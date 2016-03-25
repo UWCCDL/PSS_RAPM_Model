@@ -9,8 +9,8 @@
 	 (number 2 shape square)
 	 (number 3 shape square))
 	
-	((number 1 shape cirle)
-	 (number 2 shape cicle)
+	((number 1 shape circle)
+	 (number 2 shape circle)
 	 nil)))
 
 (setq simple-problem
@@ -125,21 +125,26 @@
 	      (shape triangle)
 	      (shape diamond))))
 
+
 (defun trial-problem (trl)
+  "Returns the problem in a RAPM trial"
   (first trl))
 
+
 (defun trial-solution (trl)
+  "Returns the solution of problem in a RAPM trial"
   (second trl))
 
 
 (defun trial-options (trl)
+  "Returns the response options available for a trial" 
   (third trl))
 
   
-
 (defun valid-options? (opt)
   "A list of options is valid if every member is a valid cell" 
   (every #'valid-cell opt))
+
 
 (defun valid-trial? (trl)
   "A trial is valid is it is made of a valid problem, a valid cell (solution), and a list of valid options" 
@@ -172,14 +177,18 @@
   (vector 0 0))
 
 (defmethod cursor-to-vis-loc ((device list))
+  "Does nothing"
   (declare (ignore device))
   nil)
 
 (defmethod build-vis-locs-for ((device list) vismod)
-  "Creates a list of visual locations"
+  "Creates a list of visual locations for a problem"
   (let* ((problem (first device))
 	 (pid (generate-pid problem))
 	 (results nil))
+
+    ;; The cells within each problem
+    
     (dotimes (i 3)
       (dotimes (j 3)
 	(let ((cell (problem-cell problem i j)))
@@ -196,6 +205,9 @@
 		       width 200
 		       ,@cell)
 		 results))))
+    
+    ;; Now the problem  
+
     (push `(isa problem-location
 		kind rapm-problem
 		id ,(generate-pid problem)
@@ -204,6 +216,9 @@
 		height 400
 		width 600)
 	  results)
+
+    ;; Creates the chunks
+    
     (funcall #'define-chunks-fct results)))
 		    
 
@@ -213,6 +228,9 @@
   (let ((kind (chunk-slot-value-fct vis-loc 'kind))
 	(new-chunk nil))
     (cond ((equal kind 'rapm-cell)
+	   
+	   ;; If the location was a cell
+
 	   (let* ((row (chunk-slot-value-fct vis-loc 'row))
 		  (column (chunk-slot-value-fct vis-loc 'column))
 		  (r (convert-to-number row))
@@ -232,6 +250,9 @@
 				     problem ,pid
 				     ,@cell
 				     )))))))
+
+	  ;; If the locations was a rapm-problem 
+
 	  ((equal kind 'rapm-problem)
 	   (let ((id (chunk-slot-value-fct vis-loc 'id)))
 	     (setf new-chunk
@@ -240,6 +261,8 @@
 				     kind ,kind 
 				     id ,id
 				     ))))))))
+    
+    ;; No matter what, fill in the slots and return the new chunk
     (fill-default-vis-obj-slots new-chunk vis-loc)
     new-chunk))
 
