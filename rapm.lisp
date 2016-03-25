@@ -23,11 +23,17 @@
 
 (chunk-type (rapm-problem (:include visual-object)) kind id)
 (chunk-type (rapm-cell (:include visual-object))
-	    kind row column row-num column-num)
+	    row column row-num column-num problem
+	    shape number)
 (chunk-type (rapm-cell-location (:include visual-location))
-	    kind row column row-num column-num)
+	    row column row-num column-num problem
+	    shape number)
+(chunk-type (problem-location (:include visual-location))
+	    id)
 
-(chunk-type rapm-goal step direction span direction-num span-num)
+(chunk-type sketchpad nature verified problem)
+
+(chunk-type rapm-goal step routine direction span direction-num span-num)
 (add-dm (rapm-cell isa chunk)
 	(rapm-problem isa chunk)
 	(verify isa chunk)
@@ -279,6 +285,8 @@
    =imaginal>
       rule =SOMETHING
       verified nil
+   ?imaginal>
+      state free   
 ==>
    @retrieval> =imaginal
 
@@ -355,7 +363,8 @@
      :nearest current 
 )
 
-(p verify*examine-new-cell
+(p verify*focus-on-attended-cell
+   "If I am looking at a new cell, make it the focus of verification"
    =goal>
      step verify
      span =SPAN
@@ -383,7 +392,7 @@
 )
 
 
-(p verify*first-line-success
+(p verify*attend-next-line
    "Notes when an entire line satisfies a rule"
    =goal>
      step verify
@@ -404,9 +413,54 @@
      focus two
      verified yes
 ==>
+   =retrieval>  ; Keep focus
      
+   =imaginal>
+     verified nil
+     focus nil
+     
+  +visual-location>
+    kind rapm-cell
+    =SPAN zero  ; Beginning of the line 
+    =DIR one    ; Next line (row or col) 
 )
 
+(p verify*success
+   "Notes when an entire line satisfies a rule"
+   =goal>
+     step verify
+     direction =DIR
+     span =SPAN
+      
+   =retrieval>
+     rule =SOMETHING
+     verified nil
+
+   =visual>
+     kind rapm-cell
+    =SPAN two
+    =DIR one
+     problem =PID
+   
+   =imaginal>
+     nature sketchpad
+     focus two
+     verified yes
+
+   ?imaginal>
+     state free  
+==>
+;; We are done. The rule is verified. We just need to create a
+;; a chunk that links the rule to the problem.
+   =goal>
+      step done
+     
+   +imaginal>
+      problem =PID
+      rule =SOMETHING
+      direction =DIR
+   
+)
 
 ;; ---------------------------------------------------------------- ;;
 ;; FEATURE SELECTION
@@ -434,7 +488,7 @@
    =visual>
 )
 
-#|
+
 (p select-feature*number
    =goal>
       step examine
@@ -454,7 +508,7 @@
       
    =visual>
 )
-|#
+
 
 ;; ----------------------------------------------------------------
 ;; RULE SELECTION

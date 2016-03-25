@@ -177,11 +177,12 @@
 
 (defmethod build-vis-locs-for ((device list) vismod)
   "Creates a list of visual locations"
-  (let ((problem (first device))
-	(results nil))
+  (let* ((problem (first device))
+	 (pid (generate-pid problem))
+	 (results nil))
     (dotimes (i 3)
       (dotimes (j 3)
-	(let ((cell (problem-cell trial i j)))
+	(let ((cell (problem-cell problem i j)))
 	  (push  `(isa rapm-cell-location 
 		       kind rapm-cell
 		       row ,(convert-to-name i)
@@ -190,11 +191,12 @@
 		       column-num ,j
 		       screen-x ,(* j 200)
 		       screen-y ,(* i 200)
+		       problem ,pid
 		       height 200 
 		       width 200
 		       ,@cell)
 		 results))))
-    (push `(isa visual-location
+    (push `(isa problem-location
 		kind rapm-problem
 		id ,(generate-pid problem)
 		screen-x 0
@@ -215,6 +217,7 @@
 		  (column (chunk-slot-value-fct vis-loc 'column))
 		  (r (convert-to-number row))
 		  (c (convert-to-number column))
+		  (pid (chunk-slot-value-fct vis-loc 'problem))
 		  (cell (problem-cell (trial-problem device)
 				      r
 				      c)))
@@ -226,6 +229,7 @@
 				     column ,column
 				     row-num ,r
 				     column-num ,c
+				     problem ,pid
 				     ,@cell
 				     )))))))
 	  ((equal kind 'rapm-problem)
