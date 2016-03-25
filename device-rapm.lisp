@@ -182,7 +182,7 @@
     (dotimes (i 3)
       (dotimes (j 3)
 	(let ((cell (problem-cell trial i j)))
-	  (push  `(isa visual-location 
+	  (push  `(isa rapm-cell-location 
 		       kind rapm-cell
 		       row ,(convert-to-name i)
 		       column ,(convert-to-name j)

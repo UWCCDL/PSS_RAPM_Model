@@ -22,10 +22,32 @@
 (sgp :auto-attend t :er t)
 
 (chunk-type (rapm-problem (:include visual-object)) kind id)
-(chunk-type (rapm-cell (:include visual-object)) kind row column)
+(chunk-type (rapm-cell (:include visual-object))
+	    kind row column row-num column-num)
+(chunk-type (rapm-cell-location (:include visual-location))
+	    kind row column row-num column-num)
 
-(add-dm (cell isa chunk)
-	(do-rapm step start
+(chunk-type rapm-goal step direction span direction-num span-num)
+(add-dm (rapm-cell isa chunk)
+	(rapm-problem isa chunk)
+	(verify isa chunk)
+	(examine isa chunk)
+	(collect isa chunk)
+	(yes isa chunk)
+	(no isa chunk)
+	(zero isa chunk)
+	(one isa chunk)
+	(two isa chunk)
+	(end isa chunk)
+	(start isa chunk)
+	(row isa chunk)
+	(row-num isa chunk)
+	(column isa chunk)
+	(column-num isa chunk)
+	(same isa chunk)
+	(solution isa chunk)
+	(do-rapm isa rapm-goal
+		 step start
 		 direction row
 		 span column
 		 direction-num row-num
@@ -271,7 +293,8 @@
       column zero
 )
 
-
+;; This is a bogus production. Will always verify everything
+;;
 (p verify*verify-cell-bogus
    =goal>
      step verify
@@ -299,10 +322,12 @@
    =visual>
 )
 
-(p verify*attend-next-cell-row
+(p verify*attend-next-cell
+   "After verifying one cell, moves in the same direction (indicated by SPAN) to the next one"
    =goal>
      step verify
-     direction row
+     span =COORDINATE
+     span-num =INDEX
       
    =retrieval>
      rule =SOMETHING
@@ -310,30 +335,30 @@
 
    =visual>
      kind rapm-cell
-     column =COL
-   - column two
+     =COORDINATE =VAL
+   - =COORDINATE two
    
    =imaginal>
-     focus =COL
+     focus =VAL
      verified yes  
 
 ==>
+   =retrieval>  ; Keep focus
+     
    =imaginal>
      verified nil
      focus nil
-
-   =retrieval>
      
    +visual-location>
      kind rapm-cell
-     > column-num current
+     > =INDEX current
      :nearest current 
 )
 
-(p verify*examine-new-cell-row
+(p verify*examine-new-cell
    =goal>
      step verify
-     direction row
+     span =SPAN
       
    =retrieval>
      rule =SOMETHING
@@ -341,7 +366,7 @@
 
    =visual>
      kind rapm-cell
-     column =VAL
+     =SPAN =VAL
    
    =imaginal>
      nature sketchpad
@@ -357,32 +382,6 @@
 
 )
 
-(p verify*examine-new-cell-column
-   =goal>
-     step verify
-     direction column
-      
-   =retrieval>
-     rule =SOMETHING
-     verified nil
-
-   =visual>
-     kind rapm-cell
-     row =VAL
-   
-   =imaginal>
-     nature sketchpad
-     focus nil
-     verified nil
- 
-==>
-   =imaginal>
-     focus =VAL
-
-   =retrieval>
-   =visual>
-
-)
 
 (p verify*first-line-success
    "Notes when an entire line satisfies a rule"
