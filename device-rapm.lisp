@@ -263,7 +263,7 @@
 (defun trial-choice-response-time (trl)
   (nth 8 trl))
 
-(defun set-trial-choice-onset (trl val)
+(defun set-trial-choice-response-time (trl val)
   (setf (nth 8 trl) val))
 
 
@@ -378,23 +378,21 @@
 (defmethod respond ((task rapm-task) response)
   "Records a response in the PSS task"
   (unless (null (current-trial task))
-    (let* ((trial (current-trial task)))
-      (set-trial-actual-response trial response))
+    (let* ((trial (current-trial task))
+	   (phase (task-phase task)))
+      (when (equal phase 'choice)
+	(set-trial-actual-response trial response))
       
-    ;; If ACT-R is loaded, we need to record response times
-    ;; and sync the visicon 
+      ;; If ACT-R is loaded, we need to record response times
+      ;; and sync the visicon 
+      (when (act-r-loaded?)
+	(let ((tme (mp-time)))
+	  (cond ((equal (task-phase task) 'problem)
+		 (set-trial-problem-response-time trial tme))
+		((equal (task-phase task) 'choice)
+		 (set-trial-choice-response-time trial tme)))
+	  (schedule-event-relative 0 #'next :params (list task)))))))
 
-    (when (act-r-loaded?)
-      (let ((tme (mp-time)))
-	(cond ((equal (phase task) 'problem)
-	       (set-trial-problem-response-time tme))
-	      ((equal (phase task) 'choice)
-	       (set-trial-problem-choice-time tme)))
-	(schedule-event-relative 0 #'next :params (list task))))))
-
-(defmethod next ((task rapm-task))
-  "Advances to the next stage"
-  ())
 
 (defmethod device-handle-keypress ((task rapm-task) key)
   "Converts the key into a symbol and passes it on to the task manager"
@@ -516,7 +514,7 @@
     
     ;; Now the choice scree
 
-    (push `(isa problem-location
+    (push `(isa rapm-choice-location
 		kind rapm-choice
 		id ,(generate-pid problem)
 		screen-x 0
@@ -531,10 +529,11 @@
 
 
 
-(defmethod vis-loc-to-obj ((device list) vis-loc)
+(defmethod vis-loc-to-obj ((task rapm-task) vis-loc)
   "Transforms a visual-loc into a visual object"
   (let ((kind (chunk-slot-value-fct vis-loc 'kind))
-	(new-chunk nil))
+	(new-chunk nil)
+	(trial (current-trial task)))
     (cond ((equal kind 'rapm-cell)
 	   
 	   ;; If the location was a cell
@@ -544,7 +543,7 @@
 		  (r (convert-to-number row))
 		  (c (convert-to-number column))
 		  (pid (chunk-slot-value-fct vis-loc 'problem))
-		  (cell (problem-cell (trial-problem device)
+		  (cell (problem-cell (trial-problem trial)
 				      r
 				      c)))
 	     (setf new-chunk
@@ -568,7 +567,24 @@
 			      `((isa rapm-problem
 				     kind ,kind 
 				     id ,id
-				     ))))))))
+				     )))))))
+
+	  ;; If the location was a rapm-choice
+	  ((equal kind 'rapm-choice)
+	   (let ((id (chunk-slot-value-fct vis-loc 'id)))
+	     (setf new-chunk
+		   (first (define-chunks-fct 
+			      `((isa rapm-choice
+				     kind ,kind 
+				     id ,id
+				     )))))))
+	  (t
+	   (setf new-chunk
+		 (first (define-chunks-fct 
+			    `((isa visual-object
+				   kind ,kind 
+				     )))))))
+	   
     
     ;; No matter what, fill in the slots and return the new chunk
     (fill-default-vis-obj-slots new-chunk vis-loc)
@@ -585,6 +601,8 @@
   "Updates the attention focus on the window"
   (when *window*
     (device-update-attended-loc *window* xyloc)))
+
+
 
 
 ;(with-open-file (file "results.csv" :direction :output

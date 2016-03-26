@@ -30,12 +30,20 @@
 	    kind row column row-num column-num problem
 	    shape number)
 
+(chunk-type (rapm-choice (:include visual-object))
+	    kind id)
+
+
 (chunk-type (rapm-cell-location (:include visual-location))
 	    row column row-num column-num problem
 	    shape number)
 
 (chunk-type (rapm-problem-location (:include visual-location))
 	    id)
+
+(chunk-type (rapm-choice-location (:include visual-location))
+	    id)
+
 
 (chunk-type sketchpad nature verified problem)
 
@@ -45,6 +53,7 @@
 
 (add-dm (rapm-cell isa chunk)
 	(rapm-problem isa chunk)
+	(rapm-pause isa chunk)
 
 	; Goal states
 	(verify isa chunk)
@@ -61,6 +70,9 @@
 	(two isa chunk)
 	(end isa chunk)
 	(start isa chunk)
+	(pause1 isa chunk)
+	(pause2 isa chunk)
+	(done isa chunk)
 
 	;; Slot names
 	
@@ -176,7 +188,30 @@
    -retrieval>  
 )
 
+(p start*satisfied
+   =goal>
+     step start
+     direction column
+   
+   =visual>
+     kind rapm-problem
+     id =PID
 
+   =retrieval>
+     nature solution
+     direction column
+
+   ?manual>
+     preparation free
+     processor free
+     execution free
+==>
+
+  +manual>
+     isa punch
+     hand right
+     finger index
+)
 
 ;; ----------------------------------------------------------------
 ;; EXAMINE
@@ -605,8 +640,100 @@
 ;; ----------------------------------------------------------------
 
 
-(goal-focus do-rapm)
+;;; ------------------------------------------------------------------
+;;; Solution generation
+;;; ------------------------------------------------------------------
 
+(p respond*initiate-response
+   "When the options show up, prepare to respond"
+   =goal>
+   - step respond
+
+   =visual>
+     kind rapm-choice
+     id =PID
+     
+   ?retrieval>
+     buffer empty
+     state free
+ ==>
+   =goal>
+     step respond
+
+   +retrieval>
+     nature missing-cell
+     pid =PID
+   =visual>
+)
+
+
+(p respond*find-cell
+   "When the solution has been found, find the corresponding cell "
+   =goal>
+     step respond
+
+   =visual>
+     isa rapm-choice
+     id =PID
+     
+   =retrieval>
+     nature missing-cell
+   
+   ?manual>
+     preparation free
+     processor free
+     execution free
+==>
+   ;; This is lame 
+   +manual>
+     isa punch
+     hand right
+     finger index
+
+)
+
+
+(p respond*randomly
+   "When no solution has been found, find the corresponding cell "
+   =goal>
+     step respond
+
+   =visual>
+     isa rapm-choice
+     id =PID
+     
+   ?retrieval>
+     state error
+   
+   ?manual>
+     preparation free
+     processor free
+     execution free
+     
+   !bind! =FINGER (pick '(index middle ring pinkie))
+==>
+   ;; This is lame 
+   +manual>
+     isa punch
+     hand right
+     finger =FINGER
+)
+
+;;; ------------------------------------------------------------------
+;;; DONE!
+;;; ------------------------------------------------------------------
+
+(p done
+   "Neatly stops when the screen says 'done"
+   =visual>
+     kind rapm-pause
+     value done
+==>
+   !stop!
+)
+
+(goal-focus do-rapm)
+ 
 )
 
 
