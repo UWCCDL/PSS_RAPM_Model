@@ -37,12 +37,12 @@
 	      (number 6 shape triangle)
 	      (number 2 shape diamond))))
 
-(setf simple-trial
-      (list simple-problem
-	    '(shape triangle)
-	    '((shape circle)
-	      (shape square)
-	      (shape triangle)
-	      (shape diamond))))
+(defparameter  *simple-trial*
+  (list simple-problem
+	'(shape triangle)
+	'((shape circle)
+	  (shape square)
+	  (shape triangle)
+	  (shape diamond))))
 
-(setf *trials* (list simple-trial))
+(defparameter *trials* (list simple-trial))
