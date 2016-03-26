@@ -1,3 +1,46 @@
+;;; ------------------------------------------------------------------
+;;; RAPM-DEVICE.LISP
+;;; ------------------------------------------------------------------
+;;; A class that provide an ACT-R GUI interface for a modified
+;;; version of Raven's Advanced Progressive Matrices
+;;; ------------------------------------------------------------------
+
+(defun act-r-loaded? ()
+  "Cheap hack to check whether ACTR is loaded"
+  (and (fboundp 'run-n-events)
+       (fboundp 'start-environment)))
+
+;; ---------------------------------------------------------------- ;;
+;; Some utilities
+;; ---------------------------------------------------------------- ;;
+
+(defun pick (lst)
+  "Picks up an element from a list"
+  (when  (listp lst)
+    (elt lst (random (length lst)))))
+
+
+(defun scramble (lst &optional (sofar nil))
+  "Scrambles a list of different elements"
+  (if (null lst)
+      sofar
+    (let ((picked (pick lst)))
+      (scramble (remove picked lst) (cons picked sofar)))))
+
+(defun scramble* (lst)
+  "Scrambles any list of objects"
+  (let ((l (length lst))
+        (pos nil))
+    (dotimes (i l)
+      (push i pos))
+    (mapcar #'(lambda (x) (elt lst x)) (scramble pos))))
+
+(defun mean (&rest nums)
+  (when (every #'numberp nums)
+    (/ (reduce #'+ nums)
+       (length nums))))
+
+
 ;;; Definition of a problem in RAPM
 
 (setq problem
@@ -31,6 +74,7 @@
 			       (6 . six) (7 . seven) (8 . eight)
 			       (9 . nine) (10 . ten)))
 
+      
 (defun convert-to-number (token)
   (car (rassoc token *number-names*)))
 
@@ -83,12 +127,14 @@
 		      (divide-into-pairs c2))))
 
 (defun valid-coordinates? (x y)
+  "Tests whether the coordinate of a cell are valid (i.e., [0, 1, 2])"
   (and (>= x 0)
        (< x 3)
        (>= y 0)
        (< y 3)))
 
 (defun valid-problem? (p)
+  "Tests whether a problem is valid"
   (and (= 3 (length p))
        (every #'(lambda (x) (and (= 3 (length x))
 				 (every #'valid-cell? x)))
@@ -145,15 +191,124 @@
   "A list of options is valid if every member is a valid cell" 
   (every #'valid-cell opt))
 
+(defun trial-correct-response (trl)
+  "Returns the correct answer of a trial"
+  (nth 3 trl))
+
+(defun set-trial-correct-response (trl val)
+  "Returns the correct answer of a trial"
+  (setf (nth 3 trl) val))
+
+
+(defun trial-actual-response (trl)
+  "Returns the answer given by the model"
+  (nth 4 trl))
+
+(defun set-trial-actual-response (trl val)
+  "Returns the answer given by the model"
+  (setf (nth 4 trl) val))
+
+
+(defun trial-problem-rt (trl)
+  (nth 5 trl))
+
+(defun set-trial-problem-rt (trl val)
+  (setf (nth 5 trl) val))
+
+
+(defun trial-choice-rt (trl)
+  (nth 6 trl))
+
+(defun set-trial-choice-rt (trl val)
+  (setf (nth 6 trl) val))
+
 
 (defun valid-trial? (trl)
   "A trial is valid is it is made of a valid problem, a valid cell (solution), and a list of valid options" 
-  (and (= (length trl) 3)
+  (and (>= (length trl) 3)
        (valid-problem? (first trl))
        (valid-cell? (second trl))
        (valid-options? (third trl))))
 
-;; Quick device. Unfortunately, we do need the model to look at something
+(defparameter *responses* '(("j" . 0) ("k" . 1) ("l" . 2) (";" . 3)))
+
+(defun make-trial (trl)
+  (let* ((new-options (scramble* (trial-options trl)))
+	 (correct (position (trial-solution trl) new-options)))
+    (list (trial-problem trl)              ; Problem
+	  (trial-solution trl)             ; Solution
+	  new-options                      ; Options
+	  correct                          ; Correct response
+	  nil                              ; Actual response
+	  0                                ; Problem RT
+	  0)))                             ; Choice RT
+
+(defun trial-accuracy (trl)
+  (if (and (>= (length trl) 7)
+	   (= (trial-correct-response trl)
+	      (trial-actual-response trl)))
+      1
+      0))
+
+
+;;; ------------------------------------------------------------------
+;;; ACT-R DEVICE INTERFACE
+;;; ------------------------------------------------------------------
+
+;;; ------------
+;;; Task Manager
+;;; ------------
+;;;
+(defclass rapm-task ()
+  ((task-phase :accessor task-phase
+	       :initform nil)
+   (index :accessor index
+	  :initform nil)
+   (trials :accessor training-trials
+	   :initform *trials*)
+   (current-trial :accessor current-trial
+		  :initform nil)
+   (experiment-log :accessor experiment-log
+		   :initform nil))
+  (:documentation "A manager for the PSS task"))
+
+(defmethod init ((task rapm-task))
+  "Initializes the PSS task manager"
+  (when (not (null (trials task)))
+    (setf (index task) 0)
+    (setf (experiment-log task) nil)
+    (setf (trials task) (scramble* (trials task)))
+    (setf (current-trial task) (make-trial (nth (index task) (trials task))))
+    (setf (task-phase task) 'problem)))
+
+(defmethod respond ((task rapm-task) key)
+  "Records a response in the PSS task"
+  (unless (null (current-trial task))
+    (let* ((trial (current-trial task))
+	   (choice (trial-choice trial))
+	   (chosen (nth (cdr (assoc key *key-mappings*))
+			choice))
+	   (n (random 1.0))
+	   (prob (cdr (assoc chosen *probabilities*)))
+	   
+	   (feedback (< n prob)))
+
+      (set-trial-chosen-option trial chosen)
+      (set-trial-best-option trial (trial-best-option trial))
+      (set-trial-feedback trial feedback))
+
+    ;; If ACT-R is loaded, we need to sync the visicon with the
+    ;; state of the task.
+
+    (when (act-r-loaded?)
+      (cond ((equal (phase task) 'test)
+	     (schedule-event-relative 0 #'next :params (list task)))
+	    ((equal (phase task) 'training)
+	     (schedule-event-relative 0 #'proc-display :params nil)
+	     (schedule-event-relative 3 #'next :params (list task)))
+	    (t
+	     (schedule-event-relative 0 #'proc-display :params nil))))))
+
 
 (defmethod device-handle-keypress ((tm list) key)
   "Converts the key into a symbol and passes it on to the task manager"

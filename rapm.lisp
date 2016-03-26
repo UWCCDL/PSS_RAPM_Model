@@ -171,8 +171,8 @@
    +imaginal>
      direction =DIR
    
-   
    =visual>
+
    -retrieval>  
 )
 
