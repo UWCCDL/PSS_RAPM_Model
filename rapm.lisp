@@ -82,15 +82,6 @@
 		 direction-num row-num
 		 span-num column-num))
 	
-;(p attend-cell
-;   ?visual-location>
-;      buffer empty
-;==>
-;   +visual-location>
-;      screen-x lowest
-;      screen-y lowest
-;)
-
 
 ;; ---------------------------------------------------------------- ;;
 ;; START
@@ -104,12 +95,12 @@
 ==>
    +visual-location>
       kind rapm-problem
-
 )
 
-(p start*retrieve-solutions
+(p start*retrieve-solution-row
    =goal>
      step start
+   
    =visual>
      kind rapm-problem
      id =PID
@@ -118,127 +109,74 @@
      state free
 ==>
    =goal>
-     step check-solutions
+     direction row
+     span column
+     direction-num row-num
+     span-num column-num
       
    +retrieval>
      nature solution
      problem =PID
-
+     direction row
+  
    =visual>
 )
 
-(p start*solution-found
-   "If a solution has been found, check its satisfaction"
+(p start*retrieve-solution-column
    =goal>
-     step check-solutions
-
+     step start
+     direction =DIR
+   
    =visual>
-     kind  rapm-problem
-     id  =PID
+     kind rapm-problem
+     id =PID
 
    =retrieval>
      nature solution
-     problem =PID
-   
+     direction row
+
+   ?retrieval>
+      state free  
 ==>
    =goal>
-     step satisfaction
+     direction column
+     span row
+     direction-num column-num
+     span-num row-num
 
-   @imaginal>
-     =retrieval
-   
+   +retrieval>
+     nature solution
+     problem =PID
+     direction column
+  
    =visual>
 )
-
 
 (p start*solution-not-found
-   "If a solution has NOT been found, the create a bogus solution (and begin examining features) "
    =goal>
-     step check-solutions
-   
+     step start
+     direction =DIR
+     
    =visual>
-     kind  rapm-problem
-     id  =PID
+     kind rapm-problem
+     id =PID
+
    ?retrieval>
      state error
-   ?imaginal>
-     state free
-     buffer empty
 ==>
+   =goal>
+     step examine
+     routine collect
+   
    +imaginal>
-     nature solution
-
-   =goal>
-     step satisfaction
-
-   -retrieval>
+     direction =DIR
+   
+   
    =visual>
+   -retrieval>  
 )
 
 
-
-;;; -------------------------------------------------------------- ;;;
-;;; SATISFIED
-;;; -------------------------------------------------------------- ;;;
-;;; Checks whether our solutions are satisfying or not.
-;;; -------------------------------------------------------------- ;;;
-
-(p satisfy*no-because-no-row
-   "If you have just examined a solution, examine more features"
-   =goal>
-     step satisfaction
-   =visual>
-     kind  rapm-problem
-     id  =PID
-   =imaginal>
-     nature solution  
-     row nil
-     ;column nil
-==>
-   =goal>
-     step examine
-     direction row
-     routine collect
-
-   =visual>
-)
-
-(p satisfy*no-because-no-column
-   "If you have just examined a solution, examine more features"
-   =goal>
-     step satisfaction
-   =visual>
-     kind  rapm-problem
-     id  =PID
-   =imaginal>
-     nature solution  
-    ;row nil
-     column nil
-==>
-   =goal>
-     step examine
-     direction row
-     routine collect
-
-   =visual>
-)
-
-(p satisfy*yes
-   "If you have just examined a solution, examine more features"
-   =goal>
-     step satisfaction
-   =visual>
-     kind  rapm-problem
-     id  =PID
-   =imaginal>
-     nature solution  
-    - row nil
-    - column nil
-==>
-   =goal>
-     step end
-   =visual>
-)
 
 ;; ----------------------------------------------------------------
 ;; EXAMINE
@@ -321,12 +259,12 @@
       two nil   ; The last value must be still free
 ==>
    =imaginal>
-      =COL =VAL
+      =ROW =VAL
    
    +visual-location>
-      screen-y current
-    > screen-x current
-      screen-x lowest    
+      screen-x current
+    > screen-y current
+      screen-y lowest    
    
 )
 
