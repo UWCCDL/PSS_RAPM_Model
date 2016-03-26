@@ -319,7 +319,7 @@
     (setf (experiment-log task) nil)
     (setf (trials task) (scramble* (trials task)))
     (setf (current-trial task) (make-trial (nth (index task) (trials task))))
-    (setf (task-phase task) 'pause2))) ;'problem)))
+    (setf (task-phase task) 'problem)))
 
 (defparameter *phase-transitions* '((problem . pause1) (pause1 . choice)
 				    (choice . pause2) (pause2 . problem)))
@@ -396,32 +396,32 @@
   "Advances to the next stage"
   ())
 
-(defmethod device-handle-keypress ((tm list) key)
+(defmethod device-handle-keypress ((task rapm-task) key)
   "Converts the key into a symbol and passes it on to the task manager"
   (let ((val (cdr (assoc (format nil "~a" key)
-			 *responses
+			 *responses*
 			 :test #'string-equal))))
-    (respond tm val)))
+    (respond task val)))
 			   
-(defmethod device-handle-click ((device list))
+(defmethod device-handle-click ((task rapm-task))
   "Does nothing"
-  (declare (ignore device))
+  (declare (ignore task))
   nil)
 
-(defmethod device-move-cursor-to ((device list) pos)
+(defmethod device-move-cursor-to ((task rapm-task) pos)
   "Does nothing"
-  (declare (ignore device))
+  (declare (ignore rask))
   nil)
 
 
-(defmethod get-mouse-coordinates ((device list))
+(defmethod get-mouse-coordinates ((task rapm-task))
   "Does nothing"
-  (declare (ignore device))
+  (declare (ignore task))
   (vector 0 0))
 
-(defmethod cursor-to-vis-loc ((device list))
+(defmethod cursor-to-vis-loc ((task rapm-task))
   "Does nothing"
-  (declare (ignore device))
+  (declare (ignore task))
   nil)
 
 (defmethod build-vis-locs-for ((task rapm-task) vismod)
@@ -474,7 +474,7 @@
     
     ;; Now the problem  
 
-    (push `(isa problem-location
+    (push `(isa rapm-problem-location
 		kind rapm-problem
 		id ,(generate-pid problem)
 		screen-x 0

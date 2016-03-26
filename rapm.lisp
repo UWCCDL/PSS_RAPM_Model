@@ -34,7 +34,7 @@
 	    row column row-num column-num problem
 	    shape number)
 
-(chunk-type (problem-location (:include visual-location))
+(chunk-type (rapm-problem-location (:include visual-location))
 	    id)
 
 (chunk-type sketchpad nature verified problem)
