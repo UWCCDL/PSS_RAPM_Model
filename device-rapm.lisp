@@ -272,6 +272,8 @@
 (defun trial-accuracy (trl)
   "Returns 1 if the choice was correct, 0 otherwise" 
   (if (and (>= (length trl) 7)
+	   (numberp (trial-correct-response trl))
+	   (numberp (trial-actual-response trl))
 	   (= (trial-correct-response trl)
 	      (trial-actual-response trl)))
       1
@@ -302,13 +304,13 @@
 	       :initform nil)
    (index :accessor index
 	  :initform nil)
-   (trials :accessor training-trials
+   (trials :accessor trials
 	   :initform *trials*)
    (current-trial :accessor current-trial
 		  :initform nil)
    (experiment-log :accessor experiment-log
 		   :initform nil))
-  (:documentation "A manager for the PSS task"))
+  (:documentation "A manager for Lauren's version of the RAPM task"))
 
 (defmethod init ((task rapm-task))
   "Initializes the PSS task manager"
@@ -323,20 +325,43 @@
 				    (choice . pause2) (pause2 . problem)))
 
 (defun get-next-phase (phase)
-  (cdr assoc phase *phase-transitions*))
+  "Next phase in the task's phase transitions diagram"
+  (cdr (assoc phase *phase-transitions*)))
 
 (defmethod next ((task rapm-task))
   "Moves on to the next stage of the task"
   (unless (null (index task))  ; If it nil, the tast is not initialized yetr
-    (incf (index task))  ; Increament the index. This is easy
-    (push (current-trial task) (experiment-log task))
     (let* ((current-phase (task-phase task))
 	   (next-phase (get-next-phase current-phase)))
-      (if  (and (equal current-phase 'choice)
-		(>= (index task) (length (trials task))))
-	   (setf (task-phase task) 'done)
-	   (setf (task-phase task) next-phase))
+      (when  (equal next-phase 'problem)
+	;; If we are moving to a new problem, we need to do some checks
+	(incf (index task))  ; Increament the index. This is easy
+	(push (current-trial task)   ; Save the current trial
+	      (experiment-log task))
+	(setf (current-trial task) nil)
+
+	;; If we are out of problem, the next phase is 'done.
+	;; Otherwise, we simply update the current problem 
+	(if (>= (index task) (length (trials task)))
+	    (setf next-phase 'done)
+	    (setf (current-trial task) (nth (index task) (trials task)))))
+
+      ;; Update the phase
+      (setf (task-phase task) next-phase)
+
+      ;; Schedule the appropriate updates if ACTR is loaded,
+      ;; And make sure to record the onset times.
+      
       (when (act-r-loaded?)
+	;; cannot trust the "next-phase" variable, since now the phase could
+	;; also be 'done'.
+	(setf current-phase (task-phase task))
+	(print "Zero")
+	;; Record times if we have a new problem or choice phase
+	(cond ((equal current-phase 'problem)
+	       (set-trial-problem-onset (current-trial) (mp-time)))
+	      ((equal current-phase 'choice)
+	       (set-trial-choice-onset (current-trial) (mp-time))))
 	(schedule-event-relative 0 #'proc-display :params nil)
 	(when (member next-phase '(pause1 pause2))
 	  (schedule-event-relative 1 #'next :params (list task)))))))
