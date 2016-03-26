@@ -472,7 +472,7 @@
     
     ;; Now the problem  
 
-    (push `(isa rapm-problem-location
+    (push `(isa rapm-screen-location
 		kind rapm-problem
 		id ,(generate-pid problem)
 		screen-x 0
@@ -514,7 +514,7 @@
     
     ;; Now the choice scree
 
-    (push `(isa rapm-choice-location
+    (push `(isa rapm-screen-location
 		kind rapm-choice
 		id ,(generate-pid problem)
 		screen-x 0
