@@ -319,7 +319,7 @@
     (setf (experiment-log task) nil)
     (setf (trials task) (scramble* (trials task)))
     (setf (current-trial task) (make-trial (nth (index task) (trials task))))
-    (setf (task-phase task) 'problem)))
+    (setf (task-phase task) 'pause2))) ;'problem)))
 
 (defparameter *phase-transitions* '((problem . pause1) (pause1 . choice)
 				    (choice . pause2) (pause2 . problem)))
@@ -334,7 +334,9 @@
     (let* ((current-phase (task-phase task))
 	   (next-phase (get-next-phase current-phase)))
       (when  (equal next-phase 'problem)
+	
 	;; If we are moving to a new problem, we need to do some checks
+
 	(incf (index task))  ; Increament the index. This is easy
 	(push (current-trial task)   ; Save the current trial
 	      (experiment-log task))
@@ -342,34 +344,36 @@
 
 	;; If we are out of problem, the next phase is 'done.
 	;; Otherwise, we simply update the current problem 
+
 	(if (>= (index task) (length (trials task)))
 	    (setf next-phase 'done)
 	    (setf (current-trial task) (nth (index task) (trials task)))))
 
-      ;; Update the phase
+      ;; Now, we can update the phase safely
+
       (setf (task-phase task) next-phase)
 
       ;; Schedule the appropriate updates if ACTR is loaded,
       ;; And make sure to record the onset times.
       
       (when (act-r-loaded?)
+	
 	;; cannot trust the "next-phase" variable, since now the phase could
 	;; also be 'done'.
+
 	(setf current-phase (task-phase task))
-	(print "Zero")
+	
 	;; Record times if we have a new problem or choice phase
+
 	(cond ((equal current-phase 'problem)
-	       (set-trial-problem-onset (current-trial) (mp-time)))
+	       (set-trial-problem-onset (current-trial task) (mp-time)))
 	      ((equal current-phase 'choice)
-	       (set-trial-choice-onset (current-trial) (mp-time))))
+	       (set-trial-choice-onset (current-trial task) (mp-time))))
 	(schedule-event-relative 0 #'proc-display :params nil)
 	(when (member next-phase '(pause1 pause2))
 	  (schedule-event-relative 1 #'next :params (list task)))))))
 	      
-	   
-		
-
-
+	
 
 (defmethod respond ((task rapm-task) response)
   "Records a response in the PSS task"
@@ -420,9 +424,32 @@
   (declare (ignore device))
   nil)
 
-(defmethod build-vis-locs-for ((device list) vismod)
+(defmethod build-vis-locs-for ((task rapm-task) vismod)
+  (let ((phase (task-phase task))
+	(trial (current-trial task)))
+    (cond ((equal phase 'problem)
+	   (build-vis-locs-for-problem trial vismod))
+	  ((equal phase 'choice)
+	   (build-vis-locs-for-choice trial vismod))
+	  (t
+	   (build-vis-locs-for-pauses phase vismod)))))
+
+(defmethod build-vis-locs-for-pauses ((name symbol) vismod)
+  (declare (ignore vismod))
+  (define-chunks-fct  `((isa visual-location 
+			     kind rapm-pause
+			     value ,name
+			     screen-x 0
+			     screen-y 0
+			     ;problem ,pid
+			     height 400 
+			     width 600))))
+
+
+(defmethod build-vis-locs-for-problem ((trial list) vismod)
   "Creates a list of visual locations for a problem"
-  (let* ((problem (first device))
+  (declare (ignore vismod))
+  (let* ((problem (first trial))
 	 (pid (generate-pid problem))
 	 (results nil))
 
@@ -460,6 +487,48 @@
     
     (funcall #'define-chunks-fct results)))
 		    
+
+(defmethod build-vis-locs-for-choice ((trial list) vismod)
+  "Creates a list of visual locations for a problem"
+  (declare (ignore vismod))
+  (let* ((problem (trial-problem trial))
+	 (options (trial-options trial))
+	 (pid (generate-pid problem))
+	 (results nil))
+
+    ;; The cells within each problem
+    
+    (dotimes (i (length options))
+      (let ((cell (nth i  options)))
+	(push  `(isa rapm-cell-location 
+		     kind rapm-cell
+		     row zero
+		     column ,(convert-to-name i)
+		     row-num ,0
+		     column-num ,i
+		     screen-x ,(* i 200)
+		     screen-y 100
+		     problem ,pid
+		     height 200 
+		     width 200
+		     ,@cell)
+	       results)))
+    
+    ;; Now the choice scree
+
+    (push `(isa problem-location
+		kind rapm-choice
+		id ,(generate-pid problem)
+		screen-x 0
+		screen-y 0
+		height 400
+		width 800)
+	  results)
+
+    ;; Creates the chunks
+    
+    (funcall #'define-chunks-fct results)))
+
 
 
 (defmethod vis-loc-to-obj ((device list) vis-loc)

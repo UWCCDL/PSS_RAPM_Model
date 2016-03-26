@@ -19,7 +19,7 @@
 (clear-all)
 (define-model bar
 
-(sgp :style-warnings nil :model-warnings nil :auto-attend t :er t)
+(sgp :style-warnings t :model-warnings t :auto-attend t :er t)
 
 ;; Chnunk types. Not needed, technically, but save lots of warnings.
 
@@ -612,6 +612,7 @@
 
 (defun my-reload ()
   (reload)
-  (install-device simple-trial)
+  (install-device (make-instance 'rapm-task))
+  (init (current-device))
   (proc-display)
   (print-visicon))
