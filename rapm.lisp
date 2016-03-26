@@ -19,26 +19,41 @@
 (clear-all)
 (define-model bar
 
-(sgp :auto-attend t :er t)
+(sgp :style-warnings nil :model-warnings nil :auto-attend t :er t)
 
-(chunk-type (rapm-problem (:include visual-object)) kind id)
+;; Chnunk types. Not needed, technically, but save lots of warnings.
+
+(chunk-type (rapm-problem (:include visual-object))
+	    kind id)
+
 (chunk-type (rapm-cell (:include visual-object))
-	    row column row-num column-num problem
+	    kind row column row-num column-num problem
 	    shape number)
+
 (chunk-type (rapm-cell-location (:include visual-location))
 	    row column row-num column-num problem
 	    shape number)
+
 (chunk-type (problem-location (:include visual-location))
 	    id)
 
 (chunk-type sketchpad nature verified problem)
 
 (chunk-type rapm-goal step routine direction span direction-num span-num)
+
+;;; Declarative memory
+
 (add-dm (rapm-cell isa chunk)
 	(rapm-problem isa chunk)
+
+	; Goal states
 	(verify isa chunk)
 	(examine isa chunk)
 	(collect isa chunk)
+	(find-rule isa  chunk)
+
+	; Simple feature
+	
 	(yes isa chunk)
 	(no isa chunk)
 	(zero isa chunk)
@@ -46,12 +61,20 @@
 	(two isa chunk)
 	(end isa chunk)
 	(start isa chunk)
+
+	;; Slot names
+	
 	(row isa chunk)
 	(row-num isa chunk)
 	(column isa chunk)
 	(column-num isa chunk)
 	(same isa chunk)
 	(solution isa chunk)
+
+	;; Other
+	(sketchpad isa chunk)
+	
+	
 	(do-rapm isa rapm-goal
 		 step start
 		 direction row
@@ -84,7 +107,7 @@
 
 )
 
-(p start*retrieve-solution
+(p start*retrieve-solutions
    =goal>
      step start
    =visual>
@@ -94,47 +117,128 @@
      buffer empty
      state free
 ==>
+   =goal>
+     step check-solutions
+      
    +retrieval>
-     kind solution
+     nature solution
      problem =PID
+
    =visual>
 )
 
 (p start*solution-found
-   "If a solution has been found, go to END"
+   "If a solution has been found, check its satisfaction"
    =goal>
-     step start
+     step check-solutions
+
    =visual>
      kind  rapm-problem
      id  =PID
+
    =retrieval>
-     kind solution
+     nature solution
      problem =PID
+   
 ==>
    =goal>
-     step end
+     step satisfaction
+
+   @imaginal>
+     =retrieval
+   
    =visual>
 )
 
 
 (p start*solution-not-found
-   "If a solution has NOT been found, examine more features"
+   "If a solution has NOT been found, the create a bogus solution (and begin examining features) "
    =goal>
-     step start
+     step check-solutions
+   
    =visual>
      kind  rapm-problem
      id  =PID
    ?retrieval>
      state error
+   ?imaginal>
+     state free
+     buffer empty
+==>
+   +imaginal>
+     nature solution
+
+   =goal>
+     step satisfaction
+
+   -retrieval>
+   =visual>
+)
+
+
+
+;;; -------------------------------------------------------------- ;;;
+;;; SATISFIED
+;;; -------------------------------------------------------------- ;;;
+;;; Checks whether our solutions are satisfying or not.
+;;; -------------------------------------------------------------- ;;;
+
+(p satisfy*no-because-no-row
+   "If you have just examined a solution, examine more features"
+   =goal>
+     step satisfaction
+   =visual>
+     kind  rapm-problem
+     id  =PID
+   =imaginal>
+     nature solution  
+     row nil
+     ;column nil
 ==>
    =goal>
      step examine
      direction row
      routine collect
-   -retrieval>  ; Clean up the retrieval buffer
+
    =visual>
 )
 
+(p satisfy*no-because-no-column
+   "If you have just examined a solution, examine more features"
+   =goal>
+     step satisfaction
+   =visual>
+     kind  rapm-problem
+     id  =PID
+   =imaginal>
+     nature solution  
+    ;row nil
+     column nil
+==>
+   =goal>
+     step examine
+     direction row
+     routine collect
+
+   =visual>
+)
+
+(p satisfy*yes
+   "If you have just examined a solution, examine more features"
+   =goal>
+     step satisfaction
+   =visual>
+     kind  rapm-problem
+     id  =PID
+   =imaginal>
+     nature solution  
+    - row nil
+    - column nil
+==>
+   =goal>
+     step end
+   =visual>
+)
 
 ;; ----------------------------------------------------------------
 ;; EXAMINE
@@ -452,15 +556,33 @@
 ==>
 ;; We are done. The rule is verified. We just need to create a
 ;; a chunk that links the rule to the problem.
-   =goal>
-      step done
      
-   +imaginal>
+   =imaginal>
+      nature solution   
       problem =PID
       rule =SOMETHING
       direction =DIR
-   
+      
 )
+
+(p memorize-solution
+   =goal>
+     step verify
+
+   =imaginal>
+     nature solution
+
+   ?visual>
+     state free   
+==>
+   =goal>
+     step start
+   
+   +visual-location>
+      kind rapm-problem   
+)
+
+
 
 ;; ---------------------------------------------------------------- ;;
 ;; FEATURE SELECTION
@@ -476,6 +598,8 @@
    =visual>
       shape =S
       row =R
+   ?imaginal>
+      state free   
 ==> 
    =goal>
       step find-rule
@@ -497,6 +621,8 @@
    =visual>
       number =N
       row =R
+   ?imaginal>
+      state free   
 ==> 
    =goal>
       step find-rule
