@@ -290,7 +290,7 @@
   (- (trial-problem-response-time trl)
      (trial-problem-onset trl)))
 
-(defun trial-chocie-rt (trl)
+(defun trial-choice-rt (trl)
   "Calculates the problem's RT"
   (- (trial-choice-response-time trl)
      (trial-choice-onset trl)))
@@ -325,7 +325,9 @@
     (setf (experiment-log task) nil)
     (setf (trials task) (scramble* (trials task)))
     (setf (current-trial task) (make-trial (nth (index task) (trials task))))
-    (setf (task-phase task) 'problem)))
+    (setf (task-phase task) 'problem)
+    (when (act-r-loaded?)
+      (set-trial-problem-onset (current-trial task) (mp-time)))))
 
 (defparameter *phase-transitions* '((problem . pause1) (pause1 . choice)
 				    (choice . pause2) (pause2 . problem)))
@@ -354,7 +356,7 @@
 	(if (>= (index task) (length (trials task)))
 	    (setf next-phase 'done)
 	    (setf (current-trial task) (nth (index task) (trials task)))))
-
+	   
       ;; Now, we can update the phase safely
 
       (setf (task-phase task) next-phase)
@@ -449,10 +451,10 @@
 			     height 400 
 			     width 600))))
 
-(defun generate-feature-list (features)
+(defun generate-feature-slots (cell)
   (let ((i -1)
 	(results nil))
-    (dolist (feat features (reverse results))
+    (dolist (feat (cell-features cell) results)
       (push feat results)
       (push (intern (format nil "~A~A" 'feature (incf i))) results))))
 
@@ -467,8 +469,8 @@
     
     (dotimes (i 3)
       (dotimes (j 3)
-	(let ((cell (problem-cell problem i j))
-	      (features (cell-feactures cell))
+	(let* ((cell (problem-cell problem i j))
+	       (feature-slots (generate-feature-slots cell)))
 	      
 	  (push  `(isa rapm-cell-location 
 		       kind rapm-cell
@@ -481,7 +483,8 @@
 		       problem ,pid
 		       height 200 
 		       width 200
-		       ,@cell)
+		       ,@cell
+		       ,@feature-slots)
 		 results))))
     
     ;; Now the problem  
@@ -547,7 +550,8 @@
   "Transforms a visual-loc into a visual object"
   (let ((kind (chunk-slot-value-fct vis-loc 'kind))
 	(new-chunk nil)
-	(trial (current-trial task)))
+	(trial (current-trial task))
+	(phase (task-phase task)))
     (cond ((equal kind 'rapm-cell)
 	   
 	   ;; If the location was a cell
@@ -559,7 +563,8 @@
 		  (pid (chunk-slot-value-fct vis-loc 'problem))
 		  (cell (problem-cell (trial-problem trial)
 				      r
-				      c)))
+				      c))
+		  (feature-slots (generate-feature-slots cell)))
 	     (setf new-chunk
 		   (first (define-chunks-fct 
 			      `((isa rapm-cell
@@ -569,7 +574,9 @@
 				     row-num ,r
 				     column-num ,c
 				     problem ,pid
-				     ,@cell
+				     phase ,phase  ;; Whether a problem cell or a choice cell
+				     ,@cell    ;; shape triangle; number 1; etc.
+				     ,@feature-slots  ;; feature0, feature1, etc.
 				     )))))))
 
 	  ;; If the locations was a rapm-problem 

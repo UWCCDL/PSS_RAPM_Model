@@ -28,7 +28,7 @@
 
 (chunk-type (rapm-cell (:include visual-object))
 	    kind row column row-num column-num problem
-	    shape number
+	    phase shape number 
 	    feature0 feature1 feature2 feature3 feature4
 	    feature5 feature6 feature7 feature8 feature9)
 
@@ -208,7 +208,21 @@
    =retrieval>
      nature solution
      direction column
+==>
+   =goal>
+     step respond
+   
+   =visual>
+)   
 
+(p start*respond
+   =goal>
+     step respond
+   
+   =visual>
+     kind rapm-problem
+     id =PID
+   
    ?manual>
      preparation free
      processor free
@@ -221,9 +235,13 @@
      finger index
 )
 
-;; ----------------------------------------------------------------
-;; EXAMINE
-;; ----------------------------------------------------------------
+;;; ----------------------------------------------------------------
+;;; EXAMINE
+;;; ----------------------------------------------------------------
+;;; The examination part is where a feature is selected to collect
+;;; its variation across row or columns.
+;;; ------------------------------------------------------------------
+
 
 (p examine*look-at-cells
    =goal>
@@ -247,7 +265,6 @@
 ;; It consists of scaning a row or column collecting feauture to
 ;; put in the imaginal buffer.
 ;; ----------------------------------------------------------------
-
 
 (p collect*by-row
    "Collects the value of a feature while scanning horizontally"
@@ -346,12 +363,21 @@
    
 )
 
-;; ----------------------------------------------------------------
-;; Verify rules
-;; ----------------------------------------------------------------
-;; A rule is verified when it is consistent with the features of
-;; three cells.
-;; ----------------------------------------------------------------
+;;; ----------------------------------------------------------------
+;;; RULE VERIFICATION
+;;; ----------------------------------------------------------------
+;;; A rule is verified when it is consistent with the features of
+;;; three cells. The verification process roughly follows this
+;;; algorithm:
+;;;   1. Move the tenativ solution (contents of the imaginal buffer)
+;;;      to the retrieval. This free the resources for the imaginal.
+;;;   2. Scan the first row, cell by cell.
+;;;   3. For each cell a special 'verify*RULE' production should be
+;;;      called (need to write one for each rule)
+;;;   4. Repeat for the second row.
+;;;   5. If the second row is finished, the rule is verified.
+;;;
+;;; ----------------------------------------------------------------
 
 
 (p verify*init
@@ -615,15 +641,37 @@
    =goal>
      step generate
 
+   =imaginal>
+     nature missing-cell
+     completed nil
+     
    ?retrieval>
      state error
+
+   ?imaginal>
+     state free  
 ==>
-   =goal>
-     step respond
-   
+
+   =imaginal>
+     completed yes  
    ;; Clean-up the retrieval buffer
    -retrieval>
 )
+
+(p generate*switch-to-respond
+   "Done with the generation, switches to responding"
+   =goal>
+     step generate
+   
+   =imaginal>
+     nature missing-cell
+     completed yes
+==>
+   =goal>
+     step respond
+)
+
+
 ;; ---------------------------------------------------------------- ;;
 ;; FEATURE SELECTION
 ;; ---------------------------------------------------------------- ;;
@@ -708,13 +756,18 @@
 
 
 ;;; ------------------------------------------------------------------
-;;; RESPONSE
+;;; CHOICE
 ;;; ------------------------------------------------------------------
+;;; The choice procedure is essentially a hack. The model simply
+;;; retrieves the generated missing cell. Then, it scans the options.
+;;; Then it simply retrieves the option that best matches.
+;;; Crude but should be effective.
+;;;
 
-(p respond*initiate-response
+(p choice*initiate-response
    "When the options show up, prepare to respond"
-   =goal>
-   - step respond
+;   =goal>
+;   - step respond
 
    =visual>
      kind rapm-choice
@@ -724,8 +777,8 @@
      buffer empty
      state free
  ==>
-   =goal>
-     step respond
+;   =goal>
+;     step respond
 
    +retrieval>
      nature missing-cell
@@ -734,7 +787,7 @@
 )
 
 
-(p respond*find-cell
+(p choice*find-cell
    "When the solution has been found, find the corresponding cell "
    =goal>
      step respond
@@ -756,12 +809,11 @@
      isa punch
      hand right
      finger index
-
 )
 
 
-(p respond*randomly
-   "When no solution has been found, find the corresponding cell "
+(p choice*respond-randomly
+   "When no solution has been found, pick one at random "
    =goal>
      step respond
 
@@ -776,10 +828,10 @@
      preparation free
      processor free
      execution free
-     
+
+   ;; This is lame, I know. 
    !bind! =FINGER (pick '(index middle ring pinkie))
 ==>
-   ;; This is lame 
    +manual>
      isa punch
      hand right
