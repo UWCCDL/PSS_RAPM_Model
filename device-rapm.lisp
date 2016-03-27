@@ -119,6 +119,12 @@
        (>= y 0)
        (< y 3)))
 
+(defun cell-features (cell)
+  "Returns the features of a RAPM cell"
+  (when (valid-cell? cell)
+    (mapcar #'first (divide-into-pairs cell))))
+
+
 (defun valid-problem? (p)
   "A problem is valid if it is made of three rows of cells"
   (and (= 3 (length p))
@@ -443,6 +449,12 @@
 			     height 400 
 			     width 600))))
 
+(defun generate-feature-list (features)
+  (let ((i -1)
+	(results nil))
+    (dolist (feat features (reverse results))
+      (push feat results)
+      (push (intern (format nil "~A~A" 'feature (incf i))) results))))
 
 (defmethod build-vis-locs-for-problem ((trial list) vismod)
   "Creates a list of visual locations for a problem"
@@ -455,7 +467,9 @@
     
     (dotimes (i 3)
       (dotimes (j 3)
-	(let ((cell (problem-cell problem i j)))
+	(let ((cell (problem-cell problem i j))
+	      (features (cell-feactures cell))
+	      
 	  (push  `(isa rapm-cell-location 
 		       kind rapm-cell
 		       row ,(convert-to-name i)
@@ -560,24 +574,15 @@
 
 	  ;; If the locations was a rapm-problem 
 
-	  ((equal kind 'rapm-problem)
+	  ((member kind '(rapm-problem rapm-choice))
 	   (let ((id (chunk-slot-value-fct vis-loc 'id)))
 	     (setf new-chunk
 		   (first (define-chunks-fct 
-			      `((isa rapm-problem
+			      `((isa rapm-screen
 				     kind ,kind 
 				     id ,id
 				     )))))))
 
-	  ;; If the location was a rapm-choice
-	  ((equal kind 'rapm-choice)
-	   (let ((id (chunk-slot-value-fct vis-loc 'id)))
-	     (setf new-chunk
-		   (first (define-chunks-fct 
-			      `((isa rapm-choice
-				     kind ,kind 
-				     id ,id
-				     )))))))
 	  (t
 	   (setf new-chunk
 		 (first (define-chunks-fct 

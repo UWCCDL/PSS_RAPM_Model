@@ -23,31 +23,27 @@
 
 ;; Chnunk types. Not needed, technically, but save lots of warnings.
 
-(chunk-type (rapm-problem (:include visual-object))
+(chunk-type (rapm-screen (:include visual-object))
 	    kind id)
 
 (chunk-type (rapm-cell (:include visual-object))
 	    kind row column row-num column-num problem
-	    shape number)
-
-(chunk-type (rapm-choice (:include visual-object))
-	    kind id)
-
+	    shape number
+	    feature0 feature1 feature2 feature3 feature4
+	    feature5 feature6 feature7 feature8 feature9)
 
 (chunk-type (rapm-cell-location (:include visual-location))
 	    row column row-num column-num problem
-	    shape number)
+	    shape number
+	    feature0 feature1 feature2 feature3 feature4
+	    feature5 feature6 feature7 feature8 feature9)
 
-(chunk-type (rapm-problem-location (:include visual-location))
+(chunk-type (rapm-screen-location (:include visual-location))
 	    id)
-
-(chunk-type (rapm-choice-location (:include visual-location))
-	    id)
-
 
 (chunk-type sketchpad nature verified problem)
 
-(chunk-type rapm-goal step routine direction span direction-num span-num)
+(chunk-type rapm-goal step routine pid direction span direction-num span-num)
 
 ;;; Declarative memory
 
@@ -55,27 +51,37 @@
 	(rapm-problem isa chunk)
 	(rapm-pause isa chunk)
 
-	; Goal states
+	;; Goal states
+
 	(verify isa chunk)
 	(examine isa chunk)
 	(collect isa chunk)
 	(find-rule isa  chunk)
 
-	; Simple feature
+	;; Simple chunks
 	
 	(yes isa chunk)
-	(no isa chunk)
+	(no isa chunk)	
 	(zero isa chunk)
 	(one isa chunk)
 	(two isa chunk)
+	(three isa chunk)
 	(end isa chunk)
 	(start isa chunk)
 	(pause1 isa chunk)
 	(pause2 isa chunk)
 	(done isa chunk)
 
-	;; Slot names
+	;; Features
+	(triangle isa chunk)
+	(square isa chunk)
+	(circle isa chunk)
+	(diamond isa chunk)
+	(thick isa chunk)
+	(think isa chunk)
 	
+
+	;; Slot names
 	(row isa chunk)
 	(row-num isa chunk)
 	(column isa chunk)
@@ -84,10 +90,12 @@
 	(solution isa chunk)
 
 	;; Other
+
 	(sketchpad isa chunk)
 	
 	
 	(do-rapm isa rapm-goal
+		 pid nil
 		 step start
 		 direction row
 		 span column
@@ -338,10 +346,6 @@
    
 )
 
-   
-
-
-
 ;; ----------------------------------------------------------------
 ;; Verify rules
 ;; ----------------------------------------------------------------
@@ -553,10 +557,73 @@
    
    +visual-location>
       kind rapm-problem   
+      )
+
+
+;;; ------------------------------------------------------------------
+;;; SOLUTION GENERATION
+;;; ------------------------------------------------------------------
+;;; This is the part where the model identifies a solution
+;;; ------------------------------------------------------------------
+
+
+(p generate*retrieve-solution
+   =goal>
+     step generate
+     pid =PID
+
+   =imaginal>
+     nature missing-cell
+     completed nil
+
+   ?imaginal>
+     state free
+   
+   ?retrieval>
+     buffer empty
+     state free
+==>
+   +retrieval>
+     nature solution
+     pid =PID
+     :recently-retrieved nil
+   =imaginal> ; Keep the imaginal buffer
 )
 
+;;; In order to generate a solution, we need to be able to predict
+;;; a feature based on the value of the same feature across rows or
+;;; columns. To do this, we need again to collect features. 
 
+(p generate*collect-features
+   =goal>
+     step generate
+     routine nil
+   
+   =retrieval>
+     nature solution
+     direction row
 
+==>
+   +visual-location>
+     kind rapm-cell
+     row zero
+     column two
+)     
+     
+(p generate*done
+   "When no more solution rules can be retrieved, we are done"
+   =goal>
+     step generate
+
+   ?retrieval>
+     state error
+==>
+   =goal>
+     step respond
+   
+   ;; Clean-up the retrieval buffer
+   -retrieval>
+)
 ;; ---------------------------------------------------------------- ;;
 ;; FEATURE SELECTION
 ;; ---------------------------------------------------------------- ;;
@@ -635,13 +702,13 @@
      step verify  
 )
 
-;; ----------------------------------------------------------------
-;; Special verification rules
-;; ----------------------------------------------------------------
+;;; ----------------------------------------------------------------
+;;; Special verification rules
+;;; ----------------------------------------------------------------
 
 
 ;;; ------------------------------------------------------------------
-;;; Solution generation
+;;; RESPONSE
 ;;; ------------------------------------------------------------------
 
 (p respond*initiate-response
@@ -673,7 +740,7 @@
      step respond
 
    =visual>
-     isa rapm-choice
+     kind rapm-choice
      id =PID
      
    =retrieval>
@@ -699,7 +766,7 @@
      step respond
 
    =visual>
-     isa rapm-choice
+     kind rapm-choice
      id =PID
      
    ?retrieval>
@@ -743,3 +810,6 @@
   (init (current-device))
   (proc-display)
   (print-visicon))
+
+
+
