@@ -47,6 +47,8 @@
 
 (chunk-type missing-cell kind nature pid) 
 
+(chunk-type feature kind feature)
+
 ;;; Declarative memory
 
 (add-dm (rapm-cell isa chunk)
@@ -94,7 +96,15 @@
 	;; Other
 
 	(sketchpad isa chunk)
-	
+
+	;; Feature chunks
+	(shape-feature isa feature
+		       kind feature
+		       feature shape)
+
+	(number-feature isa feature
+			kind feature
+			feature number)
 	
 	(do-rapm isa rapm-goal
 		 pid nil
@@ -105,19 +115,46 @@
 		 span-num column-num))
 	
 
-;; ---------------------------------------------------------------- ;;
-;; START
-;; ---------------------------------------------------------------- ;;
 
-(p attend-problem
-   =goal>
-      step start
+;;; ---------------------------------------------------------------- ;;
+;;; START
+;;; ---------------------------------------------------------------- ;;
+;;;
+;;; New algorithm:
+;;;   1. Pick a feature.
+;;;   2. If you cannot find a solution associated to that feature,
+;;;      examine the feature (randomly going column or row).
+;;;   3. If you can find a feature, then, check
+;;;      3.1 If it's enough, end
+
+(p start*attend-problem
+   ?goal>
+     buffer empty
+   
    ?visual-location>
       buffer empty
 ==>
    +visual-location>
       kind rapm-problem
 )
+
+
+(p start*create-goal
+   ?goal>
+     buffer empty
+   
+   =visual>
+     kind rapm-problem
+     id =PID
+==>
+   +goal>
+      isa rapm-goal
+      step start
+      kind rapm-problem
+      pid =PID
+   =visual>
+)
+
 
 (p start*retrieve-solution-row
    =goal>
@@ -682,6 +719,55 @@
 ;; ---------------------------------------------------------------- ;;
 
 ;; This is the crucial part.
+
+(p feature*pick-shape
+   "REtrieves a feature"
+   =goal>
+      step examine
+      direction =DIR
+      
+   =visual>
+      shape =S
+            
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     isa feature
+     kind feature
+     feature shape
+     
+   =visual>
+)
+
+
+(p feature*select-feature
+   "Once a feature has been retrieved, select it for examination"
+   =goal>
+      step examine
+      direction =DIR
+   =visual>
+      shape =S
+      row =R      
+   =retrieval>
+      isa feature
+      kind feature
+      feature =FEATURE
+==> 
+   =goal>
+      step find-rule
+
+   =visual>
+      
+   +imaginal>
+      feature =FEATURE
+      direction =DIR
+      value =R
+)
+
+#|
+;; This is the crucial part.
 (p select-feature*shape
    =goal>
       step examine
@@ -725,7 +811,7 @@
       
    =visual>
 )
-
+|#
 
 ;; ----------------------------------------------------------------
 ;; RULE SELECTION
@@ -888,10 +974,12 @@
      isa punch
      hand right
      finger index
+
+   -goal>
 )
   
 (p choice*respond-middle
-   "Responds with index to a cell with column index 0"
+   "Responds with middle finger to a cell with column index 1"
    =goal>
      step respond
  
@@ -910,6 +998,8 @@
      isa punch
      hand right
      finger middle
+     
+   -goal>
 )
 
 
@@ -933,6 +1023,8 @@
      isa punch
      hand right
      finger ring
+     
+   -goal>
 )
 
 (p choice*respond-pinkie
@@ -955,40 +1047,10 @@
      isa punch
      hand right
      finger pinkie
+    
+   -goal>
 )
 
-
-;;; This could be modified so that a fake missing-cell is created
-;;; in the imaginal buffer. This will make the procedure behave the same.
-
-
-#|
-(p choice*respond-randomly
-   "When no solution has been found, pick one at random "
-   =goal>
-     step respond
-
-   =visual>
-     kind rapm-choice
-     id =PID
-     
-   ?retrieval>
-     state error
-   
-   ?manual>
-     preparation free
-     processor free
-     execution free
-
-   ;; This is lame, I know. 
-   !bind! =FINGER (pick '(index middle ring pinkie))
-==>
-   +manual>
-     isa punch
-     hand right
-     finger =FINGER
-)
-|#
 
 (p choice*respond-random
    "When no solution has been found, pick one at random "
@@ -1036,7 +1098,7 @@
    !stop!
 )
 
-(goal-focus do-rapm)
+;(goal-focus do-rapm)
  
 )
 

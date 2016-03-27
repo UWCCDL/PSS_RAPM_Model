@@ -210,13 +210,13 @@
   "Returns the response options available for a trial" 
   (nth 2 trl))
 
-(defun trial-options (trl opts)
+(defun set-trial-options (trl opts)
   "Returns the response options available for a trial" 
   (setf (nth 2 trl) opts))
 
 (defun valid-options? (opt)
   "A list of options is valid if every member is a valid cell" 
-  (every #'valid-cell opt))
+  (every #'valid-cell? opt))
 
 ;;; The correct response
 
@@ -416,7 +416,7 @@
 
 (defmethod device-move-cursor-to ((task rapm-task) pos)
   "Does nothing"
-  (declare (ignore rask))
+  (declare (ignore task))
   nil)
 
 
@@ -609,10 +609,10 @@
     (proc-display :clear t)))
 
 
-(defmethod device-update-attended-loc ((tm list) xyloc)
-  "Updates the attention focus on the window"
-  (when *window*
-    (device-update-attended-loc *window* xyloc)))
+;(defmethod device-update-attended-loc ((tm list) xyloc)
+; "Updates the attention focus on the window"
+;(when *window*
+					; (device-update-attended-loc *window* xyloc)))
 
 
 
