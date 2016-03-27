@@ -45,6 +45,8 @@
 
 (chunk-type rapm-goal step routine pid direction span direction-num span-num)
 
+(chunk-type missing-cell kind nature pid) 
+
 ;;; Declarative memory
 
 (add-dm (rapm-cell isa chunk)
@@ -227,6 +229,7 @@
      preparation free
      processor free
      execution free
+     
 ==>
 
   +manual>
@@ -587,7 +590,7 @@
 
 
 ;;; ------------------------------------------------------------------
-;;; SOLUTION GENERATION
+;;; SOLUTION 
 ;;; ------------------------------------------------------------------
 ;;; This is the part where the model identifies a solution
 ;;; ------------------------------------------------------------------
@@ -755,14 +758,14 @@
 ;;; ----------------------------------------------------------------
 
 
-;;; ------------------------------------------------------------------
+;;; ==================================================================
 ;;; CHOICE
-;;; ------------------------------------------------------------------
+;;; ==================================================================
 ;;; The choice procedure is essentially a hack. The model simply
 ;;; retrieves the generated missing cell. Then, it scans the options.
 ;;; Then it simply retrieves the option that best matches.
 ;;; Crude but should be effective.
-;;;
+;;; ==================================================================
 
 (p choice*initiate-response
    "When the options show up, prepare to respond"
@@ -786,9 +789,8 @@
    =visual>
 )
 
-
-(p choice*find-cell
-   "When the solution has been found, find the corresponding cell "
+(p choice*rehearse-solution
+   "When the solution has been found, put it in the imaginal buffer "
    =goal>
      step respond
 
@@ -799,19 +801,168 @@
    =retrieval>
      nature missing-cell
    
+   ?imaginal>
+     state free
+==>
+   @imaginal> =retrieval>
+
+   +visual-location>
+     kind rapm-cell
+;     phase choice
+     screen-x lowest
+
+)
+
+
+(p choice*scan-options
+   "When we have a solution, scan the available options"
+   =goal>
+     step respond
+
+   =visual>
+     kind rapm-cell
+     phase choice
+        
+   =imaginal>
+     nature missing-cell
+   
+   ?visual>
+     state free  
+==>
+
+   +visual-location>
+     kind rapm-cell
+;     phase choice
+   > screen-x current
+   ;;screen-x lowest
+     :nearest current-x
+       
+   =imaginal>  ; keep the imaginal
+)
+
+(p choice*finish-scanning
+   "When we have scanned all the options, we retrieve the most similar"
+   =goal>
+     step respond
+ 
+   =imaginal>
+     nature missing-cell
+     pid =PID
+   
+   ?visual-location>
+     state error
+   
+   ?retrieval>
+     state free  
+==>
+
+   +retrieval>  
+     kind rapm-cell
+     problem =PID
+     phase choice
+
+   ;; Needs to look at the screen, so that when the
+   ;; pauses show up, they can be encoded. This permits
+   ;; to detect the 'done screen.
+   +visual-location>
+     kind rapm-choice  
+)
+
+(p choice*respond-index
+   "Responds with index to a cell with column index 0"
+   =goal>
+     step respond
+ 
+   =retrieval>  
+     kind rapm-cell
+     phase choice
+     column zero 
+
    ?manual>
      preparation free
      processor free
      execution free
 ==>
-   ;; This is lame 
+   
    +manual>
      isa punch
      hand right
      finger index
 )
+  
+(p choice*respond-middle
+   "Responds with index to a cell with column index 0"
+   =goal>
+     step respond
+ 
+   =retrieval>  
+     kind rapm-cell
+     phase choice
+     column one
+
+   ?manual>
+     preparation free
+     processor free
+     execution free
+==>
+   
+   +manual>
+     isa punch
+     hand right
+     finger middle
+)
 
 
+(p choice*respond-ring
+   "Responds with ring finger to a cell with column index 2"
+   =goal>
+     step respond
+ 
+   =retrieval>  
+     kind rapm-cell
+     phase choice
+     column two
+
+   ?manual>
+     preparation free
+     processor free
+     execution free
+==>
+   
+   +manual>
+     isa punch
+     hand right
+     finger ring
+)
+
+(p choice*respond-pinkie
+   "Responds with pinkie finger to a cell with column index 3"
+   =goal>
+     step respond
+ 
+   =retrieval>  
+     kind rapm-cell
+     phase choice
+     column three
+
+   ?manual>
+     preparation free
+     processor free
+     execution free
+==>
+   
+   +manual>
+     isa punch
+     hand right
+     finger pinkie
+)
+
+
+;;; This could be modified so that a fake missing-cell is created
+;;; in the imaginal buffer. This will make the procedure behave the same.
+
+
+#|
 (p choice*respond-randomly
    "When no solution has been found, pick one at random "
    =goal>
@@ -837,6 +988,40 @@
      hand right
      finger =FINGER
 )
+|#
+
+(p choice*respond-random
+   "When no solution has been found, pick one at random "
+   =goal>
+     step respond
+
+   =visual>
+     kind rapm-choice
+     id =PID
+     
+   ?retrieval>
+     state error
+   
+   ?imaginal>
+     state free
+     buffer empty
+   ?visual>
+     state free  
+==>
+   ;; Create a neutral missing cell, with no expectations      
+   +imaginal>
+     isa missing-cell
+     kind nothing
+     nature missing-cell
+     pid =PID
+     
+   +visual-location>
+     kind rapm-cell
+;     phase choice
+     screen-x lowest
+
+)
+
 
 ;;; ------------------------------------------------------------------
 ;;; DONE!
