@@ -8,10 +8,13 @@
 ;;
 ;;    1. Generate a missing cell when the rule have been found.
 ;;
-;;    2. Decide to examine row or column for a given feature.
+;;    2. [DONE--not pretty] Decide to examine row or column for a given feature.
 ;;
-;;    3. Trigger rewards for new feature with no solution is found.
-;;       Trigger when a new solution is found too.
+;;    3. Trigger rewards for new feature when no solution is found.
+;;       Trigger when a new solution is found too (maybe only when
+;;       solution is found). 
+;;
+;;    4. Identify rules much like features.
 ;;
 
 (clear-all)
@@ -46,7 +49,7 @@
 
 (chunk-type sketchpad nature verified problem)
 
-(chunk-type rapm-goal step routine pid direction span direction-num span-num)
+(chunk-type rapm-goal step routine problem direction span direction-num span-num)
 
 (chunk-type missing-cell kind nature pid) 
 
@@ -54,20 +57,39 @@
 
 (chunk-type solution problem feature rule direction)
 
+;; (chunk-type direction kind direction span direction-num span-num) 
+
 ;;; DECLARATIVE MEMORY
 ;;; 
-;;; A list of chunks in DM
+;;; A list of chunks in DM.
 ;;;
 (add-dm (rapm-cell isa chunk)
 	(rapm-problem isa chunk)
 	(rapm-pause isa chunk)
+	(rapm-choice isa chunk)
 
+	;; The coordinates
+
+	(row0-col0 isa chunk)
+	(row0-col1 isa chunk)
+	(row0-col2 isa chunk)
+	(row1-col0 isa chunk)
+	(row1-col1 isa chunk)
+	(row1-col2 isa chunk)
+	(row2-col0 isa chunk)
+	(row2-col1 isa chunk)
+	(row2-col2 isa chunk)
+	
 	;; Goal states
 
 	(verify isa chunk)
 	(examine isa chunk)
 	(collect isa chunk)
 	(find-rule isa  chunk)
+	(choice isa chunk)
+	(check isa chunk)
+	(start isa chunk)
+	(generate isa chunk)
 
 	;; Simple chunks
 	
@@ -77,8 +99,6 @@
 	(one isa chunk)
 	(two isa chunk)
 	(three isa chunk)
-	(end isa chunk)
-	(start isa chunk)
 	(pause1 isa chunk)
 	(pause2 isa chunk)
 	(done isa chunk)
@@ -114,14 +134,30 @@
 	(number-feature isa feature
 			kind feature
 			feature number)
+	#|
+	(row-direction isa direction
+		       kind direction
+		       direction row
+		       span column
+		       direction-num row-num
+		       span-num column-num)
+
+	(column-direction isa direction
+			  kind direction
+			  direction column
+			  span row
+			  direction-num column-num
+			  span-num row-num)
+	|#
 	
-	(do-rapm isa rapm-goal
-		 pid nil
-		 step start
-		 direction row
-		 span column
-		 direction-num row-num
-		 span-num column-num))
+;	(do-rapm isa rapm-goal
+;		 pid nil
+;		 step start
+;		 direction row
+;		 span column
+;		 direction-num row-num
+;;		 span-num column-num)
+	)
 	
 
 
@@ -381,8 +417,8 @@
    =visual>   
 )
 
-(p check*solution-not-found
-   "If a previous solution cannot be found, initiate the process of finding one"
+(p check*solution-not-found-row
+   "If a previous solution cannot be found, initiate the process of finding one by row"
    =goal>
       step check
       problem =PID
@@ -399,10 +435,42 @@
  ==>
    =goal>
       step find-rule
-      direction row   ;;; THIS NEEDS FIXED
+      direction row   
       span column
       direction-num row-num
       span-num column-num
+      routine collect
+      
+   =imaginal>
+      direction row
+   
+   =visual>   
+
+   -retrieval> ; Clear retrieval error
+)
+
+(p check*solution-not-found-column
+   "If a previous solution cannot be found, initiate the process of finding one by column"
+   =goal>
+      step check
+      problem =PID
+      
+   =visual>
+      kind rapm-cell
+
+   =imaginal>
+      feature =FEATURE
+
+   ?retrieval>
+      state error
+
+ ==>
+   =goal>
+      step find-rule
+      direction column
+      span row
+      direction-num column-num
+      span-num row-num
       routine collect
       
    =imaginal>
@@ -512,7 +580,7 @@
 ;; These are the routines to examine a proposed rule
 ;; ----------------------------------------------------------------
 
-
+#|
 (p examine*examine-pattern
    "Examine a pattern and try to find a rule"
    ?visual>
@@ -539,6 +607,7 @@
     > screen-x current
       screen-x lowest    
 )
+|#
 
 ;;; ----------------------------------------------------------------
 ;;; RULE VERIFICATION
@@ -780,7 +849,7 @@
 (p generate*retrieve-solution
    =goal>
      step generate
-     pid =PID
+     problem =PID
 
    =imaginal>
      nature missing-cell
@@ -795,7 +864,7 @@
 ==>
    +retrieval>
      nature solution
-     pid =PID
+     problem =PID
      :recently-retrieved nil
    =imaginal> ; Keep the imaginal buffer
 )
@@ -954,7 +1023,7 @@
 
    +retrieval>
      nature missing-cell
-     pid =PID
+     problem =PID
    =visual>
 )
 
@@ -1016,7 +1085,7 @@
  
    =imaginal>
      nature missing-cell
-     pid =PID
+     problem =PID
    
    ?visual-location>
      state error
@@ -1158,7 +1227,7 @@
      isa missing-cell
      kind nothing
      nature missing-cell
-     pid =PID
+     problem =PID
      
    +visual-location>
      kind rapm-cell
