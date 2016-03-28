@@ -474,6 +474,8 @@
 	      
 	  (push  `(isa rapm-cell-location 
 		       kind rapm-cell
+		       value ,(intern (format nil "ROW~A-COL~A" i j))
+		       color black
 		       row ,(convert-to-name i)
 		       column ,(convert-to-name j)
 		       row-num ,i

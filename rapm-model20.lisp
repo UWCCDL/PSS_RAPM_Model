@@ -4,18 +4,19 @@
 ;; Lots of things happen. At the top level, the strategy looks like
 ;; this:
 ;;
-;;; To dos:
-;;
-;;    1. Generate a missing cell when the rule have been found.
-;;
-;;    2. Decide to examine row or column for a given feature.
-;;
-;;    3. Trigger rewards for new feature with no solution is found.
-;;       Trigger when a new solution is found too.
-;;
+;;   1. Observe a cell
+;;   2. Find a feature that has not been verified.
+;;   3.   Collect the values of tyhe property across first row/column
+;;   4.   Find a property.
+;;   5.     Find a rule for that property.
+;;          Verify rule on second row/column
+;;             If rule is verified, create a chunk that links feature, direction, and rule. Go
+;;          How do we know that we have examined all the features?
+;;             when we cannot retrieve a single feature, for instance. Or when we cannot retrieve a single feature that has not been examined.
+
+
 
 (clear-all)
-
 (define-model bar
 
 (sgp :style-warnings t :model-warnings t :auto-attend t :er t)
@@ -49,8 +50,6 @@
 (chunk-type missing-cell kind nature pid) 
 
 (chunk-type feature kind feature)
-
-(chunk-type solution problem feature rule direction)
 
 ;;; Declarative memory
 
@@ -129,28 +128,10 @@
 ;;;   1. Pick a feature.
 ;;;   2. If you cannot find a solution associated to that feature,
 ;;;      examine the feature (randomly going column or row).
-;;;   3. If you can find a solution, then, check:
-;;;      3.1 If it's been a long time since you have found a new
-;;;          feature, end
-;;;      3.2 If not, go back to 1
-;;;
-;;;          Pick Feature <------+
-;;;               |              |
-;;;         Find Solution        |
-;;;               |              |
-;;;             Found?           |
-;;;          /         \         |
-;;;        No           Yes     No
-;;;        |             |     /
-;;;    Mark Time      Long time?
-;;;       |                   \  
-;;;   *EXAMINE*               Yes
-;;;                           |
-;;;                         *END*
-;;; ------------------------------------------------------------------
+;;;   3. If you can find a feature, then, check
+;;;      3.1 If it's enough, end
 
 (p start*attend-problem
-   "Attends a problem"
    ?goal>
      buffer empty
    
@@ -174,241 +155,108 @@
       isa rapm-goal
       step start
       kind rapm-problem
-      problem =PID
-      
-   +visual-location>
-      kind rapm-cell
-      screen-x lowest
-      screen-y lowest
+      pid =PID
+   =visual>
 )
 
-;;; ---------------------------------------------------------------- ;;
-;;; 1.1 FEATURE SELECTION
-;;; ---------------------------------------------------------------- ;;
-;;; Here are all the productions that compete for feature selection.
-;;; Feature selection consists of two steps only, picking a feature
-;;; to examine and encoding it into WM.
-;;;
-;;;            Pick Feature
-;;;                 |
-;;;            Encode Feature
-;;;
-;;; ---------------------------------------------------------------- ;;
 
-;; This is the crucial part.
-
-(p feature*pick-shape
-   "REtrieves a feature"
+(p start*retrieve-solution-row
    =goal>
-      step start
-;      direction =DIR
-      
+     step start
+   
    =visual>
-    - shape nil
-            
+     kind rapm-problem
+     id =PID
    ?retrieval>
-     state free
      buffer empty
+     state free
 ==>
-   +retrieval>
-     isa feature
-     kind feature
-     feature shape
-     
-   =visual>
-)
-
-(p feature*dont-pick-shape
-   "REtrieves a feature"
    =goal>
-      step examine
-      direction =DIR
+     direction row
+     span column
+     direction-num row-num
+     span-num column-num
       
-   =visual>
-      shape =S
-            
-   ?retrieval>
-     state free
-     buffer empty
-==>
-   +retrieval>
-     isa feature
-     kind feature
-   - feature shape
-     
-   =visual>
-)
-
-;;; SELECT FEATURE
-;;;
-;;; Once a feature has been selected, encode it and proceed with the next step/
-
-(p feature*encode-feature
-   "Once a feature has been retrieved, select it for examination"
-   =goal>
-      step start
-
-   =visual>
-      shape =S
-      row =R      
-
-   =retrieval>
-      isa feature
-      kind feature
-      feature =FEATURE
-==> 
-   =goal>
-      step check
-
-   =visual>
-      
-   +imaginal>
-      feature =FEATURE
-      value =R
-)
-
-
-;;; ---------------------------------------------------------------- ;;
-;;; 1.2 FEATURE CHECK
-;;; ---------------------------------------------------------------- ;;
-;;; Feature check is the process by which a feature is considered as
-;;; somethinbg to examine. It consists of two steps, retrieving the
-;;; solution for a feature (in a given problem), and deciding what
-;;; to do when the feature has been found:
-;;;
-;;;              Retrieve Solution
-;;;                      |
-;;;               Solution Found?
-;;;                /           \
-;;;              No            Yes
-;;;              /               \
-;;;         *EXAMINE*           Time since last
-;;;                             Examination > 100?
-;;;                               /             \
-;;;                             No              Yes
-;;;                             /                 \
-;;;                          Pick another       *RESPODN*
-;;;                          Feature
-;;;
-;;; ---------------------------------------------------------------- ;;
-
-
-(p check*retrieve-solution-for-feature
-   "Once a feature has been picked, examine whether a solution exists "
-   =goal>
-      step check
-      problem =PID
-      
-   =visual>
-      kind rapm-cell
-
-   ?retrieval>
-     state free
-     buffer empty
-
-   =imaginal>
-      feature =FEATURE
-
- ==>
-   =visual>      ; Keep looking
-   =imaginal>    ; keep in WM
    +retrieval>
      nature solution
      problem =PID
-     feature =FEATURE
-)
-      
-
-(p check*solution-found-and-time-elapsed
-   "If a solution has been found and time has passed, proceed"
-   =goal>
-      step check
-      problem =PID
-      
+     direction row
+  
    =visual>
-      kind rapm-cell
+)
 
-   =retrieval>
-      nature solution
-      problem =PID
-      feature =FEATURE
-
-   =imaginal>
-      feature =FEATURE
-
-   =temporal>
-      isa time
-    > ticks 20   ; Totally random value
- ==>
+(p start*retrieve-solution-column
    =goal>
-      step respond
-
-   +visual-location>
-      kind rapm-problem
+     step start
+     direction =DIR
    
-   -temporal>   ; Stop counting
-)
-
-
-(p check*solution-found-and-time-not-elapsed
-   "If a solution has been found and time has not passed, back to selecting"
-   =goal>
-      step check
-      problem =PID
-      
    =visual>
-      kind rapm-cell
+     kind rapm-problem
+     id =PID
 
    =retrieval>
-      isa solution
-      problem =PID
-      feature =FEATURE
-
-   =imaginal>
-      feature =FEATURE
-
-   =temporal>
-      isa time
-    < ticks 20   ; Totally random value
- ==>
-   =goal>
-      step start
-
-   =visual>   
-)
-
-(p check*solution-not-found
-   "If a previous solution cannot be found, initiate the process of finding one"
-   =goal>
-      step check
-      problem =PID
-      
-   =visual>
-      kind rapm-cell
-
-   =imaginal>
-      feature =FEATURE
+     nature solution
+     direction row
 
    ?retrieval>
-      state error
-
- ==>
+      state free  
+==>
    =goal>
-      step find-rule
-      direction row   ;;; THIS NEEDS FIXED
-      span column
-      direction-num row-num
-      span-num column-num
-      routine collect
-      
-   =imaginal>
-      direction row
-   
-   =visual>   
+     direction column
+     span row
+     direction-num column-num
+     span-num row-num
 
-   -retrieval> ; Clear retrieval error
+   +retrieval>
+     nature solution
+     problem =PID
+     direction column
+  
+   =visual>
 )
 
+(p start*solution-not-found
+   =goal>
+     step start
+     direction =DIR
+     
+   =visual>
+     kind rapm-problem
+     id =PID
+
+   ?retrieval>
+     state error
+==>
+   =goal>
+     step examine
+     routine collect
+   
+   +imaginal>
+     direction =DIR
+   
+   =visual>
+
+   -retrieval>  
+)
+
+(p start*satisfied
+   =goal>
+     step start
+     direction column
+   
+   =visual>
+     kind rapm-problem
+     id =PID
+
+   =retrieval>
+     nature solution
+     direction column
+==>
+   =goal>
+     step respond
+   
+   =visual>
+)   
 
 (p start*respond
    =goal>
@@ -429,6 +277,28 @@
      isa punch
      hand right
      finger index
+)
+
+;;; ----------------------------------------------------------------
+;;; EXAMINE
+;;; ----------------------------------------------------------------
+;;; The examination part is where a feature is selected to collect
+;;; its variation across row or columns.
+;;; ------------------------------------------------------------------
+
+
+(p examine*look-at-cells
+   =goal>
+      step examine
+      routine collect
+      direction =DIR
+   =visual>
+      kind rapm-problem
+==>
+   +visual-location>
+     kind rapm-cell
+     screen-x lowest
+     screen-y lowest
 )
 
 
@@ -534,6 +404,7 @@
       screen-y current
     > screen-x current
       screen-x lowest    
+   
 )
 
 ;;; ----------------------------------------------------------------
@@ -714,7 +585,6 @@
       
    =retrieval>
      rule =SOMETHING
-     feature =FEATURE
      verified nil
 
    =visual>
@@ -739,12 +609,10 @@
       problem =PID
       rule =SOMETHING
       direction =DIR
-      feature =FEATURE
-      focus nil  ;; Remove the 'focus' slot. Makes for cleaner chunks
+      
 )
 
 (p memorize-solution
-   "Memorizes the solution and resets the temporal counter"
    =goal>
      step verify
 
@@ -758,12 +626,8 @@
      step start
    
    +visual-location>
-     kind rapm-cell
-   
-   +temporal>
-     isa time
-     ticks 0
-)
+      kind rapm-problem   
+      )
 
 
 ;;; ------------------------------------------------------------------
@@ -851,6 +715,107 @@
      step respond
 )
 
+
+;; ---------------------------------------------------------------- ;;
+;; FEATURE SELECTION
+;; ---------------------------------------------------------------- ;;
+;; Here are all the productions that compete for feature selection
+;; ---------------------------------------------------------------- ;;
+
+;; This is the crucial part.
+
+(p feature*pick-shape
+   "REtrieves a feature"
+   =goal>
+      step examine
+      direction =DIR
+      
+   =visual>
+      shape =S
+            
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     isa feature
+     kind feature
+     feature shape
+     
+   =visual>
+)
+
+
+(p feature*select-feature
+   "Once a feature has been retrieved, select it for examination"
+   =goal>
+      step examine
+      direction =DIR
+   =visual>
+      shape =S
+      row =R      
+   =retrieval>
+      isa feature
+      kind feature
+      feature =FEATURE
+==> 
+   =goal>
+      step find-rule
+
+   =visual>
+      
+   +imaginal>
+      feature =FEATURE
+      direction =DIR
+      value =R
+)
+
+#|
+;; This is the crucial part.
+(p select-feature*shape
+   =goal>
+      step examine
+      direction =DIR
+   =visual>
+      shape =S
+      row =R
+   ?imaginal>
+      state free   
+==> 
+   =goal>
+      step find-rule
+   
+   +imaginal>
+      feature shape
+      direction =DIR
+      value =R
+      
+   =visual>
+)
+
+
+(p select-feature*number
+   =goal>
+      step examine
+      direction =DIR
+      
+   =visual>
+      number =N
+      row =R
+   ?imaginal>
+      state free   
+==> 
+   =goal>
+      step find-rule
+   
+   +imaginal>
+      feature number
+      direction =DIR
+      value =R
+      
+   =visual>
+)
+|#
 
 ;; ----------------------------------------------------------------
 ;; RULE SELECTION
@@ -1137,8 +1102,9 @@
    !stop!
 )
 
+;(goal-focus do-rapm)
  
-)  ; End of the Model
+)
 
 
 (defun my-reload ()
