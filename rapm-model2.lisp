@@ -22,8 +22,10 @@
   
 (sgp :trace-filter production-firing-only)
 
-;; Chnunk types. Not needed, technically, but save lots of warnings.
-
+;;; CHUNK TYPES
+;;;
+;;; Chnunk types. Not needed... but they save lots of warnings.
+;;;
 (chunk-type (rapm-screen (:include visual-object))
 	    kind id)
 
@@ -52,8 +54,10 @@
 
 (chunk-type solution problem feature rule direction)
 
-;;; Declarative memory
-
+;;; DECLARATIVE MEMORY
+;;; 
+;;; A list of chunks in DM
+;;;
 (add-dm (rapm-cell isa chunk)
 	(rapm-problem isa chunk)
 	(rapm-pause isa chunk)
@@ -878,6 +882,27 @@
      step verify  
 )
 
+(p propose*rule-progression
+   "Rule to be suggested when a feauture remains the same"
+   =goal>
+     step find-rule
+
+   =imaginal>
+     zero =P
+     one =P
+     two =P
+     rule nil
+==>
+   =imaginal>
+     rule same
+   
+   =goal>
+     step verify  
+)
+
+
+
+
 ;;; ----------------------------------------------------------------
 ;;; Special verification rules
 ;;; ----------------------------------------------------------------
@@ -889,7 +914,22 @@
 ;;; The choice procedure is essentially a hack. The model simply
 ;;; retrieves the generated missing cell. Then, it scans the options.
 ;;; Then it simply retrieves the option that best matches.
-;;; Crude but should be effective.
+;;; Crude, but should be effective.
+;;;
+;;;                         Initiate response
+;;;                                |
+;;;                        Hold on to solution
+;;;                                |
+;;;                       Scan next option cell <-----+
+;;;                                |                  |
+;;;                           Option found? -- (Yes) -+
+;;;                                |
+;;;                              (No)
+;;;                                |
+;;;                     Retrieve best option
+;;;                      /      /   \      \
+;;;                  Press  Press   Press   Press
+;;;                  Index  Middle   Ring   Pinkie
 ;;; ==================================================================
 
 (p choice*initiate-response
@@ -904,6 +944,10 @@
    ?retrieval>
      buffer empty
      state free
+   ?manual>
+     preparation free
+     processor free
+     execution free
  ==>
 ;   =goal>
 ;     step respond
@@ -914,7 +958,7 @@
    =visual>
 )
 
-(p choice*rehearse-solution
+(p choice*hold-on-to-solution
    "When the solution has been found, put it in the imaginal buffer "
    =goal>
      step respond
@@ -965,7 +1009,7 @@
    =imaginal>  ; keep the imaginal
 )
 
-(p choice*finish-scanning
+(p choice*retrieve-best-option
    "When we have scanned all the options, we retrieve the most similar"
    =goal>
      step respond
@@ -1141,12 +1185,13 @@
 )  ; End of the Model
 
 
-(defun my-reload ()
+;;; RAPM-RELOAD
+;;;
+;;; Quick reload function that also installs and sets the device properly. 
+;;;
+(defun rapm-reload ()
   (reload)
   (install-device (make-instance 'rapm-task))
   (init (current-device))
   (proc-display)
   (print-visicon))
-
-
-
