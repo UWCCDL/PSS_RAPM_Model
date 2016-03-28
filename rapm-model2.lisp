@@ -227,18 +227,21 @@
 ;;; ---------------------------------------------------------------- ;;
 ;;; Here are all the productions that compete for feature selection.
 ;;; Feature selection consists of two steps only, picking a feature
-;;; to examine and encoding it into WM.
+;;; to examine and encoding it into WM. The process of picking a
+;;; feature consists of multiple Pick/Don't Pick productions, one
+;;; pair for each feature.
 ;;;
-;;;            Pick Feature
-;;;                 |
-;;;            Encode Feature
+;;;   Pick    Don't   Pick  Don't  Pick   ... Don't
+;;;   Shape   Shape   Num   Num    ...        ...
+;;;       \      \    \    /     /          /
+;;;          Encode The Selected Feature
 ;;;
 ;;; ---------------------------------------------------------------- ;;
 
 ;; This is the crucial part.
 
 (p feature*pick-shape
-   "REtrieves a feature"
+   "Retrieves a feature"
    =goal>
       step start
 ;      direction =DIR
@@ -259,7 +262,7 @@
 )
 
 (p feature*dont-pick-shape
-   "REtrieves a feature"
+   "Retrieves a feature"
    =goal>
       step examine
       direction =DIR
@@ -316,18 +319,18 @@
 ;;; solution for a feature (in a given problem), and deciding what
 ;;; to do when the feature has been found:
 ;;;
-;;;              Retrieve Solution
+;;;         Retrieve Solution with Feature
 ;;;                      |
 ;;;               Solution Found?
 ;;;                /           \
-;;;              No            Yes
+;;;             (No)          (Yes)
 ;;;              /               \
-;;;         *EXAMINE*           Time since last
-;;;                             Examination > 100?
+;;;         *EXAMINE*           Is time since last
+;;;                             examination > 20?
 ;;;                               /             \
-;;;                             No              Yes
+;;;                            (No)            (Yes)
 ;;;                             /                 \
-;;;                          Pick another       *RESPODN*
+;;;                          Try another       *GENERATE SOLUTION*
 ;;;                          Feature
 ;;;
 ;;; ---------------------------------------------------------------- ;;
@@ -409,7 +412,7 @@
 
    =temporal>
       isa time
-    < ticks 20   ; Totally random value
+    < ticks 20   ; Totally random value! What does it translate to?
  ==>
    =goal>
       step start
@@ -574,40 +577,6 @@
    
 )
 
-;; ----------------------------------------------------------------
-;; RULE FINDING
-;; ----------------------------------------------------------------
-;; These are the routines to examine a proposed rule
-;; ----------------------------------------------------------------
-
-#|
-(p examine*examine-pattern
-   "Examine a pattern and try to find a rule"
-   ?visual>
-   state free;
-   
-   =visual>
-      kind rapm-cell
-      row =R
-      column =C
-      =F =VAL
-
-   =imaginal>
-      direction row
-      value =R
-      feature =F
-      =C nil
-      two =VAL
-==>
-   =imaginal>
-      =C =VAL
-   
-   +visual-location>
-      screen-y current
-    > screen-x current
-      screen-x lowest    
-)
-|#
 
 ;;; ----------------------------------------------------------------
 ;;; RULE VERIFICATION
@@ -615,7 +584,7 @@
 ;;; A rule is verified when it is consistent with the features of
 ;;; three cells. The verification process roughly follows this
 ;;; algorithm:
-;;;   1. Move the tenativ solution (contents of the imaginal buffer)
+;;;   1. Move the tenative solution (contents of the imaginal buffer)
 ;;;      to the retrieval. This free the resources for the imaginal.
 ;;;   2. Scan the first row, cell by cell.
 ;;;   3. For each cell a special 'verify*RULE' production should be
@@ -840,11 +809,11 @@
 
 
 ;;; ------------------------------------------------------------------
-;;; SOLUTION 
+;;; GENERATE MISSING CELL 
 ;;; ------------------------------------------------------------------
-;;; This is the part where the model identifies a solution
+;;; This is the part where the model generates a hypothetical
+;;; missing cell, based on the partial solutions identified so far.
 ;;; ------------------------------------------------------------------
-
 
 (p generate*retrieve-solution
    =goal>
@@ -873,10 +842,10 @@
 ;;; a feature based on the value of the same feature across rows or
 ;;; columns. To do this, we need again to collect features. 
 
-(p generate*collect-features
+(p generate*collect-features-by-row
    =goal>
      step generate
-     routine nil
+     routine collect
    
    =retrieval>
      nature solution
@@ -885,10 +854,27 @@
 ==>
    +visual-location>
      kind rapm-cell
+     row two
+     column zero
+)     
+
+(p generate*collect-features-by-column
+   =goal>
+     step generate
+     routine collect
+   
+   =retrieval>
+     nature solution
+     direction column
+
+==>
+   +visual-location>
+     kind rapm-cell
      row zero
      column two
 )     
-     
+
+
 (p generate*done
    "When no more solution rules can be retrieved, we are done"
    =goal>
@@ -995,7 +981,7 @@
 ;;;                                |
 ;;;                              (No)
 ;;;                                |
-;;;                     Retrieve best option
+;;;                      Retrieve best option
 ;;;                      /      /   \      \
 ;;;                  Press  Press   Press   Press
 ;;;                  Index  Middle   Ring   Pinkie
@@ -1102,6 +1088,7 @@
    ;; Needs to look at the screen, so that when the
    ;; pauses show up, they can be encoded. This permits
    ;; to detect the 'done screen.
+     
    +visual-location>
      kind rapm-choice  
 )
@@ -1242,7 +1229,7 @@
 ;;; ------------------------------------------------------------------
 
 (p done
-   "Neatly stops when the screen says 'done"
+   "Neatly stops ACT-R when the screen says 'done"
    =visual>
      kind rapm-pause
      value done
