@@ -6,7 +6,7 @@
 ;;
 ;;; To dos:
 ;;
-;;    1. Generate a missing cell when the rule have been found.
+;;    1. [DONE] Generate a missing cell when the rule have been found.
 ;;
 ;;    2. [DONE--not pretty] Decide to examine row or column for a given feature.
 ;;
@@ -16,12 +16,14 @@
 ;;
 ;;    4. Identify rules much like features.
 ;;
+;;    5. Add a consistent set of rules
+;;
 
 (clear-all)
 
 (define-model bar
 
-(sgp :style-warnings t :model-warnings t :auto-attend t :er t :record-ticks nil :esc t :mas 8.0)
+(sgp :style-warnings t :model-warnings t :auto-attend t :er t :record-ticks nil :esc t :mas 8.0 :blc 100.0 :lf 0.01)
   
 ;(sgp :trace-filter production-firing-only)
 
