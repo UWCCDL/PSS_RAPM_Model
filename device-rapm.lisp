@@ -5,7 +5,6 @@
 ;;; version of Raven's Advanced Progressive Matrices
 ;;; ------------------------------------------------------------------
 
-(load "rapm-problems.lisp")
 
 (defun act-r-loaded? ()
   "Cheap hack to check whether ACTR is loaded"
@@ -392,7 +391,8 @@
 	(set-trial-actual-response trial response))
       
       ;; If ACT-R is loaded, we need to record response times
-      ;; and sync the visicon 
+      ;; and sync the visicon
+      
       (when (act-r-loaded?)
 	(let ((tme (mp-time)))
 	  (cond ((equal (task-phase task) 'problem)
@@ -471,23 +471,23 @@
       (dotimes (j 3)
 	(let* ((cell (problem-cell problem i j))
 	       (feature-slots (generate-feature-slots cell)))
-	      
-	  (push  `(isa rapm-cell-location 
-		       kind rapm-cell
-		       value ,(intern (format nil "ROW~A-COL~A" i j))
-		       color black
-		       row ,(convert-to-name i)
-		       column ,(convert-to-name j)
-		       row-num ,i
-		       column-num ,j
-		       screen-x ,(* j 200)
-		       screen-y ,(* i 200)
-		       problem ,pid
-		       height 200 
-		       width 200
-		       ,@cell
-		       ,@feature-slots)
-		 results))))
+	  (unless (null cell)  ; Unless we ar in the missing cell	
+	    (push  `(isa rapm-cell-location 
+			 kind rapm-cell
+			 value ,(intern (format nil "ROW~A-COL~A" i j))
+			 color black
+			 row ,(convert-to-name i)
+			 column ,(convert-to-name j)
+			 row-num ,i
+			 column-num ,j
+			 screen-x ,(* j 200)
+			 screen-y ,(* i 200)
+			 problem ,pid
+			 height 200 
+			 width 200
+			 ,@cell
+			 ,@feature-slots)
+		   results)))))
     
     ;; Now the problem  
 
@@ -563,9 +563,12 @@
 		  (r (convert-to-number row))
 		  (c (convert-to-number column))
 		  (pid (chunk-slot-value-fct vis-loc 'problem))
-		  (cell (problem-cell (trial-problem trial)
-				      r
-				      c))
+		  (cell (if (equal (task-phase task)
+				   'problem)
+			    (problem-cell (trial-problem trial)
+					  r
+					  c)
+			    (nth c trial-options trial)))
 		  (feature-slots (generate-feature-slots cell)))
 	     (setf new-chunk
 		   (first (define-chunks-fct 
@@ -610,6 +613,30 @@
     (next tm)
     (proc-display :clear t)))
 
+(defun predict-feature-value (&rest params)
+  "Quick and dirty prediction of various properties"
+  (declare (ignore params))
+  (let* ((rule (first (no-output (buffer-chunk-fct '(retrieval)))))
+	 (rule-name (chunk-slot-value-fct rule 'rule))
+	 (rule-feature (chunk-slot-value-fct rule 'feature))
+	 (current (first (no-output (buffer-chunk-fct '(imaginal)))))
+	 (predicted-value nil))
+    
+    ;; If the rule is "Same", then simply copy the value of the pattern 
+
+    (cond ((equal rule-name 'same)
+	   (let ((value (chunk-slot-value-fct current 'zero)))
+	     (setf predicted-value value))))
+
+    ;; Once the feature has been predicted, it will be set in the 
+    ;; missing cell slot.
+    
+    (set-chunk-slot-value-fct current rule-feature predicted-value)
+					;    (format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a" current rule-feature predicted-value rule-name)
+    ;; Removes all the irrelevant slots
+    (mod-chunk-fct current '(zero nil one nil direction nil value nil)) 
+    (set-imaginal-free)))
+    ;(schedule-event-relative 0.2 #'set-imaginal-free :params nil)))
 
 ;(defmethod device-update-attended-loc ((tm list) xyloc)
 ; "Updates the attention focus on the window"
@@ -632,3 +659,4 @@
 ;		(format file "~{~a~^, ~}~%" row)))))
 
      
+(load "rapm-problems.lisp")

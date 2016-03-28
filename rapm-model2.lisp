@@ -21,9 +21,9 @@
 
 (define-model bar
 
-(sgp :style-warnings t :model-warnings t :auto-attend t :er t)
+(sgp :style-warnings t :model-warnings t :auto-attend t :er t :record-ticks nil :esc t :mas 8.0)
   
-(sgp :trace-filter production-firing-only)
+;(sgp :trace-filter production-firing-only)
 
 ;;; CHUNK TYPES
 ;;;
@@ -55,7 +55,7 @@
 
 (chunk-type feature kind feature)
 
-(chunk-type solution problem feature rule direction)
+(chunk-type solution problem feature rule direction predicted-value)
 
 ;; (chunk-type direction kind direction span direction-num span-num) 
 
@@ -134,29 +134,6 @@
 	(number-feature isa feature
 			kind feature
 			feature number)
-	#|
-	(row-direction isa direction
-		       kind direction
-		       direction row
-		       span column
-		       direction-num row-num
-		       span-num column-num)
-
-	(column-direction isa direction
-			  kind direction
-			  direction column
-			  span row
-			  direction-num column-num
-			  span-num row-num)
-	|#
-	
-;	(do-rapm isa rapm-goal
-;		 pid nil
-;		 step start
-;		 direction row
-;		 span column
-;		 direction-num row-num
-;;		 span-num column-num)
 	)
 	
 
@@ -384,12 +361,14 @@
     > ticks 20   ; Totally random value
  ==>
    =goal>
-      step respond
+   ;;step respond
+     step generate
 
    +visual-location>
       kind rapm-problem
-   
+
    -temporal>   ; Stop counting
+   !eval! (reset-declarative-finsts)   
 )
 
 
@@ -417,7 +396,8 @@
    =goal>
       step start
 
-   =visual>   
+   =visual>
+   !eval! (reset-declarative-finsts)   
 )
 
 (p check*solution-not-found-row
@@ -504,6 +484,7 @@
      isa punch
      hand right
      finger index
+  -temporal>
 )
 
 
@@ -815,6 +796,51 @@
 ;;; missing cell, based on the partial solutions identified so far.
 ;;; ------------------------------------------------------------------
 
+(p generate*init
+   "Prepare the imaginal buffer to generate a predicted missing cell"   
+   =goal>
+     step generate
+     problem =PID
+     
+   ?imaginal>
+     state free
+     buffer empty
+     
+ ==>
+   +imaginal>
+     nature missing-cell
+     problem =PID
+     completed nil     
+)
+
+(p generate*retrieve-solution
+   "Prepare the imaginal buffer to generate a predicted missing cell"   
+   =goal>
+     step generate
+     problem =PID
+     
+   =imaginal>
+     nature missing-cell
+     completed nil
+     
+   ?retrieval>
+     buffer empty
+     state free
+==>
+   =imaginal>
+      
+   +retrieval>
+     nature solution
+     problem =PID
+     :recently-retrieved nil
+
+   +temporal>
+     isa time
+     ticks 0
+)
+
+
+#| 
 (p generate*retrieve-solution
    =goal>
      step generate
@@ -824,6 +850,9 @@
      nature missing-cell
      completed nil
 
+   ?visual>
+     state free
+   
    ?imaginal>
      state free
    
@@ -831,13 +860,10 @@
      buffer empty
      state free
 ==>
-   +retrieval>
-     nature solution
-     problem =PID
-     :recently-retrieved nil
+;     :recently-retrieved nil
    =imaginal> ; Keep the imaginal buffer
 )
-
+|#
 ;;; In order to generate a solution, we need to be able to predict
 ;;; a feature based on the value of the same feature across rows or
 ;;; columns. To do this, we need again to collect features. 
@@ -845,13 +871,27 @@
 (p generate*collect-features-by-row
    =goal>
      step generate
-     routine collect
-   
+     routine nil
+     
    =retrieval>
      nature solution
      direction row
+     feature =FEATURE
 
-==>
+   =imaginal>
+     nature missing-cell
+
+ ==>
+   =goal>
+     routine collect
+   
+   =imaginal>
+     feature =FEATURE
+     direction row
+     value two
+     
+   =retrieval>
+
    +visual-location>
      kind rapm-cell
      row two
@@ -861,20 +901,61 @@
 (p generate*collect-features-by-column
    =goal>
      step generate
+     routine nil
+     
+   =retrieval>
+     nature solution
+     direction column
+     feature =FEATURE
+
+   =imaginal>
+     nature missing-cell
+
+==>
+   =goal>
+     routine collect
+     
+  =imaginal>
+     feature =FEATURE
+     direction column
+     value two
+     
+  =retrieval>
+
+  +visual-location>
+     kind rapm-cell
+     row zero
+     column two
+    
+)     
+
+(p generate*predict-feature-value
+   =goal>
+     step generate
      routine collect
    
    =retrieval>
      nature solution
-     direction column
+     ;direction column
+     feature =FEATURE
 
-==>
-   +visual-location>
-     kind rapm-cell
-     row zero
-     column two
-)     
+   ;=imaginal>
+   ;  nature missing-cell
 
-
+   ?imaginal>
+     state free
+   
+   ?visual-location>
+     state error
+ ==>
+   ;=imaginal>
+   =goal>
+     routine nil
+   
+   +imaginal-action>
+     action predict-feature-value  
+)
+     
 (p generate*done
    "When no more solution rules can be retrieved, we are done"
    =goal>
@@ -894,6 +975,7 @@
    =imaginal>
      completed yes  
    ;; Clean-up the retrieval buffer
+     
    -retrieval>
 )
 
@@ -908,6 +990,9 @@
 ==>
    =goal>
      step respond
+
+   +visual-location>
+     kind rapm-problem  
 )
 
 
@@ -934,9 +1019,11 @@
      rule same
    
    =goal>
-     step verify  
+     step verify
+     routine nil
 )
 
+#|
 (p propose*rule-progression
    "Rule to be suggested when a feauture remains the same"
    =goal>
@@ -952,16 +1039,10 @@
      rule same
    
    =goal>
-     step verify  
+     step verify
+     routine nil
 )
-
-
-
-
-;;; ----------------------------------------------------------------
-;;; Special verification rules
-;;; ----------------------------------------------------------------
-
+|#
 
 ;;; ==================================================================
 ;;; CHOICE
@@ -989,8 +1070,8 @@
 
 (p choice*initiate-response
    "When the options show up, prepare to respond"
-;   =goal>
-;   - step respond
+   =goal>
+     step respond
 
    =visual>
      kind rapm-choice
@@ -999,13 +1080,14 @@
    ?retrieval>
      buffer empty
      state free
+     
    ?manual>
      preparation free
      processor free
      execution free
  ==>
-;   =goal>
-;     step respond
+   =goal>
+     step choice
 
    +retrieval>
      nature missing-cell
@@ -1016,7 +1098,7 @@
 (p choice*hold-on-to-solution
    "When the solution has been found, put it in the imaginal buffer "
    =goal>
-     step respond
+     step choice
 
    =visual>
      kind rapm-choice
@@ -1028,7 +1110,7 @@
    ?imaginal>
      state free
 ==>
-   @imaginal> =retrieval>
+   @imaginal> =retrieval
 
    +visual-location>
      kind rapm-cell
@@ -1041,7 +1123,7 @@
 (p choice*scan-options
    "When we have a solution, scan the available options"
    =goal>
-     step respond
+     step choice
 
    =visual>
      kind rapm-cell
@@ -1067,7 +1149,7 @@
 (p choice*retrieve-best-option
    "When we have scanned all the options, we retrieve the most similar"
    =goal>
-     step respond
+     step choice
  
    =imaginal>
      nature missing-cell
@@ -1079,6 +1161,7 @@
    ?retrieval>
      state free  
 ==>
+   =imaginal>
 
    +retrieval>  
      kind rapm-cell
@@ -1096,8 +1179,11 @@
 (p choice*respond-index
    "Responds with index to a cell with column index 0"
    =goal>
-     step respond
- 
+     step choice
+
+   =imaginal>
+     nature missing-cell
+   
    =retrieval>  
      kind rapm-cell
      phase choice
@@ -1120,8 +1206,11 @@
 (p choice*respond-middle
    "Responds with middle finger to a cell with column index 1"
    =goal>
-     step respond
- 
+     step choice
+
+   =imaginal>
+     nature missing-cell
+
    =retrieval>  
      kind rapm-cell
      phase choice
@@ -1145,8 +1234,12 @@
 (p choice*respond-ring
    "Responds with ring finger to a cell with column index 2"
    =goal>
-     step respond
- 
+     step choice
+
+   =imaginal>
+     nature missing-cell
+
+     
    =retrieval>  
      kind rapm-cell
      phase choice
@@ -1169,8 +1262,11 @@
 (p choice*respond-pinkie
    "Responds with pinkie finger to a cell with column index 3"
    =goal>
-     step respond
+     step choice
  
+   =imaginal>
+     nature missing-cell
+     
    =retrieval>  
      kind rapm-cell
      phase choice
@@ -1194,7 +1290,7 @@
 (p choice*respond-random
    "When no solution has been found, pick one at random "
    =goal>
-     step respond
+     step choice
 
    =visual>
      kind rapm-choice
