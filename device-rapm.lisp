@@ -349,12 +349,13 @@
 	      (experiment-log task))
 	(setf (current-trial task) nil)
 
-	;; If we are out of problem, the next phase is 'done.
+	;; If we are out of problems, the next phase is 'done.
 	;; Otherwise, we simply update the current problem 
 
 	(if (>= (index task) (length (trials task)))
 	    (setf next-phase 'done)
-	    (setf (current-trial task) (nth (index task) (trials task)))))
+	    (setf (current-trial task)
+		  (make-trial (nth (index task) (trials task))))))
 	   
       ;; Now, we can update the phase safely
 
@@ -568,7 +569,7 @@
 			    (problem-cell (trial-problem trial)
 					  r
 					  c)
-			    (nth c trial-options trial)))
+			    (nth c (trial-options trial))))
 		  (feature-slots (generate-feature-slots cell)))
 	     (setf new-chunk
 		   (first (define-chunks-fct 
@@ -632,9 +633,9 @@
     ;; missing cell slot.
     
     (set-chunk-slot-value-fct current rule-feature predicted-value)
-					;    (format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a" current rule-feature predicted-value rule-name)
+    (format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a" current rule-feature predicted-value rule-name)
     ;; Removes all the irrelevant slots
-    (mod-chunk-fct current '(zero nil one nil direction nil value nil)) 
+    (mod-chunk-fct current '(zero nil one nil direction nil value nil feature nil)) 
     (set-imaginal-free)))
     ;(schedule-event-relative 0.2 #'set-imaginal-free :params nil)))
 

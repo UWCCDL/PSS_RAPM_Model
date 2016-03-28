@@ -14,18 +14,32 @@
 ;;       Trigger when a new solution is found too (maybe only when
 ;;       solution is found). 
 ;;
-;;    4. Identify rules much like features.
+;;    4. Identify rules much like features. This likely requires
+;;       Some lisp code on the side. Some ideas are there. 
 ;;
 ;;    5. Add a consistent set of rules
+;;
+;;; Bugs:
+;;
+;;;   1. Sometimes evaluation of a second solution fails.
 ;;
 
 (clear-all)
 
 (define-model bar
 
-(sgp :style-warnings t :model-warnings t :auto-attend t :er t :record-ticks nil :esc t :mas 8.0 :blc 100.0 :lf 0.01)
+(sgp :style-warnings t
+     :model-warnings t
+     :auto-attend t
+     :er t
+     :record-ticks nil
+     :esc t
+     :mas 8.0
+     :blc 100.0  ;; Assumes all chunks are incredibly active
+     :lf 0.01
+;;     :trace-filter production-firing-only
+     )
   
-;(sgp :trace-filter production-firing-only)
 
 ;;; CHUNK TYPES
 ;;;
@@ -136,6 +150,10 @@
 	(number-feature isa feature
 			kind feature
 			feature number)
+
+	(texture-feature isa feature
+			 kind feature
+			 feature texture)
 	)
 	
 
@@ -223,7 +241,6 @@
    "Retrieves a feature"
    =goal>
       step start
-;      direction =DIR
       
    =visual>
     - shape nil
@@ -243,8 +260,7 @@
 (p feature*dont-pick-shape
    "Retrieves a feature"
    =goal>
-      step examine
-      direction =DIR
+      step start
       
    =visual>
       shape =S
@@ -261,7 +277,89 @@
    =visual>
 )
 
-;;; SELECT FEATURE
+(p feature*pick-number
+   "Retrieves a feature"
+   =goal>
+      step start
+      
+   =visual>
+    - number nil
+            
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     isa feature
+     kind feature
+     feature number
+     
+   =visual>
+)
+
+(p feature*dont-pick-number
+   "Retrieves a feature that is not number"
+   =goal>
+      step start
+      
+   =visual>
+      shape =S
+            
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     isa feature
+     kind feature
+   - feature number
+     
+   =visual>
+)
+
+
+(p feature*pick-texture
+   "Selects the 'texture' feature"
+   =goal>
+      step start
+      
+   =visual>
+    - texture nil
+            
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     isa feature
+     kind feature
+     feature texture
+     
+   =visual>
+)
+
+(p feature*dont-pick-texture
+   "Retrieves a feature"
+   =goal>
+      step start
+      
+   =visual>
+    - texture nil
+            
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     isa feature
+     kind feature
+   - feature texture
+     
+   =visual>
+)
+
+
+;;; Encode FEATURE
 ;;;
 ;;; Once a feature has been selected, encode it and proceed with the next step/
 
@@ -325,8 +423,8 @@
       kind rapm-cell
 
    ?retrieval>
-     state free
-     buffer empty
+      state free
+      buffer empty
 
    =imaginal>
       feature =FEATURE
@@ -360,7 +458,7 @@
 
    =temporal>
       isa time
-    > ticks 20   ; Totally random value
+    > ticks 30   ; Totally random value
  ==>
    =goal>
    ;;step respond
@@ -393,7 +491,7 @@
 
    =temporal>
       isa time
-    < ticks 20   ; Totally random value! What does it translate to?
+    < ticks 30   ; Totally random value! What does it translate to?
  ==>
    =goal>
       step start
@@ -425,6 +523,7 @@
       direction-num row-num
       span-num column-num
       routine collect
+      value zero
       
    =imaginal>
       direction row
@@ -434,6 +533,8 @@
    -retrieval> ; Clear retrieval error
 )
 
+;;; Temporarily disabled --- need to arrange more rules before getting into this.
+#|
 (p check*solution-not-found-column
    "If a previous solution cannot be found, initiate the process of finding one by column"
    =goal>
@@ -459,13 +560,13 @@
       routine collect
       
    =imaginal>
-      direction row
+      direction column
    
    =visual>   
 
    -retrieval> ; Clear retrieval error
 )
-
+|#
 
 (p start*respond
    =goal>
@@ -768,7 +869,7 @@
       focus nil  ;; Remove the 'focus' slot. Makes for cleaner chunks
 )
 
-(p memorize-solution
+(p verify*memorize-solution
    "Memorizes the solution and resets the temporal counter"
    =goal>
      step verify
@@ -781,9 +882,12 @@
 ==>
    =goal>
      step start
-   
+
+   ;; Moves attention to the first cell
    +visual-location>
      kind rapm-cell
+     row zero
+     column zero
    
    +temporal>
      isa time
@@ -810,6 +914,7 @@
      
  ==>
    +imaginal>
+     isa missing-cell
      nature missing-cell
      problem =PID
      completed nil     
