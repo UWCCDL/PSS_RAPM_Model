@@ -648,14 +648,21 @@
 				(chunk-slot-value-fct rule 'one)
 				(chunk-slot-value-fct rule 'two)))
 		  (odd-man-out (first (set-difference in-the-rule current-row))))
-	     (setf predicted-value odd-man-out))))
+	     (setf predicted-value odd-man-out)))
+
+	  ((equal rule-name 'progression)
+	   ;; In case of a progression, we should do better, but we are treating
+	   ;; it like a 'constant' set of values.
+	   (let ((value (chunk-slot-value-fct rule 'two)))
+	     (setf predicted-value value))))
+
 		  
     ;; Once the feature has been predicted, it will be set in the 
     ;; missing cell slot.
     
     (set-chunk-slot-value-fct current rule-feature predicted-value)
-    ;(format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a"
-    ;current rule-feature predicted-value rule-name)
+    (format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a"
+	    current rule-feature predicted-value rule-name)
 
     ;; Removes all the irrelevant slots
     (mod-chunk-fct current '(zero nil one nil direction nil value nil feature nil)) 

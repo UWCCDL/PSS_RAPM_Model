@@ -413,14 +413,14 @@
    =goal>
       step start
 
-   =visual>
-      shape =S
-      row =R      
-
    =retrieval>
       isa feature
       kind feature
       feature =FEATURE
+
+   =visual>
+    - =FEATURE nil     
+      row =R      
 ==> 
    =goal>
       step check
@@ -430,6 +430,24 @@
    +imaginal>
       feature =FEATURE
       value =R
+)
+
+(p feature*discard-garbage
+   "Just in case we have picked the wrong feature, discard it"
+   =goal>
+      step start
+
+   =retrieval>
+      isa feature
+      kind feature
+      feature =FEATURE
+
+   =visual>
+     =FEATURE nil     
+      row =R      
+==>
+   =visual>      
+   -retrieval>      
 )
 
 
@@ -825,9 +843,9 @@
      step find-rule
 
    =imaginal>
-     zero =P
-     one =P
-     two =P
+   - zero nil
+   - one nil
+   - two nil
      rule nil
      
    =retrieval>
@@ -873,6 +891,7 @@
    =imaginal>
       rule =SOMETHING
       verified nil
+      
    ?imaginal>
       state free   
 ==>
@@ -889,9 +908,8 @@
       column zero
 )
 
-;; This is a bogus production. Will always verify everything
-;;
-(p verify*verify-cell-bogus
+
+(p verify*verify-cell
    =goal>
      step verify
      direction =DIR
@@ -900,10 +918,12 @@
    =retrieval>
      rule =SOMETHING
      verified nil
+     feature =FEATURE
 
    =visual>
      kind rapm-cell
      =INDEX =VAL
+     =FEATURE =X
 
    =imaginal>
      focus =VAL
@@ -923,6 +943,7 @@
    +imaginal-action>
      action verify-current-value  
    =imaginal>
+     =VAL =X  
    =retrieval>
    =visual>
 )
@@ -1149,7 +1170,9 @@
      isa missing-cell
      nature missing-cell
      problem =PID
-     completed nil     
+     completed nil
+  !eval! (reset-declarative-finsts)   
+
 )
 
 (p generate*retrieve-solution

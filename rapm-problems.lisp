@@ -89,6 +89,7 @@
 	  (shape triangle number 3 texture solid)
 	  (shape diamond number 4 texture solid))))
 
+;; Two features, two rules
 
 (defparameter *simple-problem-2-rules*
   '(((number 1 shape triangle)
@@ -102,6 +103,14 @@
     ((number 1 shape circle)
      (number 2 shape circle)
      nil)))
+
+(defparameter  *simple-trial-2-rules*
+  (list *simple-problem-2-rules*
+	'(shape circle number 3)
+	'((shape circle number 3)
+	  (shape square number 2)
+	  (shape triangle number 1)
+	  (shape diamond number 3))))
 
 
 (defparameter *test-trial*
@@ -132,5 +141,7 @@
 ;(defparameter *trials* (mapcar #'make-trial
 ;			       (list *simple-trial* *simple-trial-2*)))
 
+;(defparameter *trials* (mapcar #'make-trial
+;			       (list *simple-trial-3-features*)))
 (defparameter *trials* (mapcar #'make-trial
-			       (list *simple-trial-3-features*)))
+			       (list *simple-trial-2-rules*)))
