@@ -19,7 +19,7 @@
 ;;
 ;;    5. [Done---Four rules] Add a consistent set of rules. 
 ;;
-;;    6. Add serious verification rules
+;;    6. [Done] Add serious verification rules
 ;;
 ;;    7. [Done---four rule] Add larger set of generation rules for missing cell.  
 ;;
