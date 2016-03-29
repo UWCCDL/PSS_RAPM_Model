@@ -599,7 +599,7 @@
 )
 
 ;;; Temporarily disabled --- need to arrange more rules before getting into this.
-#|
+
 (p check*solution-not-found-column
    "If a previous solution cannot be found, initiate the process of finding one by column"
    =goal>
@@ -631,7 +631,7 @@
 
    -retrieval> ; Clear retrieval error
 )
-|#
+
 
 (p start*respond
    =goal>
@@ -807,6 +807,57 @@
      name progression
      progression possible
 
+)
+
+
+(p find-rule*pick-constant
+   "Rule to be suggested when a feauture increases"
+   =goal>
+     step find-rule
+
+   =imaginal>
+     zero =X
+     one =Y
+   - one =X
+   - two =Y
+     rule nil
+     
+   ?retrieval>
+     state free
+     buffer empty
+==>
+  =imaginal>
+
+   +retrieval>
+     isa rule
+     kind rule
+     name constant
+     progression possible
+)
+
+(p find-rule*dont-pick-constant
+   "Rule to be suggested when a feauture increases"
+   =goal>
+     step find-rule
+
+   =imaginal>
+     zero =X
+     one =Y
+   - one =X
+   - two =Y
+     rule nil
+     
+   ?retrieval>
+     state free
+     buffer empty
+==>
+  =imaginal>
+
+   +retrieval>
+     isa rule
+     kind rule
+   - name constant
+     progression possible
 )
 
 
