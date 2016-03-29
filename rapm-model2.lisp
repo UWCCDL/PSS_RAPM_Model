@@ -19,9 +19,10 @@
 ;;
 ;;    5. Add a consistent set of rules
 ;;
+;;    6. Add serious verification rules
 ;;; Bugs:
 ;;
-;;;   1. Sometimes evaluation of a second solution fails.
+;;;   1. [Fixed] Sometimes evaluation of a second solution fails.
 ;;
 
 (clear-all)
@@ -73,6 +74,8 @@
 
 (chunk-type solution problem feature rule direction predicted-value)
 
+(chunk-type rule same different progression name)
+
 ;; (chunk-type direction kind direction span direction-num span-num) 
 
 ;;; DECLARATIVE MEMORY
@@ -120,16 +123,30 @@
 	(done isa chunk)
 	(problem isa chunk)
 	(nothing isa chunk)
+	(missing-cell isa chunk)
+	(sketchpad isa chunk)
 
-	;; Features
+	;; Features and values
+	(feature isa chunk)
+	(shape isa chunk)
 	(triangle isa chunk)
 	(square isa chunk)
 	(circle isa chunk)
 	(diamond isa chunk)
-	(thick isa chunk)
-	(think isa chunk)
-	
 
+	(number isa chunk)
+
+	(texture isa chunk)
+	(solid isa chunk)
+	(transparent isa chunk)
+	(dotted isa chunk)
+	(striped isa chunk)
+
+	(size isa chunk)
+	(small isa chunk)
+	(medium isa chunk)
+	(large isa chunk)
+	
 	;; Slot names
 	(row isa chunk)
 	(row-num isa chunk)
@@ -137,10 +154,6 @@
 	(column-num isa chunk)
 	(same isa chunk)
 	(solution isa chunk)
-
-	;; Other
-
-	(sketchpad isa chunk)
 
 	;; Feature chunks
 	(shape-feature isa feature
@@ -154,6 +167,28 @@
 	(texture-feature isa feature
 			 kind feature
 			 feature texture)
+
+	;; Rules
+	(same-rule isa rule
+		   kind rule
+		   name same
+		   same possible
+		   progression nil
+		   different nil)
+
+	(progression-rule isa rule
+			  kind rule
+			  name progression
+			  same nil
+			  progression possible
+			  different possible)
+
+	(constant-rule isa rule
+		       kind rule
+		       name constant
+		       same nil
+		       progression possible
+		       different possible)
 	)
 	
 
@@ -303,7 +338,7 @@
       step start
       
    =visual>
-      shape =S
+    - number nil
             
    ?retrieval>
      state free
@@ -402,7 +437,7 @@
 ;;;                /           \
 ;;;             (No)          (Yes)
 ;;;              /               \
-;;;         *EXAMINE*           Is time since last
+;;;         *COLLECT*           Is time since last
 ;;;                             examination > 20?
 ;;;                               /             \
 ;;;                            (No)            (Yes)
@@ -458,7 +493,7 @@
 
    =temporal>
       isa time
-    > ticks 30   ; Totally random value
+    > ticks 25  ; Totally random value
  ==>
    =goal>
    ;;step respond
@@ -491,12 +526,14 @@
 
    =temporal>
       isa time
-    < ticks 30   ; Totally random value! What does it translate to?
+    < ticks 25   ; Totally random value! What does it translate to?
  ==>
    =goal>
       step start
 
    =visual>
+   ;; This is ugly but I cannot find a better way to do it.
+   ;; Should ask Dan...
    !eval! (reset-declarative-finsts)   
 )
 
@@ -661,6 +698,87 @@
    
 )
 
+;; ----------------------------------------------------------------
+;; RULE SELECTION
+;; ----------------------------------------------------------------
+;; Here are the productions that compete for selecting rules
+;; ----------------------------------------------------------------
+
+;; Now, how do we 'propose' a rule?
+
+
+(p find-rule*pick-same
+   "Rule to be suggested when a feauture remains the same"
+   =goal>
+     step find-rule
+
+   =imaginal>
+     zero =P
+     one =P
+     two =P
+     rule nil
+     
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   =imaginal>
+   +retrieval>
+     isa rule
+     kind rule
+     name same
+     same possible
+
+)
+
+#| ;; Not yet
+(p find-rule*dont-pick-same
+   "Rule to be suggested when a feauture remains the same"
+   =goal>
+     step find-rule
+
+   =imaginal>
+     zero =P
+     one =P
+     two =P
+     rule nil
+     
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     isa rule
+     kind rule
+   _ name same
+     same predicted 
+)
+|#
+
+(p find-rule*accept
+   "Rule to be suggested when a feauture remains the same"
+   =goal>
+     step find-rule
+
+   =imaginal>
+     zero =P
+     one =P
+     two =P
+     rule nil
+     
+   =retrieval>
+     kind rule
+     name =RULE-NAME
+==>
+   =imaginal>
+     rule =RULE-NAME
+   
+   =goal>
+     step verify
+     routine nil
+)
+
+
 
 ;;; ----------------------------------------------------------------
 ;;; RULE VERIFICATION
@@ -696,7 +814,7 @@
 ==>
    @retrieval> =imaginal
 
-   +imaginal>   ; Create a new imaginal buffer
+   +imaginal>   ; Create a new imaginal chunk
       nature sketchpad
       direction =DIR
       focus zero
@@ -732,6 +850,7 @@
    =imaginal>
      focus =VAL
      verified yes
+     
    =retrieval>
    =visual>
 )
@@ -831,7 +950,7 @@
     =DIR one    ; Next line (row or col) 
 )
 
-(p verify*success
+(p verify*successful
    "Notes when an entire line satisfies a rule"
    =goal>
      step verify
@@ -869,6 +988,33 @@
       focus nil  ;; Remove the 'focus' slot. Makes for cleaner chunks
 )
 
+
+(p verify*not-success
+   "When a cell is not verified by the rule, forget and go to start"
+   =goal>
+     step verify
+     direction =DIR
+     span =SPAN
+         
+   =imaginal>
+     nature sketchpad
+     focus two
+     verified no
+
+   ?imaginal>
+     state free  
+==>
+   =goal>
+     step start
+
+   ;; Moves attention to the first cell
+   +visual-location>
+     kind rapm-cell
+     row zero
+     column zero
+)
+
+
 (p verify*memorize-solution
    "Memorizes the solution and resets the temporal counter"
    =goal>
@@ -900,6 +1046,20 @@
 ;;; ------------------------------------------------------------------
 ;;; This is the part where the model generates a hypothetical
 ;;; missing cell, based on the partial solutions identified so far.
+;;;
+;;;              Create a missing cell chunk
+;;;                          |
+;;;          Retrieve a solution for the problem 
+;;;                          |
+;;;                New solution available?
+;;;                  /                 \
+;;;               (No)                (Yes)
+;;;               /                       \
+;;;          *RESPOND*                Collect first two
+;;;                                features in third row/col
+;;;                                           |
+;;;                                Generate missing feature
+;;;
 ;;; ------------------------------------------------------------------
 
 (p generate*init
@@ -946,36 +1106,12 @@
      ticks 0
 )
 
-
-#| 
-(p generate*retrieve-solution
-   =goal>
-     step generate
-     problem =PID
-
-   =imaginal>
-     nature missing-cell
-     completed nil
-
-   ?visual>
-     state free
-   
-   ?imaginal>
-     state free
-   
-   ?retrieval>
-     buffer empty
-     state free
-==>
-;     :recently-retrieved nil
-   =imaginal> ; Keep the imaginal buffer
-)
-|#
 ;;; In order to generate a solution, we need to be able to predict
 ;;; a feature based on the value of the same feature across rows or
 ;;; columns. To do this, we need again to collect features. 
 
 (p generate*collect-features-by-row
+   "Begin the collection process during the generation of a solution"
    =goal>
      step generate
      routine nil
@@ -1006,6 +1142,7 @@
 )     
 
 (p generate*collect-features-by-column
+   "Begins the collection process during the generation of a solution" 
    =goal>
      step generate
      routine nil
@@ -1033,21 +1170,17 @@
      kind rapm-cell
      row zero
      column two
-    
 )     
 
 (p generate*predict-feature-value
+   "Predicts the value of the missing cell based a rule. Uses Lisp code"
    =goal>
      step generate
      routine collect
    
    =retrieval>
      nature solution
-     ;direction column
      feature =FEATURE
-
-   ;=imaginal>
-   ;  nature missing-cell
 
    ?imaginal>
      state free
@@ -1055,7 +1188,7 @@
    ?visual-location>
      state error
  ==>
-   ;=imaginal>
+
    =goal>
      routine nil
    
@@ -1081,8 +1214,8 @@
 
    =imaginal>
      completed yes  
-   ;; Clean-up the retrieval buffer
-     
+
+   ;; Cleans up the retrieval buffer  
    -retrieval>
 )
 
@@ -1103,32 +1236,6 @@
 )
 
 
-;; ----------------------------------------------------------------
-;; RULE SELECTION
-;; ----------------------------------------------------------------
-;; Here are the productions that compete for selecting rules
-;; ----------------------------------------------------------------
-
-;; Now, how do we 'propose' a rule?
-
-(p propose*same-rule
-   "Rule to be suggested when a feauture remains the same"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =P
-     one =P
-     two =P
-     rule nil
-==>
-   =imaginal>
-     rule same
-   
-   =goal>
-     step verify
-     routine nil
-)
 
 #|
 (p propose*rule-progression
@@ -1430,6 +1537,12 @@
 ;;; ------------------------------------------------------------------
 ;;; DONE!
 ;;; ------------------------------------------------------------------
+;;; End of the RAPM procedure.
+;;;
+;;;                             Done
+;;;                               |
+;;;                             (END)
+;;;------------------------------------------------------------------
 
 (p done
    "Neatly stops ACT-R when the screen says 'done"
