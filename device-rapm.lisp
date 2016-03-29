@@ -627,17 +627,91 @@
 
     (cond ((equal rule-name 'same)
 	   (let ((value (chunk-slot-value-fct current 'zero)))
-	     (setf predicted-value value))))
+	     (setf predicted-value value)))
 
+	  ((equal rule-name 'constant)
+	   ;; If it's a constant set (e.g., always triangle, circle, square)
+	   ;; The the last value of the rule is the predicted value (e.g., square_
+	   (let ((value (chunk-slot-value-fct rule 'two)))
+	     (setf predicted-value value)))
+
+	  ((equal rule-name 'disjoint)
+	   ;; If it's a disjoint rule (e.g., triangle, circle, square, but in
+	   ;; different orders), the the predicted value is whatever value of the
+	   ;; original rule that has not been used yet (e.g., circle if triangle
+	   ;; and square are listed).
+	   (let* ((current-row (list
+				(chunk-slot-value-fct current 'zero)
+				(chunk-slot-value-fct current 'one)))
+		  (in-the-rule (list
+				(chunk-slot-value-fct rule 'zero)
+				(chunk-slot-value-fct rule 'one)
+				(chunk-slot-value-fct rule 'two)))
+		  (odd-man-out (first (set-difference in-the-rule current-row))))
+	     (setf predicted-value odd-man-out))))
+		  
     ;; Once the feature has been predicted, it will be set in the 
     ;; missing cell slot.
     
     (set-chunk-slot-value-fct current rule-feature predicted-value)
-    (format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a" current rule-feature predicted-value rule-name)
+    ;(format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a"
+    ;current rule-feature predicted-value rule-name)
+
     ;; Removes all the irrelevant slots
     (mod-chunk-fct current '(zero nil one nil direction nil value nil feature nil)) 
-    (set-imaginal-free)))
-    ;(schedule-event-relative 0.2 #'set-imaginal-free :params nil)))
+    (schedule-event-relative 0.1 #'set-imaginal-free :params nil)))
+
+
+(defun verify-current-value (&rest params)
+  "Quick and dirty verification of various rules"
+  (declare (ignore params))
+  (let* ((rule (first (no-output (buffer-chunk-fct '(retrieval)))))
+	 (rule-name (chunk-slot-value-fct rule 'rule))
+	 (rule-feature (chunk-slot-value-fct rule 'feature))
+	 (current (first (no-output (buffer-chunk-fct '(imaginal)))))
+	 (index (chunk-slot-value-fct rule 'focus))
+	 (verified 'yes))
+    
+    ;; A serious verification needs to be done only when we are
+    ;; examining the second cell.
+
+    (when (equal index 'two)
+      (let ((current-values (list
+			     (chunk-slot-value-fct current 'zero)
+			     (chunk-slot-value-fct current 'one)
+			     (chunk-slot-value-fct current 'two)))
+	    
+	    (rule-values (list
+			  (chunk-slot-value-fct rule 'zero)
+			  (chunk-slot-value-fct rule 'one)
+			  (chunk-slot-value-fct rule 'two))))
+	;; nothing yet
+	
+	(cond ((equal rule-name 'same)
+	       (unless (and (equal (third current-values)
+				   (first current-values))
+			    (equal (third current-values)
+				   (second current-values)))
+		 (setf verified nil)))
+
+	      ((equal rule-name 'constant)
+	       (unless (equalp current-values rule-values)
+		 (setf verified nil)))
+
+	      ((equal rule-name 'disjoint)
+	       (unless (null (set-difference current-values rule-values))
+		 (setf verified nil)))
+
+	      ((equal rule-name 'progression)
+
+	       ;; This is not quite right---makes lots of assumptions.
+	       (unless (equalp current-values rule-values)
+		 (setf verified nil)))
+	      )))
+	
+    (set-chunk-slot-value-fct current 'verified verified)
+    (schedule-event-relative 0.05 #'set-imaginal-free :params nil)))
+
 
 ;(defmethod device-update-attended-loc ((tm list) xyloc)
 ; "Updates the attention focus on the window"

@@ -14,15 +14,18 @@
 ;;       Trigger when a new solution is found too (maybe only when
 ;;       solution is found). 
 ;;
-;;    4. Identify rules much like features. This likely requires
+;;    4. [Done] Identify rules much like features. This likely requires
 ;;       Some lisp code on the side. Some ideas are there. 
 ;;
-;;    5. Add a consistent set of rules
+;;    5. [Done---Four rules] Add a consistent set of rules. 
 ;;
 ;;    6. Add serious verification rules
-;;; Bugs:
 ;;
-;;;   1. [Fixed] Sometimes evaluation of a second solution fails.
+;;    7. [Done---four rule] Add larger set of generation rules for missing cell.  
+;;
+;; Bugs:
+;;
+;;    1. [Fixed] Sometimes evaluation of a second solution fails.
 ;;
 
 (clear-all)
@@ -186,6 +189,13 @@
 	(constant-rule isa rule
 		       kind rule
 		       name constant
+		       same possible
+		       progression possible
+		       different possible)
+
+	(disjoint-rule isa rule
+		       kind rule
+		       name disjoint
 		       same nil
 		       progression possible
 		       different possible)
@@ -755,8 +765,62 @@
 )
 |#
 
-(p find-rule*accept
-   "Rule to be suggested when a feauture remains the same"
+(p find-rule*pick-progression
+   "Rule to be suggested when a feauture increases"
+   =goal>
+     step find-rule
+
+   =imaginal>
+     zero =X
+     one =Y
+   > one =X
+   > two =Y
+     rule nil
+     
+   ?retrieval>
+     state free
+     buffer empty
+==>
+  =imaginal>
+
+   +retrieval>
+     isa rule
+     kind rule
+     name progression
+     progression possible
+
+)
+
+
+(p find-rule*dont-pick-progression
+   "Rule to be suggested when a feauture increases"
+   =goal>
+     step find-rule
+
+   =imaginal>
+     zero =X
+     one =Y
+   > one =X
+   > two =Y
+     rule nil
+     
+   ?retrieval>
+     state free
+     buffer empty
+==>
+  =imaginal>
+
+   +retrieval>
+     isa rule
+     kind rule
+   - name progression
+     progression possible
+)
+
+
+
+(p find-rule*accept-suggestion
+   "Very neutral. Accepts any suggestion"
    =goal>
      step find-rule
 
@@ -846,11 +910,19 @@
      direction =DIR
      verified nil  
 
+   ?imaginal>
+     state free
+
+   ?imaginal-action>
+     state free  
 ==>
+;   =imaginal>
+ ;    focus =VAL
+  ;   verified yes
+
+   +imaginal-action>
+     action verify-current-value  
    =imaginal>
-     focus =VAL
-     verified yes
-     
    =retrieval>
    =visual>
 )
