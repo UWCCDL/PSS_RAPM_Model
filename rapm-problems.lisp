@@ -112,6 +112,31 @@
 	  (shape triangle number 1)
 	  (shape diamond number 3))))
 
+;; Three features, three rules
+
+(defparameter *simple-problem-3-rules*
+  '(((number 1 shape triangle texture solid)
+     (number 2 shape triangle texture striped)
+     (number 3 shape triangle texture dotted))
+    
+    ((number 1 shape square texture solid)
+     (number 2 shape square texture striped)
+     (number 3 shape square texture dotted))
+    
+    ((number 1 shape circle texture solid)
+     (number 2 shape circle texture striped)
+     nil)))
+
+(defparameter *simple-trial-3-rules*
+  (list *simple-problem-3-rules*
+	'(number 3 shape circle texture dotted)
+	'((number 3 shape circle texture dotted)
+	  (number 2 shape square texture striped)
+	  (number 1 shape circle texture solid)
+	  (number 3 shape triangle texture solid))))
+	  
+	  
+
 
 (defparameter *test-trial*
   (list *test-problem* '(number 3 shape circle)
@@ -144,4 +169,4 @@
 ;(defparameter *trials* (mapcar #'make-trial
 ;			       (list *simple-trial-3-features*)))
 (defparameter *trials* (mapcar #'make-trial
-			       (list *simple-trial-2-rules*)))
+			       (list *simple-trial-3-rules*)))

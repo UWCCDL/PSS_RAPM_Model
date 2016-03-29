@@ -36,6 +36,7 @@
      :model-warnings t
      :auto-attend t
      :er t
+     :ans 0.05
      :record-ticks nil
      :esc t
      :mas 8.0
@@ -262,6 +263,9 @@
       kind rapm-cell
       screen-x lowest
       screen-y lowest
+      
+   ;; Cleans up the reward signals
+   !eval! (trigger-reward nil)
 )
 
 ;;; ---------------------------------------------------------------- ;;
@@ -531,7 +535,8 @@
       kind rapm-problem
 
    -temporal>   ; Stop counting
-   !eval! (reset-declarative-finsts)   
+   !eval! (reset-declarative-finsts)
+   !eval! (trigger-reward -10)
 )
 
 
@@ -563,6 +568,7 @@
    ;; This is ugly but I cannot find a better way to do it.
    ;; Should ask Dan...
    !eval! (reset-declarative-finsts)   
+   !eval! (trigger-reward -10)
 )
 
 (p check*solution-not-found-row
@@ -652,6 +658,7 @@
      isa punch
      hand right
      finger index
+     
   -temporal>
 )
 
@@ -1130,10 +1137,12 @@
       direction =DIR
       feature =FEATURE
       focus nil  ;; Remove the 'focus' slot. Makes for cleaner chunks
+
+   !eval! (trigger-reward 10)
 )
 
 
-(p verify*not-success
+(p verify*not-successful
    "When a cell is not verified by the rule, forget and go to start"
    =goal>
      step verify
@@ -1156,6 +1165,7 @@
      kind rapm-cell
      row zero
      column zero
+   !eval! (trigger-reward -10)
 )
 
 
