@@ -11,6 +11,57 @@
   (and (fboundp 'run-n-events)
        (fboundp 'start-environment)))
 
+
+(defparameter *d1* 1)
+
+(defparameter *d2* 1)
+
+(defparameter *reward* 10)
+
+(defparameter *ticks* 20)
+
+
+
+(defun bg-reward-hook (production reward time)
+  (declare (ignore time))
+;;  (print production)
+  (let* ((pname (symbol-name production))
+	 (i (position #\* pname))
+	 (start (subseq pname (1+ i) (+ 5 i))))
+
+    (cond ((string-equal start "PICK")
+	   (* *d1* reward))
+	  ((string-equal start "DONT")
+	   (* *d2* reward))
+	  (t
+	   nil))))
+
+
+(defun simulate (n &optional (res-file "results.csv"))
+  (with-open-file (file res-file
+			   :direction :output
+			   :if-exists :overwrite
+			   :if-does-not-exist :create)
+    (let ((names (list 'd2 'ticks 'alpha 'egs 'accuracy 'problem 'choice)))
+      (format file "~{~a~^, ~}~%" names))
+
+    (dolist (d2 '(1/4 1/2 3/4 1 5/4 3/2 7/4 2))
+      (dolist (ticks '(10 15 20 25 30 35 40))
+	(dolist (alpha '(0 2/10 4/10 6/10 8/10))
+	  (dolist (egs '(0 1/10 2/10 3/10 4/10 5/10))
+	    (format t "~{~a~^, ~}~%" (list 'd2 d2 'ans ans 'alpha alpha 'egs egs))
+	    (dotimes (j n)
+	      (rapm-reload)  ; Reload
+	      (setf *d2* d2)
+	      (sgp-fct `(:egs ,egs :ans ,ans :alpha alpha :v nil)) ; Sets the params
+	      (run 20 :real-time nil)
+	      (let* ((trial (first (experiment-log (current-device))))
+		     (res (list d2 ans alpha egs
+				(trial-accuracy trial)
+				(trial-problem-rt trial)
+				(trial-choice-rt trial))))
+		(format file "~{~a~^, ~}~%" res)))))))))
+
 ;; ---------------------------------------------------------------- ;;
 ;; Some utilities
 ;; ---------------------------------------------------------------- ;;
@@ -636,13 +687,16 @@
 	     (setf predicted-value value)))
 
 	  ((equal rule-name 'disjoint)
+	   
 	   ;; If it's a disjoint rule (e.g., triangle, circle, square, but in
 	   ;; different orders), the the predicted value is whatever value of the
 	   ;; original rule that has not been used yet (e.g., circle if triangle
 	   ;; and square are listed).
+
 	   (let* ((current-row (list
 				(chunk-slot-value-fct current 'zero)
 				(chunk-slot-value-fct current 'one)))
+		  
 		  (in-the-rule (list
 				(chunk-slot-value-fct rule 'zero)
 				(chunk-slot-value-fct rule 'one)
@@ -661,7 +715,7 @@
     ;; missing cell slot.
     
     (set-chunk-slot-value-fct current rule-feature predicted-value)
-    (format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a"
+    (format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a~%"
 	    current rule-feature predicted-value rule-name)
 
     ;; Removes all the irrelevant slots
@@ -682,38 +736,41 @@
     ;; A serious verification needs to be done only when we are
     ;; examining the second cell.
 
-    (when (equal index 'two)
-      (let ((current-values (list
-			     (chunk-slot-value-fct current 'zero)
-			     (chunk-slot-value-fct current 'one)
-			     (chunk-slot-value-fct current 'two)))
-	    
-	    (rule-values (list
-			  (chunk-slot-value-fct rule 'zero)
-			  (chunk-slot-value-fct rule 'one)
-			  (chunk-slot-value-fct rule 'two))))
+    (let ((current-values (list
+			   (chunk-slot-value-fct current 'zero)
+			   (chunk-slot-value-fct current 'one)
+			   (chunk-slot-value-fct current 'two)))
+	  
+	  (rule-values (list
+			(chunk-slot-value-fct rule 'zero)
+			(chunk-slot-value-fct rule 'one)
+			(chunk-slot-value-fct rule 'two))))
+      (when (and (= 3 (length current-values))
+		 (not (null (third current-values))))
 	;; nothing yet
-	
+	(format nil "Rule name ~a~%" current-values)
+	      
 	(cond ((equal rule-name 'same)
 	       (unless (and (equal (third current-values)
 				   (first current-values))
 			    (equal (third current-values)
 				   (second current-values)))
-		 (setf verified nil)))
-
+		 (setf verified 'no)))
 	      ((equal rule-name 'constant)
+	       (print (list current-values rule-values))
 	       (unless (equalp current-values rule-values)
-		 (setf verified nil)))
+		 (setf verified 'no)))
 
 	      ((equal rule-name 'disjoint)
 	       (unless (null (set-difference current-values rule-values))
-		 (setf verified nil)))
+		 (setf verified 'no)))
 
 	      ((equal rule-name 'progression)
 
 	       ;; This is not quite right---makes lots of assumptions.
+	       (print (list current-values rule-values))
 	       (unless (equalp current-values rule-values)
-		 (setf verified nil)))
+		 (setf verified 'no)))
 	      )))
 	
     (set-chunk-slot-value-fct current 'verified verified)

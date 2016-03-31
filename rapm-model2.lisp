@@ -10,7 +10,7 @@
 ;;
 ;;    2. [DONE--not pretty] Decide to examine row or column for a given feature.
 ;;
-;;    3. Trigger rewards for new feature when no solution is found.
+;;    3. [Done] Trigger rewards for new feature when no solution is found.
 ;;       Trigger when a new solution is found too (maybe only when
 ;;       solution is found). 
 ;;
@@ -32,8 +32,8 @@
 
 (define-model bar
 
-(sgp :style-warnings t
-     :model-warnings t
+(sgp :style-warnings nil
+     :model-warnings nil
      :auto-attend t
      :er t
      :ans 0.05
@@ -42,6 +42,10 @@
      :mas 8.0
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
+     :ul t
+     :reward-hook bg-reward-hook
+     :alpha 0.1
+     :egs 0.05
 ;;     :trace-filter production-firing-only
      )
   
@@ -55,13 +59,13 @@
 
 (chunk-type (rapm-cell (:include visual-object))
 	    kind row column row-num column-num problem
-	    phase shape number 
+	    phase shape number background
 	    feature0 feature1 feature2 feature3 feature4
 	    feature5 feature6 feature7 feature8 feature9)
 
 (chunk-type (rapm-cell-location (:include visual-location))
 	    row column row-num column-num problem
-	    shape number
+	    shape number background
 	    feature0 feature1 feature2 feature3 feature4
 	    feature5 feature6 feature7 feature8 feature9)
 
@@ -78,7 +82,7 @@
 
 (chunk-type solution problem feature rule direction predicted-value)
 
-(chunk-type rule same different progression name)
+(chunk-type rule kind same different progression name)
 
 ;; (chunk-type direction kind direction span direction-num span-num) 
 
@@ -171,6 +175,14 @@
 	(texture-feature isa feature
 			 kind feature
 			 feature texture)
+
+	(background-feature isa feature
+			    kind feature
+			    feature background)
+
+	(orientation-feature isa feature
+			     kind feature
+			     feature orientation)
 
 	;; Rules
 	(same-rule isa rule
@@ -523,9 +535,10 @@
    =imaginal>
       feature =FEATURE
 
+   !bind! =MAX *ticks*
    =temporal>
       isa time
-    > ticks 25  ; Totally random value
+    > ticks =MAX  ; Totally random value
  ==>
    =goal>
    ;;step respond
@@ -536,7 +549,7 @@
 
    -temporal>   ; Stop counting
    !eval! (reset-declarative-finsts)
-   !eval! (trigger-reward -10)
+   !eval! (trigger-reward (* -1 *reward*))
 )
 
 
@@ -557,9 +570,10 @@
    =imaginal>
       feature =FEATURE
 
+   !bind! =MAX *ticks*
    =temporal>
       isa time
-    < ticks 25   ; Totally random value! What does it translate to?
+    < ticks =MAX   ; Totally random value! What does it translate to?
  ==>
    =goal>
       step start
@@ -568,7 +582,7 @@
    ;; This is ugly but I cannot find a better way to do it.
    ;; Should ask Dan...
    !eval! (reset-declarative-finsts)   
-   !eval! (trigger-reward -10)
+   !eval! (trigger-reward (* -1 *reward*))
 )
 
 (p check*solution-not-found-row
@@ -1138,7 +1152,7 @@
       feature =FEATURE
       focus nil  ;; Remove the 'focus' slot. Makes for cleaner chunks
 
-   !eval! (trigger-reward 10)
+   !eval! (trigger-reward *reward*)
 )
 
 
@@ -1151,9 +1165,11 @@
          
    =imaginal>
      nature sketchpad
-     focus two
      verified no
 
+   =retrieval>
+   - rule nil
+   
    ?imaginal>
      state free  
 ==>
@@ -1165,7 +1181,8 @@
      kind rapm-cell
      row zero
      column zero
-   !eval! (trigger-reward -10)
+   -retrieval>
+   !eval! (trigger-reward (* -1 *reward*))
 )
 
 
@@ -1722,4 +1739,5 @@
   (install-device (make-instance 'rapm-task))
   (init (current-device))
   (proc-display)
-  (print-visicon))
+  ;;(print-visicon)
+  )

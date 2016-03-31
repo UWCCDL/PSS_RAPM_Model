@@ -135,7 +135,28 @@
 	  (number 1 shape circle texture solid)
 	  (number 3 shape triangle texture solid))))
 	  
-	  
+;;; Four feature/rules
+
+(defparameter *simple-problem-4-rules*
+  '(((number 1 shape triangle texture solid background white)
+     (number 2 shape triangle texture striped background black)
+     (number 3 shape triangle texture dotted background grey))
+    
+    ((number 1 shape square texture solid background black)
+     (number 2 shape square texture striped background grey)
+     (number 3 shape square texture dotted background white))
+    
+    ((number 1 shape circle texture solid background grey)
+     (number 2 shape circle texture striped background white)
+     nil)))
+
+(defparameter *simple-trial-4-rules*
+  (list *simple-problem-4-rules*
+	'(number 3 shape circle texture dotted background black)
+	'((number 3 shape circle texture dotted background black)
+	  (number 2 shape circle texture striped background white)
+	  (number 3 shape triangle texture dotted background grey)
+	  (number 1 shape circle texture dotted background black))))
 
 
 (defparameter *test-trial*
@@ -169,4 +190,4 @@
 ;(defparameter *trials* (mapcar #'make-trial
 ;			       (list *simple-trial-3-features*)))
 (defparameter *trials* (mapcar #'make-trial
-			       (list *simple-trial-3-rules*)))
+			       (list *simple-trial-4-rules*)))
