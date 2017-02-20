@@ -557,7 +557,7 @@
 
    -temporal>   ; Stop counting
    !eval! (reset-declarative-finsts)
-   !eval! (trigger-reward (* -1 *reward*))
+;   !eval! (trigger-reward (* -1 *reward*))
 )
 
 
@@ -590,7 +590,7 @@
    ;; This is ugly but I cannot find a better way to do it.
    ;; Should ask Dan...
    !eval! (reset-declarative-finsts)   
-   !eval! (trigger-reward (* -1 *reward*))
+;   !eval! (trigger-reward (* -1 *reward*))
 )
 
 (p check*solution-not-found-row
@@ -1735,6 +1735,12 @@
 
  
 )  ; End of the Model
+
+
+(spp check*solution-found-and-time-elapsed :reward -10)
+(spp check*solution-found-and-time-not-elapsed :reward -10)
+(spp check*solution-not-found-row :reward 10)
+(spp check*solution-not-found-row :reward -10)
 
 
 ;;; RAPM-RELOAD

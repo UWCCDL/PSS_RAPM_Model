@@ -762,5 +762,7 @@
     (set-chunk-slot-value-fct current 'verified verified)
     (schedule-event-relative 0.05 #'set-imaginal-free :params nil)))
 
-     
-(load "rapm-problems.lisp")
+
+;; Loads the definition of the problems and the correct value of
+;; the *trials* parameter
+(load (translate-logical-pathname "RAPM:rapm-problems.lisp"))
