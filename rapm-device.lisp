@@ -22,6 +22,7 @@
 
 
 (defun bg-reward-hook (production reward time)
+  "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
   (declare (ignore time))
   (let* ((pname (symbol-name production))
 	 (i (position #\* pname))
@@ -34,32 +35,6 @@
 	  (t
 	   nil))))
 
-
-(defun simulate (n &optional (res-file "results.csv"))
-  (with-open-file (file res-file
-			   :direction :output
-			   :if-exists :overwrite
-			   :if-does-not-exist :create)
-    (let ((names (list 'd2 'ticks 'alpha 'egs 'accuracy 'problem 'choice)))
-      (format file "~{~a~^, ~}~%" names))
-
-    (dolist (d2 '(1/2 1 3/2 2 5/2 3 7/2 4))
-      (dolist (ticks '(10 15 20 25 30 35 40))
-	(dolist (alpha '(0 2/10 4/10 6/10 8/10 1))
-	  (dolist (egs '(0 1/10 2/10 3/10 4/10 5/10))
-	    (format t "~{~a~^, ~}~%" (list 'd2 d2 'ticks ticks 'alpha alpha 'egs egs))
-	    (dotimes (j n)
-	      (rapm-reload)  ; Reload
-	      (setf *d2* d2)
-	      (setf *ticks* ticks)
-	      (sgp-fct `(:egs ,egs :alpha alpha :v nil)) ; Sets the params
-	      (run 1000 :real-time nil)
-	      (let* ((trial (first (experiment-log (current-device))))
-		     (res (list d2 ticks alpha egs
-				(trial-accuracy trial)
-				(trial-problem-rt trial)
-				(trial-choice-rt trial))))
-		(format file "~{~a~^, ~}~%" (mapcar #'float res))))))))))
 
 ;; ---------------------------------------------------------------- ;;
 ;; Some utilities
@@ -664,6 +639,11 @@
     (next tm)
     (proc-display :clear t)))
 
+
+;;; ----------------------------------------------------------------
+;;; ACT-R extensions to imaginal module (imaginal actions)
+;;; ----------------------------------------------------------------
+
 (defun predict-feature-value (&rest params)
   "Quick and dirty prediction of various properties"
   (declare (ignore params))
@@ -774,27 +754,6 @@
 	
     (set-chunk-slot-value-fct current 'verified verified)
     (schedule-event-relative 0.05 #'set-imaginal-free :params nil)))
-
-
-;(defmethod device-update-attended-loc ((tm list) xyloc)
-; "Updates the attention focus on the window"
-;(when *window*
-					; (device-update-attended-loc *window* xyloc)))
-
-
-
-
-;(with-open-file (file "results.csv" :direction :output
-;		      :if-exists :overwrite) 
-;    (loop for egs from 0 to 2.0 by 0.5 do
-;	 (loop for ga from 1 to 2.0 by 0.25 do
-;	      (reload)
-;	      (sgp-fct `(:egs ,egs :ga ,ga))
-					;(run 1000 :real-time nil)
-	      ;(let* ((data (analyze-data (current-device)))
-	;	     (row (append (list egs ga)
-					;			  data)))
-;		(format file "~{~a~^, ~}~%" row)))))
 
      
 (load "rapm-problems.lisp")
