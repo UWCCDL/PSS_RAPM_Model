@@ -1741,10 +1741,11 @@
 ;;;
 ;;; Quick reload function that also installs and sets the device properly. 
 ;;;
-(defun rapm-reload ()
+(defun rapm-reload (&optional (visicon t))
+  "Reloads the model and sets up the experiment"
   (reload)
   (install-device (make-instance 'rapm-task))
   (init (current-device))
   (proc-display)
-  ;;(print-visicon)
-  )
+  (when visicon
+    (print-visicon)))

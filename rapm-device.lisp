@@ -5,6 +5,11 @@
 ;;; version of Raven's Advanced Progressive Matrices
 ;;; ------------------------------------------------------------------
 
+;;; Sets up the logical pathname for all files in the same folder
+;;;
+(setf (logical-pathname-translations "RAPM")
+  `(("**;*.*" ,(namestring (merge-pathnames "**/*.*" *load-truename*)))))
+
 
 (defun act-r-loaded? ()
   "Cheap hack to check whether ACTR is loaded"
@@ -324,6 +329,8 @@
 ;;; ------------------------------------------------------------------
 ;;; ACT-R DEVICE INTERFACE
 ;;; ------------------------------------------------------------------
+
+(defparameter *trials* nil)
 
 ;;; ------------
 ;;; Task Manager
