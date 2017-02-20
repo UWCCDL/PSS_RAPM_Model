@@ -1,19 +1,22 @@
-;; ---------------------------------------------------------------- ;;
-;; a model of RAPM
-;; ---------------------------------------------------------------- ;;
-;; Lots of things happen. At the top level, the strategy looks like
-;; this:
-;;
-;;   1. Observe a cell
-;;   2. Find a feature that has not been verified.
-;;   3.   Collect the values of tyhe property across first row/column
-;;   4.   Find a property.
-;;   5.     Find a rule for that property.
-;;          Verify rule on second row/column
-;;             If rule is verified, create a chunk that links feature, direction, and rule. Go
-;;          How do we know that we have examined all the features?
-;;             when we cannot retrieve a single feature, for instance. Or when we cannot retrieve a single feature that has not been examined.
-
+;;; ---------------------------------------------------------------- ;;
+;;; A model of RAPM
+;;; ---------------------------------------------------------------- ;;
+;;; Lots of things happen. At the top level, the strategy looks like
+;;; this:
+;;;
+;;;   1. Observe a cell
+;;;   2. Find a feature that has not been verified.
+;;;   3.   Collect the values of tyhe property across first row/column
+;;;   4.   Find a property.
+;;;   5.     Find a rule for that property.
+;;;          Verify rule on second row/column
+;;;             If rule is verified, create a chunk that links feature,
+;;;             direction, and rule. Go
+;;;          How do we know that we have examined all the features?
+;;;             when we cannot retrieve a single feature, for instance.
+;;;             Or when we cannot retrieve a single feature that has
+;;;             not been examined.
+;;; ==================================================================
 
 
 (clear-all)
@@ -832,9 +835,7 @@
 
    +visual-location>
      kind rapm-cell
-;     phase choice
    > screen-x current
-   ;;screen-x lowest
      :nearest current-x
        
    =imaginal>  ; keep the imaginal
@@ -1017,9 +1018,7 @@
      
    +visual-location>
      kind rapm-cell
-;     phase choice
      screen-x lowest
-
 )
 
 
