@@ -24,7 +24,6 @@
 
 (defun bg-reward-hook (production reward time)
   (declare (ignore time))
-;;  (print production)
   (let* ((pname (symbol-name production))
 	 (i (position #\* pname))
 	 (start (subseq pname (1+ i) (+ 5 i))))

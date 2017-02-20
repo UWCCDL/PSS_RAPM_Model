@@ -6,7 +6,7 @@
 ;;
 ;;; To dos:
 ;;
-;;    1. [DONE] Generate a missing cell when the rule have been found.
+;;    1. [DONE] Generate a missing cell when the rule has been found.
 ;;
 ;;    2. [DONE--not pretty] Decide to examine row or column for a given feature.
 ;;
@@ -220,14 +220,15 @@
 ;;; START
 ;;; ---------------------------------------------------------------- ;;
 ;;;
-;;; New algorithm:
+;;; General solution algorithm:
 ;;;   1. Pick a feature.
-;;;   2. If you cannot find a solution associated to that feature,
+;;;   2. Retrieve a solution for that feature.
+;;;   3. If you cannot find a solution associated to that feature,
 ;;;      examine the feature (randomly going column or row).
-;;;   3. If you can find a solution, then, check:
-;;;      3.1 If it's been a long time since you have found a new
+;;;   4. If you can find a solution, then, check:
+;;;      4.1 If it's been a long time since you have found a new
 ;;;          feature, end
-;;;      3.2 If not, go back to 1
+;;;      4.2 If not, go back to 1
 ;;;
 ;;;          Pick Feature <------+
 ;;;               |              |
@@ -235,11 +236,11 @@
 ;;;               |              |
 ;;;             Found?           |
 ;;;          /         \         |
-;;;        No           Yes     No
+;;;        No          Yes     No
 ;;;        |             |     /
 ;;;    Mark Time      Long time?
-;;;       |                   \  
-;;;   *EXAMINE*               Yes
+;;;        |                 \  
+;;;   *EXAMINE*              Yes
 ;;;                           |
 ;;;                         *END*
 ;;; ------------------------------------------------------------------
@@ -940,7 +941,7 @@
 ;;; A rule is verified when it is consistent with the features of
 ;;; three cells. The verification process roughly follows this
 ;;; algorithm:
-;;;   1. Move the tenative solution (contents of the imaginal buffer)
+;;;   1. Move the tentative solution (contents of the imaginal buffer)
 ;;;      to the retrieval. This free the resources for the imaginal.
 ;;;   2. Scan the first row, cell by cell.
 ;;;   3. For each cell a special 'verify*RULE' production should be
@@ -1108,6 +1109,9 @@
    =imaginal>
      verified nil
      focus nil
+     zero nil
+     one nil
+     two nil
      
   +visual-location>
     kind rapm-cell

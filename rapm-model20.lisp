@@ -167,6 +167,7 @@
    =visual>
      kind rapm-problem
      id =PID
+     
    ?retrieval>
      buffer empty
      state free
