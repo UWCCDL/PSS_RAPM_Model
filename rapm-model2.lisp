@@ -21,7 +21,9 @@
 ;;
 ;;    6. [Done] Add serious verification rules
 ;;
-;;    7. [Done---four rule] Add larger set of generation rules for missing cell.  
+;;    7. [Done---four rule] Add larger set of generation rules for missing cell.
+;;;
+;;;   8. Needs to insist on same feature when one rule fails.
 ;;
 ;; Bugs:
 ;;
@@ -623,7 +625,6 @@
    -retrieval> ; Clear retrieval error
 )
 
-;;; Temporarily disabled --- need to arrange more rules before getting into this.
 
 (p check*solution-not-found-column
    "If a previous solution cannot be found, initiate the process of finding one by column"
