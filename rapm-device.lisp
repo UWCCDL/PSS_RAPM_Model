@@ -18,8 +18,7 @@
 
 (defparameter *reward* 10)
 
-(defparameter *ticks* 20)
-
+(defparameter *ticks* 30)
 
 
 (defun bg-reward-hook (production reward time)

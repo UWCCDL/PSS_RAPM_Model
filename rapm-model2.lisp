@@ -435,9 +435,13 @@
       kind feature
       feature =FEATURE
 
+   ?visual>
+      state free
+   
    =visual>
     - =FEATURE nil     
-      row =R      
+      row =R
+    
 ==> 
    =goal>
       step check
@@ -1009,12 +1013,9 @@
    ?imaginal-action>
      state free  
 ==>
-;   =imaginal>
- ;    focus =VAL
-  ;   verified yes
-
    +imaginal-action>
      action verify-current-value  
+
    =imaginal>
      =VAL =X  
    =retrieval>
