@@ -316,13 +316,22 @@
 
 (defun trial-problem-rt (trl)
   "Calculates the problem's RT"
-  (- (trial-problem-response-time trl)
-     (trial-problem-onset trl)))
+  (let ((rsp (trial-problem-response-time trl))
+	(onset (trial-problem-onset trl)))
+    (if (and (numberp rsp)
+	     (numberp onset))
+      (- rsp onset)
+      -1)))
 
 (defun trial-choice-rt (trl)
   "Calculates the problem's RT"
-  (- (trial-choice-response-time trl)
-     (trial-choice-onset trl)))
+  (let ((rsp (trial-choice-response-time trl))
+	(onset (trial-choice-onset trl)))
+    (if (and (numberp rsp)
+	     (numberp onset))
+      (- rsp onset)
+      -1)))
+
 
 
 

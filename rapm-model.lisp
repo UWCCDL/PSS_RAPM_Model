@@ -1,8 +1,9 @@
 ;;; ==================================================================
 ;;; A model of RAPM
 ;;; ==================================================================
-;;; Lots of things happen. At the top level, the strategy looks like
-;;; this:
+;;; An ACT-R model that solves Raven's (Advanced) Progressive Matrices
+;;; in a human-like fashion. It also explains the correlation with
+;;; PSS 
 ;;;
 ;;; To dos:
 ;;;
@@ -24,7 +25,12 @@
 ;;;
 ;;;    7. [Done---four rule] Add larger set of generation rules for missing cell.
 ;;;
-;;;   8. Needs to insist on same feature when one rule fails.
+;;;    8. Needs to insist on same feature when one rule fails
+;;;       (but prevent the rule from being reused)
+;;;
+;;;    9. Find better algorithm for pick/don't pick. Better one would
+;;;       be incremental vetting (pick a feature, then vet pick/dont,
+;;;       then repeat).
 ;;;
 ;;; Bugs:
 ;;;

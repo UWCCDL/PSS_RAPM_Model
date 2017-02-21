@@ -21,7 +21,7 @@
 	      (rapm-reload)  ; Reload
 	      (setf *d2* d2)
 	      (setf *ticks* ticks)
-	      (sgp-fct `(:egs ,egs :alpha alpha :v nil)) ; Sets the params
+	      (sgp-fct `(:egs ,egs :alpha ,alpha :v nil)) ; Sets the params
 	      (run 1000 :real-time nil)
 	      (let* ((trial (first (experiment-log (current-device))))
 		     (res (list d2 ticks alpha egs
