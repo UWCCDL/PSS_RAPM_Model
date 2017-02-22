@@ -29,3 +29,20 @@
 				(trial-problem-rt trial)
 				(trial-choice-rt trial))))
 		(format file "~{~a~^, ~}~%" (mapcar #'float res))))))))))
+
+
+(defun simulate-d2 (n &key (d2vals '(1/2 1 3/2 2 5/2 3 7/2 4)))
+  (let ((results nil))
+    (dolist (d2 d2vals)
+      (setf *d2* d2)
+      (let ((partial nil))
+	(dotimes (j n)
+	  (rapm-reload nil)  ; Reload
+	  (sgp :v nil)
+	  (run 1000 :real-time nil)
+	  (push (trial-accuracy (first (experiment-log (current-device))))
+		partial))
+	(push (apply #'mean partial) results)))
+    (pairlis (mapcar #'float (reverse d2vals)) (mapcar #'float results))))
+    
+      

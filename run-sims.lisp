@@ -2,5 +2,5 @@
 (load "rapm-device.lisp")
 (load "./devel/rapm-model.lisp")
 (load "rapm-simulations.lisp")
-(simulate 20 "test.csv")
+(simulate 20 "new-test.csv")
 (quit)
