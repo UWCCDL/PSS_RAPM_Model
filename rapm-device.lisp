@@ -21,10 +21,11 @@
 
 (defparameter *d2* 1)
 
+(defparameter *bias* 1)
+
 (defparameter *reward* 10)
 
 (defparameter *ticks* 30)
-
 
 (defun bg-reward-hook (production reward time)
   "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
@@ -32,7 +33,7 @@
   (let* ((pname (symbol-name production))
 	 (i (position #\* pname))
 	 (start (subseq pname (1+ i) (+ 5 i))))
-
+    ;(format t "~A (~A) ~%" production start)
     (cond ((string-equal start "PICK")
 	   (* *d1* reward))
 	  ((string-equal start "DONT")
@@ -40,6 +41,14 @@
 	  (t
 	   nil))))
 
+(defparameter *comp-prods* '(FEATURE*PICK-SHAPE FEATURE*DONT-PICK-SHAPE
+			     FEATURE*PICK-NUMBER FEATURE*DONT-PICK-NUMBER
+			     FEATURE*PICK-TEXTURE FEATURE*DONT-PICK-TEXTURE
+			     FEATURE*PICK-BACKGROUND FEATURE*DONT-PICK-BACKGROUND))
+
+(defun prod-utilities ()
+  (dolist (p *comp-prods*)
+    (format t "~A : ~A~%" p (production-utility p))))
 
 ;; ---------------------------------------------------------------- ;;
 ;; Some utilities

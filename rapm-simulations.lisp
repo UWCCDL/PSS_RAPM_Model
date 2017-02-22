@@ -9,22 +9,22 @@
 			   :direction :output
 			   :if-exists :overwrite
 			   :if-does-not-exist :create)
-    (let ((names (list 'd2 'ticks 'alpha 'egs 'accuracy 'problem 'choice)))
+    (let ((names (list 'd1 'ticks 'alpha 'egs 'accuracy 'problem 'choice)))
       (format file "~{~a~^, ~}~%" names))
 
-    (dolist (d2 '(1/2 1 3/2 2 5/2 3 7/2 4))
-      (dolist (ticks '(10 15 20 25 30 35 40))
-	(dolist (alpha '(0 2/10 4/10 6/10 8/10 1))
-	  (dolist (egs '(0 1/10 2/10 3/10 4/10 5/10))
-	    (format t "~{~a~^, ~}~%" (list 'd2 d2 'ticks ticks 'alpha alpha 'egs egs))
+    (dolist (d1 '(1/10 1/5 1 5 10))
+      (dolist (ticks '(10 15 20))
+	(dolist (alpha '(2/10 4/10 6/10 8/10 1))
+	  (dolist (egs '(1/10 2/10 3/10 4/10 5/10))
+	    (format t "~{~a~^, ~}~%" (list 'd1 d1 'ticks ticks 'alpha alpha 'egs egs))
 	    (dotimes (j n)
 	      (rapm-reload)  ; Reload
-	      (setf *d2* d2)
+	      (setf *d1* d1)
 	      (setf *ticks* ticks)
 	      (sgp-fct `(:egs ,egs :alpha ,alpha :v nil)) ; Sets the params
 	      (run 1000 :real-time nil)
 	      (let* ((trial (first (experiment-log (current-device))))
-		     (res (list d2 ticks alpha egs
+		     (res (list d1 ticks alpha egs
 				(trial-accuracy trial)
 				(trial-problem-rt trial)
 				(trial-choice-rt trial))))
@@ -39,10 +39,24 @@
 	(dotimes (j n)
 	  (rapm-reload nil)  ; Reload
 	  (sgp :v nil)
-	  (run 1000 :real-time nil)
+	  (no-output (run 1000 :real-time nil))
 	  (push (trial-accuracy (first (experiment-log (current-device))))
 		partial))
 	(push (apply #'mean partial) results)))
     (pairlis (mapcar #'float (reverse d2vals)) (mapcar #'float results))))
     
-      
+
+(defun simulate-d1 (n &key (d1vals '(1/2 1 3/2 2 5/2 3 7/2 4)))
+  (let ((results nil))
+    (dolist (d1 d1vals)
+      (setf *d1* d1)
+      (let ((partial nil))
+	(dotimes (j n)
+	  (rapm-reload nil)  ; Reload
+	  (sgp :v nil)
+	  (no-output (run 100 :real-time nil))
+	  (push (trial-accuracy (first (experiment-log (current-device))))
+		partial))
+	(push (apply #'mean partial) results)))
+    (pairlis (mapcar #'float (reverse d1vals)) (mapcar #'float results))))
+

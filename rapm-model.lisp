@@ -43,18 +43,20 @@
 
 (sgp :style-warnings nil
      :model-warnings nil
+     :style-warnings nil
      :auto-attend t
      :er t
      :ans 0.05
      :record-ticks nil
      :esc t
      :mas 8.0
+     :bll nil
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
      :reward-hook bg-reward-hook
-     :alpha 0.1
-     :egs 0.05
+     :alpha 0.9
+     :egs 0.2
 ;;     :trace-filter production-firing-only
      )
   
@@ -321,7 +323,6 @@
      buffer empty
 ==>
    +retrieval>
-     isa feature
      kind feature
      feature shape
      
@@ -334,14 +335,13 @@
       step start
       
    =visual>
-      shape =S
+   - shape nil
             
    ?retrieval>
      state free
      buffer empty
 ==>
    +retrieval>
-     isa feature
      kind feature
    - feature shape
      
@@ -354,14 +354,13 @@
       step start
       
    =visual>
-    - number nil
+   - number nil
             
    ?retrieval>
      state free
      buffer empty
 ==>
    +retrieval>
-     isa feature
      kind feature
      feature number
      
@@ -374,14 +373,13 @@
       step start
       
    =visual>
-    - number nil
+   - number nil
             
    ?retrieval>
      state free
      buffer empty
 ==>
    +retrieval>
-     isa feature
      kind feature
    - feature number
      
@@ -395,36 +393,72 @@
       step start
       
    =visual>
-    - texture nil
+   - texture nil
             
    ?retrieval>
      state free
      buffer empty
 ==>
    +retrieval>
-     isa feature
      kind feature
      feature texture
-     
    =visual>
 )
 
 (p feature*dont-pick-texture
-   "Retrieves a feature"
+   "Retrieves a feature that is not 'texture'"
    =goal>
       step start
       
    =visual>
-    - texture nil
+   - texture nil
             
    ?retrieval>
      state free
      buffer empty
 ==>
    +retrieval>
-     isa feature
      kind feature
    - feature texture
+     
+   =visual>
+)
+
+
+(p feature*pick-background
+   "Selects the 'background' feature"
+   =goal>
+      step start
+      
+   =visual>
+   - texture nil
+            
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     kind feature
+     feature background
+     
+   =visual>
+)
+
+(p feature*dont-pick-background
+   "Retrieves a feature that is not 'background'"
+   =goal>
+      step start
+      
+   =visual>
+   - texture nil
+            
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     kind feature
+   - feature background
      
    =visual>
 )
@@ -1746,7 +1780,13 @@
 (spp check*solution-found-and-time-elapsed :reward -10)
 (spp check*solution-found-and-time-not-elapsed :reward -10)
 (spp check*solution-not-found-row :reward 10)
-(spp check*solution-not-found-row :reward -10)
+(spp check*solution-not-found-column :reward 10)
+(spp verify*memorize-solution :reward 20)
+
+(spp-fct `((feature*pick-shape :u ,*bias*)))
+(spp-fct `((feature*pick-number :u ,*bias*)))
+(spp-fct `((feature*pick-texture :u ,*bias*)))
+(spp-fct `((feature*pick-background :u ,*bias*)))
 
 
 ;;; RAPM-RELOAD
