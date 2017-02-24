@@ -70,13 +70,13 @@
 
 (chunk-type (rapm-cell (:include visual-object))
 	    kind row column row-num column-num problem
-	    phase shape number background
+	    phase shape number background texture
 	    feature0 feature1 feature2 feature3 feature4
 	    feature5 feature6 feature7 feature8 feature9)
 
 (chunk-type (rapm-cell-location (:include visual-location))
 	    row column row-num column-num problem
-	    shape number background
+	    shape number background texture
 	    feature0 feature1 feature2 feature3 feature4
 	    feature5 feature6 feature7 feature8 feature9)
 

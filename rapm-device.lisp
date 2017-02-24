@@ -25,7 +25,7 @@
 
 (defparameter *reward* 10)
 
-(defparameter *ticks* 30)
+(defparameter *ticks* 15)
 
 (defun bg-reward-hook (production reward time)
   "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
@@ -719,8 +719,8 @@
     ;; missing cell slot.
     
     (set-chunk-slot-value-fct current rule-feature predicted-value)
-    (format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a~%"
-	    current rule-feature predicted-value rule-name)
+    ;(format t "Changing the chunk ~a with new slot ~a and value ~a from rule ~a~%"
+;	    current rule-feature predicted-value rule-name)
 
     ;; Removes all the irrelevant slots
     (mod-chunk-fct current '(zero nil one nil direction nil value nil feature nil)) 
@@ -752,7 +752,7 @@
       (when (and (= 3 (length current-values))
 		 (not (null (third current-values))))
 	;; nothing yet
-	(format nil "Rule name ~a~%" current-values)
+	;(format nil "Rule name ~a~%" current-values)
 	      
 	(cond ((equal rule-name 'same)
 	       (unless (and (equal (third current-values)
@@ -761,7 +761,7 @@
 				   (second current-values)))
 		 (setf verified 'no)))
 	      ((equal rule-name 'constant)
-	       (print (list current-values rule-values))
+	       ;(print (list current-values rule-values))
 	       (unless (equalp current-values rule-values)
 		 (setf verified 'no)))
 
@@ -772,7 +772,7 @@
 	      ((equal rule-name 'progression)
 
 	       ;; This is not quite right---makes lots of assumptions.
-	       (print (list current-values rule-values))
+	       ;(print (list current-values rule-values))
 	       (unless (equalp current-values rule-values)
 		 (setf verified 'no)))
 	      )))
