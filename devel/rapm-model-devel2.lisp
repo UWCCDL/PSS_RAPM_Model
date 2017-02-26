@@ -43,18 +43,20 @@
 
 (sgp :style-warnings nil
      :model-warnings nil
+     :style-warnings nil
      :auto-attend t
      :er t
      :ans 0.05
      :record-ticks nil
      :esc t
      :mas 8.0
+     :bll nil
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
      :reward-hook bg-reward-hook
-     :alpha 0.5
-     :egs 0.1
+     :alpha 0.9
+     :egs 0.2
 ;;     :trace-filter production-firing-only
      )
   
@@ -68,13 +70,13 @@
 
 (chunk-type (rapm-cell (:include visual-object))
 	    kind row column row-num column-num problem
-	    phase shape number background
+	    phase shape number background texture
 	    feature0 feature1 feature2 feature3 feature4
 	    feature5 feature6 feature7 feature8 feature9)
 
 (chunk-type (rapm-cell-location (:include visual-location))
 	    row column row-num column-num problem
-	    shape number background
+	    shape number background texture
 	    feature0 feature1 feature2 feature3 feature4
 	    feature5 feature6 feature7 feature8 feature9)
 
@@ -280,18 +282,17 @@
       step start
       kind rapm-problem
       problem =PID
-
-   +imaginal>
-      value something
-   
+      
    +visual-location>
       kind rapm-cell
       screen-x lowest
       screen-y lowest
-      
+
    ;; Cleans up the reward signals
    !eval! (trigger-reward nil)
 )
+
+
 
 ;;; ---------------------------------------------------------------- ;;
 ;;; 1.1 FEATURE SELECTION
@@ -311,6 +312,23 @@
 
 ;; This is the crucial part.
 
+(p feature*start-feature
+   =goal>
+      step start
+      
+    ?visual>
+     state free
+   
+   ?imaginal>
+      state free
+      buffer empty
+==>
+   =goal>
+
+   +imaginal>
+      kind attention
+)
+
 (p feature*pick-shape
    "Attends shape"
    =goal>
@@ -318,10 +336,9 @@
       
    =visual>
    - shape nil
-     row =ROW
 
    =imaginal>
-     feature nil
+     shape nil
 
    ?visual>
      state free
@@ -329,14 +346,11 @@
    ?imaginal>
      state free
 ==>
-   =goal>
-      step check
-
+   =goal>     
    =visual>
       
    *imaginal>
-      feature shape
-      value =ROW
+      shape shape
 )
 
 (p feature*dont-pick-shape
@@ -346,7 +360,6 @@
       
    =visual>
    - shape nil
-     row =ROW
 
    =imaginal>
      shape nil
@@ -359,7 +372,6 @@
 
 ==>
    =goal>
-     step check
 
    =visual>
 
@@ -374,10 +386,9 @@
       
    =visual>
    - number nil
-     row =ROW
 
    =imaginal>
-     feature nil
+     number nil
 
    ?visual>
      state free
@@ -386,13 +397,11 @@
      state free
 ==>
    =goal>
-      step check
 
    =visual>
       
    *imaginal>
-      feature number
-      value =ROW
+      number number
 )
 
 (p feature*dont-pick-number
@@ -402,7 +411,6 @@
       
    =visual>
    - number nil
-     row =ROW
 
    =imaginal>
      number nil  
@@ -429,10 +437,9 @@
       
    =visual>
    - texture nil
-     row =ROW
 
    =imaginal>
-     feature nil
+     texture nil
 
    ?visual>
      state free
@@ -441,13 +448,11 @@
      state free
 ==>
    =goal>
-      step check
 
    =visual>
       
    *imaginal>
-      feature texture
-      value =ROW
+      texture texture
 )
 
 (p feature*dont-pick-texture
@@ -456,8 +461,7 @@
       step start
       
    =visual>
-   - texture nil
-     row =ROW
+   - shape nil
 
    =imaginal>
      texture nil  
@@ -470,8 +474,7 @@
 
 ==>
    =goal>
-     step check
-   
+
    =visual>
 
    *imaginal>
@@ -485,10 +488,9 @@
       
    =visual>
    - background nil
-     row =ROW
 
    =imaginal>
-     feature nil
+     background nil
 
    ?visual>
      state free
@@ -497,13 +499,11 @@
      state free
 ==>
    =goal>
-      step check
 
    =visual>
       
    *imaginal>
-      feature background
-      value =ROW
+      background background
 )
 
 (p feature*dont-pick-background
@@ -513,7 +513,6 @@
       
    =visual>
    - background nil
-     row =ROW
 
    =imaginal>
      background nil 
@@ -526,7 +525,6 @@
 
 ==>
    =goal>
-     step check
 
    =visual>
 
@@ -541,10 +539,9 @@
       
    =visual>
    - color nil
-     row =ROW
 
    =imaginal>
-     feature nil
+     color nil
    
    ?visual>
      state free
@@ -557,8 +554,7 @@
    =visual>
       
    *imaginal>
-      feature color
-      value =ROW
+      color color
 )
 
 (p feature*dont-pick-color
@@ -567,9 +563,8 @@
       step start
       
    =visual>
-   - shape nil
-     row =ROW
-
+   - color nil
+ 
    =imaginal>
      color nil
    
@@ -581,14 +576,92 @@
 
 ==>
    =goal>
-     step check
-   
+
    =visual>
 
    *imaginal>
      color no
 )
 
+
+
+;;; Encode FEATURE
+;;;
+;;; Once a feature has been selected, encode it and proceed with the next step/
+
+
+(p feature*enough
+   =goal>
+     step start
+      
+   ?visual>
+     state free
+     buffer full
+
+   ?imaginal>
+     state free
+     buffer full
+   
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   =goal>
+     step check
+   
+   +retrieval>
+     kind feature
+   
+)
+
+
+(p feature*encode-feature
+   "Once a feature has been retrieved, select it for examination"
+   =goal>
+      step check
+
+   =retrieval>
+      isa feature
+      kind feature
+      feature =FEATURE
+
+   ?visual>
+      state free
+   
+   =visual>
+    - =FEATURE nil     
+      row =R
+    
+==> 
+   =goal>
+
+   =visual>
+      
+   +imaginal>
+      feature =FEATURE
+      value =R
+)
+
+(p feature*discard-garbage
+   "Just in case we have picked the wrong feature, discard it"
+   =goal>
+      step check
+
+   =retrieval>
+      isa feature
+      kind feature
+      feature =FEATURE
+
+   =visual>
+     =FEATURE nil     
+      row =R      
+ ==>
+   =goal>
+     start
+   
+   =visual>      
+   -retrieval>      
+)
 
 ;;; ---------------------------------------------------------------- ;;
 ;;; 1.2 FEATURE CHECK
@@ -671,7 +744,8 @@
       kind rapm-problem
 
    -temporal>   ; Stop counting
-   ;!eval! (reset-declarative-finsts)
+   !eval! (reset-declarative-finsts)
+;   !eval! (trigger-reward (* -1 *reward*))
 )
 
 
@@ -700,9 +774,6 @@
    =goal>
       step start
 
-   *imaginal>
-      feature nil
-  
    =visual>
    ;; This is ugly but I cannot find a better way to do it.
    ;; Should ask Dan...
@@ -1300,9 +1371,6 @@
    =goal>
      step start
 
-   +imaginal>
-     value something
-   
    ;; Moves attention to the first cell
    +visual-location>
      kind rapm-cell
@@ -1336,9 +1404,6 @@
    +temporal>
      isa time
      ticks 0
-
-   +imaginal>
-     value something  
 )
 
 
@@ -1866,6 +1931,11 @@
 (spp check*solution-not-found-column :reward 10)
 (spp verify*successful :reward 10)
 (spp verify*not-successful :reward -10)
+
+(spp-fct `((feature*pick-shape :u ,*bias*)))
+(spp-fct `((feature*pick-number :u ,*bias*)))
+(spp-fct `((feature*pick-texture :u ,*bias*)))
+(spp-fct `((feature*pick-background :u ,*bias*)))
 
 
 ;;; RAPM-RELOAD

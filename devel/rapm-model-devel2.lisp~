@@ -43,18 +43,20 @@
 
 (sgp :style-warnings nil
      :model-warnings nil
+     :style-warnings nil
      :auto-attend t
      :er t
      :ans 0.05
      :record-ticks nil
      :esc t
      :mas 8.0
+     :bll nil
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
      :reward-hook bg-reward-hook
-     :alpha 0.5
-     :egs 0.1
+     :alpha 0.9
+     :egs 0.2
 ;;     :trace-filter production-firing-only
      )
   
@@ -68,13 +70,13 @@
 
 (chunk-type (rapm-cell (:include visual-object))
 	    kind row column row-num column-num problem
-	    phase shape number background
+	    phase shape number background texture
 	    feature0 feature1 feature2 feature3 feature4
 	    feature5 feature6 feature7 feature8 feature9)
 
 (chunk-type (rapm-cell-location (:include visual-location))
 	    row column row-num column-num problem
-	    shape number background
+	    shape number background texture
 	    feature0 feature1 feature2 feature3 feature4
 	    feature5 feature6 feature7 feature8 feature9)
 
@@ -280,10 +282,7 @@
       step start
       kind rapm-problem
       problem =PID
-
-   +imaginal>
-      value something
-   
+      
    +visual-location>
       kind rapm-cell
       screen-x lowest
@@ -312,281 +311,207 @@
 ;; This is the crucial part.
 
 (p feature*pick-shape
-   "Attends shape"
+   "Retrieves a feature"
    =goal>
       step start
       
    =visual>
-   - shape nil
-     row =ROW
-
-   =imaginal>
-     feature nil
-
-   ?visual>
+    - shape nil
+            
+   ?retrieval>
      state free
-   
-   ?imaginal>
-     state free
+     buffer empty
 ==>
-   =goal>
-      step check
-
+   +retrieval>
+     kind feature
+     feature shape
+     
    =visual>
-      
-   *imaginal>
-      feature shape
-      value =ROW
 )
 
 (p feature*dont-pick-shape
-   "Does not attend shape"
+   "Retrieves a feature"
    =goal>
       step start
       
    =visual>
    - shape nil
-     row =ROW
-
-   =imaginal>
-     shape nil
-   
-   ?visual>
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
-
+     buffer empty
 ==>
-   =goal>
-     step check
-
+   +retrieval>
+     kind feature
+   - feature shape
+     
    =visual>
-
-   *imaginal>
-     shape no
 )
 
 (p feature*pick-number
-   "Attends number"
+   "Retrieves a feature"
    =goal>
       step start
       
    =visual>
    - number nil
-     row =ROW
-
-   =imaginal>
-     feature nil
-
-   ?visual>
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
+     buffer empty
 ==>
-   =goal>
-      step check
-
+   +retrieval>
+     kind feature
+     feature number
+     
    =visual>
-      
-   *imaginal>
-      feature number
-      value =ROW
 )
 
 (p feature*dont-pick-number
-   "Does not attend number"
+   "Retrieves a feature that is not number"
    =goal>
       step start
       
    =visual>
    - number nil
-     row =ROW
-
-   =imaginal>
-     number nil  
-     
-   ?visual>
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
+     buffer empty
 ==>
-   =goal>
-
+   +retrieval>
+     kind feature
+   - feature number
+     
    =visual>
-
-   *imaginal>
-     number no
 )
 
 
 (p feature*pick-texture
-   "Attends texture"
+   "Selects the 'texture' feature"
    =goal>
       step start
       
    =visual>
    - texture nil
-     row =ROW
-
-   =imaginal>
-     feature nil
-
-   ?visual>
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
+     buffer empty
 ==>
-   =goal>
-      step check
-
+   +retrieval>
+     kind feature
+     feature texture
    =visual>
-      
-   *imaginal>
-      feature texture
-      value =ROW
 )
 
 (p feature*dont-pick-texture
-   "Does not attend texture"
+   "Retrieves a feature that is not 'texture'"
    =goal>
       step start
       
    =visual>
    - texture nil
-     row =ROW
-
-   =imaginal>
-     texture nil  
-     
-   ?visual>
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
-
+     buffer empty
 ==>
-   =goal>
-     step check
-   
+   +retrieval>
+     kind feature
+   - feature texture
+     
    =visual>
-
-   *imaginal>
-     texture no
 )
 
+
 (p feature*pick-background
-   "Attends number"
+   "Selects the 'background' feature"
    =goal>
       step start
       
    =visual>
-   - background nil
-     row =ROW
+   - texture nil
+            
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     kind feature
+     feature background
+     
+   =visual>
+)
 
-   =imaginal>
-     feature nil
+(p feature*dont-pick-background
+   "Retrieves a feature that is not 'background'"
+   =goal>
+      step start
+      
+   =visual>
+   - texture nil
+            
+   ?retrieval>
+     state free
+     buffer empty
+==>
+   +retrieval>
+     kind feature
+   - feature background
+     
+   =visual>
+)
+
+
+;;; Encode FEATURE
+;;;
+;;; Once a feature has been selected, encode it and proceed with the next step/
+
+(p feature*encode-feature
+   "Once a feature has been retrieved, select it for examination"
+   =goal>
+      step start
+
+   =retrieval>
+      isa feature
+      kind feature
+      feature =FEATURE
 
    ?visual>
-     state free
-
-   ?imaginal>
-     state free
-==>
+      state free
+   
+   =visual>
+    - =FEATURE nil     
+      row =R
+    
+==> 
    =goal>
       step check
 
    =visual>
       
-   *imaginal>
-      feature background
-      value =ROW
+   +imaginal>
+      feature =FEATURE
+      value =R
 )
 
-(p feature*dont-pick-background
-   "Does not attend background"
+(p feature*discard-garbage
+   "Just in case we have picked the wrong feature, discard it"
    =goal>
       step start
-      
+
+   =retrieval>
+      isa feature
+      kind feature
+      feature =FEATURE
+
    =visual>
-   - background nil
-     row =ROW
-
-   =imaginal>
-     background nil 
-     
-   ?visual>
-     state free
-
-   ?imaginal>
-     state free
-
+     =FEATURE nil     
+      row =R      
 ==>
-   =goal>
-     step check
-
-   =visual>
-
-   *imaginal>
-     background no
-)
-
-(p feature*pick-color
-   "Attends color"
-   =goal>
-      step start
-      
-   =visual>
-   - color nil
-     row =ROW
-
-   =imaginal>
-     feature nil
-   
-   ?visual>
-     state free
-
-   ?imaginal>
-     state free
-==>
-   =goal>
-
-   =visual>
-      
-   *imaginal>
-      feature color
-      value =ROW
-)
-
-(p feature*dont-pick-color
-   "Does not attend color"
-   =goal>
-      step start
-      
-   =visual>
-   - shape nil
-     row =ROW
-
-   =imaginal>
-     color nil
-   
-   ?visual>
-     state free
-
-   ?imaginal>
-     state free
-
-==>
-   =goal>
-     step check
-   
-   =visual>
-
-   *imaginal>
-     color no
+   =visual>      
+   -retrieval>      
 )
 
 
@@ -671,7 +596,8 @@
       kind rapm-problem
 
    -temporal>   ; Stop counting
-   ;!eval! (reset-declarative-finsts)
+   !eval! (reset-declarative-finsts)
+;   !eval! (trigger-reward (* -1 *reward*))
 )
 
 
@@ -700,9 +626,6 @@
    =goal>
       step start
 
-   *imaginal>
-      feature nil
-  
    =visual>
    ;; This is ugly but I cannot find a better way to do it.
    ;; Should ask Dan...
@@ -1300,9 +1223,6 @@
    =goal>
      step start
 
-   +imaginal>
-     value something
-   
    ;; Moves attention to the first cell
    +visual-location>
      kind rapm-cell
@@ -1336,9 +1256,6 @@
    +temporal>
      isa time
      ticks 0
-
-   +imaginal>
-     value something  
 )
 
 
@@ -1864,8 +1781,12 @@
 (spp check*solution-found-and-time-not-elapsed :reward -10)
 (spp check*solution-not-found-row :reward 10)
 (spp check*solution-not-found-column :reward 10)
-(spp verify*successful :reward 10)
-(spp verify*not-successful :reward -10)
+(spp verify*memorize-solution :reward 20)
+
+(spp-fct `((feature*pick-shape :u ,*bias*)))
+(spp-fct `((feature*pick-number :u ,*bias*)))
+(spp-fct `((feature*pick-texture :u ,*bias*)))
+(spp-fct `((feature*pick-background :u ,*bias*)))
 
 
 ;;; RAPM-RELOAD

@@ -1781,7 +1781,8 @@
 (spp check*solution-found-and-time-not-elapsed :reward -10)
 (spp check*solution-not-found-row :reward 10)
 (spp check*solution-not-found-column :reward 10)
-(spp verify*memorize-solution :reward 20)
+(spp verify*successful :reward 10)
+(spp verify*not-successful :reward -10)
 
 (spp-fct `((feature*pick-shape :u ,*bias*)))
 (spp-fct `((feature*pick-number :u ,*bias*)))

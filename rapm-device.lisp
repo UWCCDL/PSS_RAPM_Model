@@ -522,7 +522,7 @@
       (dotimes (j 3)
 	(let* ((cell (problem-cell problem i j))
 	       (feature-slots (generate-feature-slots cell)))
-	  (unless (null cell)  ; Unless we ar in the missing cell	
+	  (unless (null cell)  ; Unless we are in the missing cell	
 	    (push  `(isa rapm-cell-location 
 			 kind rapm-cell
 			 value ,(intern (format nil "ROW~A-COL~A" i j))
