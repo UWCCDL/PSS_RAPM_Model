@@ -50,7 +50,7 @@
      :record-ticks nil
      :esc t
      :mas 8.0
-     :bll nil
+     :bll nil 
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
@@ -1781,8 +1781,8 @@
 (spp check*solution-found-and-time-not-elapsed :reward -10)
 (spp check*solution-not-found-row :reward 10)
 (spp check*solution-not-found-column :reward 10)
-(spp verify*successful :reward 10)
-(spp verify*not-successful :reward -10)
+;(spp verify*successful :reward 10)
+;(spp verify*not-successful :reward -10)
 
 (spp-fct `((feature*pick-shape :u ,*bias*)))
 (spp-fct `((feature*pick-number :u ,*bias*)))

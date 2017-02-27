@@ -39,7 +39,7 @@
 
 (clear-all)
 
-(define-model bar
+(define-model bar-devel2
 
 (sgp :style-warnings nil
      :model-warnings nil
@@ -50,12 +50,12 @@
      :record-ticks nil
      :esc t
      :mas 8.0
-     :bll nil
+     :bll 0.5; nil
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
      :reward-hook bg-reward-hook
-     :alpha 0.9
+     :alpha 0.1
      :egs 0.2
 ;;     :trace-filter production-firing-only
      )
@@ -84,6 +84,8 @@
 	    id)
 
 (chunk-type sketchpad nature verified problem)
+
+(chunk-type attention kind color texture background shape number)
 
 (chunk-type rapm-goal step routine problem direction span direction-num span-num)
 
@@ -326,6 +328,7 @@
    =goal>
 
    +imaginal>
+      isa attention
       kind attention
 )
 
@@ -532,56 +535,6 @@
      background no
 )
 
-(p feature*pick-color
-   "Attends color"
-   =goal>
-      step start
-      
-   =visual>
-   - color nil
-
-   =imaginal>
-     color nil
-   
-   ?visual>
-     state free
-
-   ?imaginal>
-     state free
-==>
-   =goal>
-
-   =visual>
-      
-   *imaginal>
-      color color
-)
-
-(p feature*dont-pick-color
-   "Does not attend color"
-   =goal>
-      step start
-      
-   =visual>
-   - color nil
- 
-   =imaginal>
-     color nil
-   
-   ?visual>
-     state free
-
-   ?imaginal>
-     state free
-
-==>
-   =goal>
-
-   =visual>
-
-   *imaginal>
-     color no
-)
 
 
 
@@ -1929,13 +1882,16 @@
 (spp check*solution-found-and-time-not-elapsed :reward -10)
 (spp check*solution-not-found-row :reward 10)
 (spp check*solution-not-found-column :reward 10)
-(spp verify*successful :reward 10)
-(spp verify*not-successful :reward -10)
+;(spp verify*successful :reward 10)
+;(spp verify*not-successful :reward -10)
+
+
 
 (spp-fct `((feature*pick-shape :u ,*bias*)))
 (spp-fct `((feature*pick-number :u ,*bias*)))
 (spp-fct `((feature*pick-texture :u ,*bias*)))
 (spp-fct `((feature*pick-background :u ,*bias*)))
+(spp-fct `((feature*enough :u -100 :fixed-utility t)))
 
 
 ;;; RAPM-RELOAD
