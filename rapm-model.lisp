@@ -1198,8 +1198,6 @@
       direction =DIR
       feature =FEATURE
       focus nil  ;; Remove the 'focus' slot. Makes for cleaner chunks
-
-   !eval! (trigger-reward *reward*)
 )
 
 
@@ -1229,7 +1227,6 @@
      row zero
      column zero
    -retrieval>
-   !eval! (trigger-reward (* -1 *reward*))
 )
 
 
@@ -1256,6 +1253,7 @@
    +temporal>
      isa time
      ticks 0
+   !eval! (trigger-reward nil)
 )
 
 

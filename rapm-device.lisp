@@ -30,6 +30,7 @@
 (defun bg-reward-hook (production reward time)
   "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
   (declare (ignore time))
+  (format t "BG: ~A, <~A>~%" production reward)
   (let* ((pname (symbol-name production))
 	 (i (position #\* pname))
 	 (start (subseq pname (1+ i) (+ 5 i))))
