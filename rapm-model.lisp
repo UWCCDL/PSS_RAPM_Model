@@ -55,8 +55,8 @@
      :lf 0.01
      :ul t
      :reward-hook bg-reward-hook
-     :alpha 0.9
-     :egs 0.2
+     :alpha 0.1
+     :egs 0.1
 ;;     :trace-filter production-firing-only
      )
   
