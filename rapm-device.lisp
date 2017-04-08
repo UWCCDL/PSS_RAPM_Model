@@ -25,7 +25,7 @@
 
 (defparameter *reward* 10)
 
-(defparameter *ticks* 40)
+(defparameter *ticks* 15)
 
 (defparameter *verbose* nil)
 
@@ -364,7 +364,7 @@
    (index :accessor index
 	  :initform nil)
    (trials :accessor trials
-	   :initform *trials*)
+	   :initform (scramble* *trials*))
    (current-trial :accessor current-trial
 		  :initform nil)
    (experiment-log :accessor experiment-log

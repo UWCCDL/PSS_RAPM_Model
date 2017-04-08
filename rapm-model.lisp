@@ -55,10 +55,10 @@
      :lf 0.01
      :ul t
      :reward-hook bg-reward-hook
-     :alpha 0.1
+     :alpha 0.5
      :egs 0.1
      :imaginal-activation 10
-     :visual-activation 10
+     :visual-activation 20
      :trace-filter production-firing-only
      )
   

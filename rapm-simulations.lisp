@@ -39,7 +39,7 @@
 	(dotimes (j n)
 	  (rapm-reload nil)  ; Reload
 	  (sgp :v nil)
-	  (no-output (run 1000 :real-time nil))
+	  (no-output (run 10000 :real-time nil))
 	  (push (trial-accuracy (first (experiment-log (current-device))))
 		partial))
 	(push (apply #'mean partial) results)))
@@ -54,8 +54,11 @@
 	(dotimes (j n)
 	  (rapm-reload nil)  ; Reload
 	  (sgp :v nil)
-	  (no-output (run 100 :real-time nil))
-	  (push (trial-accuracy (first (experiment-log (current-device))))
+	  (no-output (run 10000 :real-time nil))
+	  (print (list j (index (current-device)) (mp-time)))
+	  (push (apply #'mean
+		       (mapcar #'trial-accuracy (experiment-log (current-device)))
+		       )
 		partial))
 	(push (apply #'mean partial) results)))
     (pairlis (mapcar #'float (reverse d1vals)) (mapcar #'float results))))

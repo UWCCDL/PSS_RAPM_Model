@@ -191,4 +191,6 @@
 ;(defparameter *trials* (mapcar #'make-trial
 ;			       (list *simple-trial-3-features*)))
 (defparameter *trials* (mapcar #'make-trial
-			       (list *simple-trial-4-rules*)))
+			       (list *simple-trial-2-rules*
+				     *simple-trial-3-rules*
+				     *simple-trial-4-rules*)))
