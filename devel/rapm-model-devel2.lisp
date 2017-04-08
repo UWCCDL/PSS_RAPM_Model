@@ -1,40 +1,7 @@
 ;;; ==================================================================
 ;;; A model of RAPM
 ;;; ==================================================================
-;;; An ACT-R model that solves Raven's (Advanced) Progressive Matrices
-;;; in a human-like fashion. It also explains the correlation with
-;;; PSS 
-;;;
-;;; To dos:
-;;;
-;;;    1. [DONE] Generate a missing cell when the rule has been found.
-;;;
-;;;    2. [DONE--not pretty] Decide to examine row or column for a
-;;;       given feature.
-;;;
-;;;    3. [Done] Trigger rewards for new feature when no solution is
-;;;       found.  Trigger when a new solution is found too (maybe
-;;;       only when solution is found). 
-;;;
-;;;    4. [Done] Identify rules much like features. This likely 
-;;;       requires some lisp code on the side. Some ideas are there. 
-;;;
-;;;    5. [Done]---Four rules] Add a consistent set of rules. 
-;;;
-;;;    6. [Done] Add serious verification rules
-;;;
-;;;    7. [Done---four rule] Add larger set of generation rules for missing cell.
-;;;
-;;;    8. Needs to insist on same feature when one rule fails
-;;;       (but prevent the rule from being reused)
-;;;
-;;;    9. Find better algorithm for pick/don't pick. Better one would
-;;;       be incremental vetting (pick a feature, then vet pick/dont,
-;;;       then repeat).
-;;;
-;;; Bugs:
-;;;
-;;;    1. [Fixed] Sometimes evaluation of a second solution fails.
+;;; Devel 2 version
 ;;; ==================================================================
 
 (clear-all)
