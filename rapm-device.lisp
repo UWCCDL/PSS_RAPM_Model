@@ -25,7 +25,7 @@
 
 (defparameter *reward* 10)
 
-(defparameter *ticks* 15)
+(defparameter *ticks* 40)
 
 (defparameter *verbose* nil)
 
@@ -52,7 +52,7 @@
 
 (defun prod-utilities ()
   (dolist (p *comp-prods*)
-    (format t "~A : ~A~%" p (production-utility p))))
+    (format t "~A : ~A~%" p (production-u p))))
 
 ;; ---------------------------------------------------------------- ;;
 ;; Some utilities

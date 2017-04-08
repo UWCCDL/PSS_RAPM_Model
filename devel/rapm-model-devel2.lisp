@@ -54,6 +54,7 @@
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
+     :imaginal-activation 10
      :reward-hook bg-reward-hook
      :alpha 0.1
      :egs 0.2
@@ -1878,10 +1879,10 @@
 )  ; End of the Model
 
 
-(spp check*solution-found-and-time-elapsed :reward -10)
-(spp check*solution-found-and-time-not-elapsed :reward -10)
-(spp check*solution-not-found-row :reward 10)
-(spp check*solution-not-found-column :reward 10)
+(spp check*solution-found-and-time-elapsed :reward -1)
+(spp check*solution-found-and-time-not-elapsed :reward -1)
+(spp check*solution-not-found-row :reward 1)
+(spp check*solution-not-found-column :reward 1)
 ;(spp verify*successful :reward 10)
 ;(spp verify*not-successful :reward -10)
 

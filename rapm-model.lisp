@@ -57,7 +57,9 @@
      :reward-hook bg-reward-hook
      :alpha 0.1
      :egs 0.1
-;;     :trace-filter production-firing-only
+     :imaginal-activation 10
+     :visual-activation 10
+     :trace-filter production-firing-only
      )
   
 
@@ -1775,8 +1777,8 @@
 )  ; End of the Model
 
 
-(spp check*solution-found-and-time-elapsed :reward -10)
-(spp check*solution-found-and-time-not-elapsed :reward -10)
+(spp check*solution-found-and-time-elapsed :reward -1)
+(spp check*solution-found-and-time-not-elapsed :reward -1)
 (spp check*solution-not-found-row :reward 10)
 (spp check*solution-not-found-column :reward 10)
 ;(spp verify*successful :reward 10)
