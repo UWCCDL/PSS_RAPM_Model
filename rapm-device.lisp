@@ -25,7 +25,7 @@
 
 (defparameter *reward* 10)
 
-(defparameter *ticks* 15)
+(defparameter *ticks* 25)
 
 (defparameter *verbose* nil)
 
@@ -44,6 +44,121 @@
 	   (* *d2* reward))
 	  (t
 	   nil))))
+
+
+(defun bg-reward-hook-anticorrelated (production reward time)
+  "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
+  (declare (ignore time))
+  (let ((module (get-module utility)))
+    
+    (when *verbose*
+      (format t "BG: ~A, <~A>~%" production reward))
+    (let* ((path (production-pathway production))
+	   (twin (production-twin production)))
+      (case path
+	(pick
+	 (when twin
+	   (linear-update-utility module (intern twin) (* -1 *d2* reward)))
+	 (* *d1* reward))
+	(dontpick
+	 (when twin
+	   (linear-update-utility module (intern twin) (* -1 *d1* reward)))
+	 (* *d2* reward))
+	(othwerise
+	 nil)))))
+
+
+(defun production-pathway (production)
+  "Determines if a production is a 'pathway' production, and, if so, which pathway"
+  (let* ((pname (symbol-name production))
+	 (i (position #\* pname)))
+    (when i
+      (let ((start (subseq pname (1+ i) (+ 5 i))))
+	
+	(cond ((string-equal start "PICK")
+	       'pick)
+	      ((string-equal start "DONT")
+	       'dontpick)
+	      (t
+	       nil))))))
+
+
+(defun production-pathway-action (production)
+  "If we have a 'path' production, determines its gate (action)"
+  (when (production-pathway production)
+    (let* ((pname (symbol-name production))
+	   (start (search "PICK" pname)))
+      (subseq pname (+ start 5)))))
+
+
+(defun production-prefix (production)
+  (let* ((pname (symbol-name production))
+	 (i (position #\* pname)))
+    (subseq pname 0 i)))
+
+
+(defun production-twin (production)
+  (let ((path (production-pathway production)))
+    (when path
+      (let ((prefix (production-prefix production))
+	    (action (production-pathway-action production)))
+	(case path
+	  (pick
+	   (concatenate 'string prefix "*DONT-PICK-" action))
+	  (dontpick
+	   (concatenate 'string prefix "*PICK-" action))
+	  (otherwise nil))))))
+
+
+(defun bg-reward-hook-anticorrelated (production reward time)
+  "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
+  (declare (ignore time))
+  (let ((module (get-module utility)))
+    
+    (when *verbose*
+      (format t "BG: ~A, <~A>~%" production reward))
+    (let* ((path (production-pathway production))
+	   (twin (production-twin production)))
+      (case path
+	(pick
+	 (when twin
+	   (linear-update-utility module (intern twin) (* -1 *d2* reward)))
+	 (* *d1* reward))
+	(dontpick
+	 (when twin
+	   (linear-update-utility module (intern twin) (* -1 *d1* reward)))
+	 (* *d2* reward))
+	(othwerise
+	 nil)))))
+
+(defun bg-reward-hook-anticorrelated-asymmetrical (production reward time)
+  "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
+  (declare (ignore time))
+  (let ((module (get-module utility)))
+    
+    (when *verbose*
+      (format t "BG: ~A, <~A>~%" production reward))
+    (let* ((path (production-pathway production))
+	   (twin (production-twin production)))
+      (case path
+	(pick
+	 (when twin
+	   (linear-update-utility module (intern twin) (* -1 *d2* reward)))
+	 (* *d1* reward))
+	(dontpick
+	 (if (all-productions-negative (utility-history module))
+	     (progn
+	       (when twin
+		 (linear-update-utility module (intern twin) (* -1 *d1* reward)))
+	       (* *d2* reward))
+	     (caar (spp-fct (list production :u)))))
+	(othwerise
+	 nil)))))
+
+(defun all-productions-negative (history)
+  (not (remove-if-not #'(lambda (x) (let ((path (production-pathway x)))
+				      (equal path 'pick)))
+		      history :key #'utility-history-name)))
 
 (defparameter *comp-prods* '(FEATURE*PICK-SHAPE FEATURE*DONT-PICK-SHAPE
 			     FEATURE*PICK-NUMBER FEATURE*DONT-PICK-NUMBER

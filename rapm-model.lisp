@@ -38,7 +38,7 @@
 ;;; ==================================================================
 
 (clear-all)
-
+(written-for-act-r-version "7.4.0")
 (define-model bar
 
 (sgp :style-warnings nil
@@ -54,9 +54,9 @@
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
-     :reward-hook bg-reward-hook
-     :alpha 0.5
-     :egs 0.1
+     :reward-hook bg-reward-hook-anticorrelated
+     :alpha 0.3
+     :egs 0.2
      :imaginal-activation 10
      :visual-activation 20
      :trace-filter production-firing-only
@@ -828,6 +828,31 @@
      same possible
 
 )
+
+(p find-rule*dont-pick-same
+   "Rule to be suggested when a feauture increases"
+   =goal>
+     step find-rule
+
+   =imaginal>
+     zero =P
+     one =P
+     two =P
+     rule nil
+     
+   ?retrieval>
+     state free
+     buffer empty
+==>
+  =imaginal>
+
+   +retrieval>
+     isa rule
+     kind rule
+   - name same
+     progression possible
+)
+
 
 #| ;; Not yet
 (p find-rule*dont-pick-same
@@ -1779,15 +1804,15 @@
 
 (spp check*solution-found-and-time-elapsed :reward -1)
 (spp check*solution-found-and-time-not-elapsed :reward -1)
-(spp check*solution-not-found-row :reward 10)
-(spp check*solution-not-found-column :reward 10)
-;(spp verify*successful :reward 10)
-;(spp verify*not-successful :reward -10)
+(spp check*solution-not-found-row :reward 1)
+(spp check*solution-not-found-column :reward 1)
+(spp verify*successful :reward 1)
+(spp verify*not-successful :reward -1)
 
-(spp-fct `((feature*pick-shape :u ,*bias*)))
-(spp-fct `((feature*pick-number :u ,*bias*)))
-(spp-fct `((feature*pick-texture :u ,*bias*)))
-(spp-fct `((feature*pick-background :u ,*bias*)))
+;(spp-fct `((feature*pick-shape :u ,*bias*)))
+;(spp-fct `((feature*pick-number :u ,*bias*)))
+;(spp-fct `((feature*pick-texture :u ,*bias*)))
+;(spp-fct `((feature*pick-background :u ,*bias*)))
 
 
 ;;; RAPM-RELOAD
