@@ -1,45 +1,25 @@
 ;;; ==================================================================
 ;;; A model of RAPM
 ;;; ==================================================================
-;;; An ACT-R model that solves Raven's (Advanced) Progressive Matrices
-;;; in a human-like fashion. It also explains the correlation with
-;;; PSS 
+;;; Devel 7
+;;; 
+;;; This is a complete rethinking of the competing productions
+;;; algorithm described in Stocco (2017) and Stocco et al. (2017).
+;;; In essence:
 ;;;
-;;; To dos:
+;;;   1. There are no more "dont" productions.
+;;;   2. Competition is managed between "pick" productions using the
+;;;      conflict set.
+;;;   3. Production in the conflict set that did not fire are assigned
+;;;      a negative D2 reward.
 ;;;
-;;;    1. [DONE] Generate a missing cell when the rule has been found.
-;;;
-;;;    2. [DONE--not pretty] Decide to examine row or column for a
-;;;       given feature.
-;;;
-;;;    3. [Done] Trigger rewards for new feature when no solution is
-;;;       found.  Trigger when a new solution is found too (maybe
-;;;       only when solution is found). 
-;;;
-;;;    4. [Done] Identify rules much like features. This likely 
-;;;       requires some lisp code on the side. Some ideas are there. 
-;;;
-;;;    5. [Done]---Four rules] Add a consistent set of rules. 
-;;;
-;;;    6. [Done] Add serious verification rules
-;;;
-;;;    7. [Done---four rule] Add larger set of generation rules for missing cell.
-;;;
-;;;    8. Needs to insist on same feature when one rule fails
-;;;       (but prevent the rule from being reused)
-;;;
-;;;    9. Find better algorithm for pick/don't pick. Better one would
-;;;       be incremental vetting (pick a feature, then vet pick/dont,
-;;;       then repeat).
-;;;
-;;; Bugs:
-;;;
-;;;    1. [Fixed] Sometimes evaluation of a second solution fails.
+;;; In the future, the conflict set should be addressed automatically.
+;;; Here, it is derived from the name and pathway of a production.
 ;;; ==================================================================
 
 (clear-all)
 (written-for-act-r-version "7.4.0")
-(define-model bar
+(define-model bar-devel7
 
 (sgp :style-warnings nil
      :model-warnings nil
@@ -54,18 +34,18 @@
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
-     :reward-hook bg-reward-hook-anticorrelated
-     :alpha 0.3
-     :egs 0.2
+     :reward-hook bg-reward-hook-selection
+     :alpha 0.2
+     :egs 0.01
      :imaginal-activation 10
-     :visual-activation 20
+     :visual-activation 10
      :trace-filter production-firing-only
      )
   
 
 ;;; CHUNK TYPES
 ;;;
-;;; Chnunk types. Not needed... but they save lots of warnings.
+;;; Chunk types. Not needed... but they save lots of warnings.
 ;;;
 (chunk-type (rapm-screen (:include visual-object))
 	    kind id)
@@ -289,7 +269,9 @@
       kind rapm-cell
       screen-x lowest
       screen-y lowest
-      
+   +temporal>
+      isa time
+      ticks 0
    ;; Cleans up the reward signals
    !eval! (trigger-reward nil)
 )
@@ -312,6 +294,28 @@
 
 ;; This is the crucial part.
 
+(p feature*prepare
+   =goal>
+      step start
+      
+   =visual>
+     isa rapm-cell
+
+   ?imaginal>
+     state free
+     buffer empty
+ ==>
+   =visual>    
+
+   +imaginal>
+     kind attention
+   
+;   +temporal>
+;     isa time  
+;     ticks 0  
+)
+
+
 (p feature*pick-shape
    "Retrieves a feature"
    =goal>
@@ -319,36 +323,20 @@
       
    =visual>
     - shape nil
-            
-   ?retrieval>
-     state free
-     buffer empty
+
+   =imaginal>
+     kind attention
+     feature nil
+
+   ?imaginal>
+     state free  
 ==>
-   +retrieval>
-     kind feature
+   *imaginal>
      feature shape
      
    =visual>
 )
 
-(p feature*dont-pick-shape
-   "Retrieves a feature"
-   =goal>
-      step start
-      
-   =visual>
-   - shape nil
-            
-   ?retrieval>
-     state free
-     buffer empty
-==>
-   +retrieval>
-     kind feature
-   - feature shape
-     
-   =visual>
-)
 
 (p feature*pick-number
    "Retrieves a feature"
@@ -357,165 +345,83 @@
       
    =visual>
    - number nil
-            
-   ?retrieval>
-     state free
-     buffer empty
-==>
-   +retrieval>
-     kind feature
-     feature number
-     
-   =visual>
-)
 
-(p feature*dont-pick-number
-   "Retrieves a feature that is not number"
-   =goal>
-      step start
-      
-   =visual>
-   - number nil
-            
-   ?retrieval>
-     state free
-     buffer empty
+   =imaginal>
+     kind attention
+     feature nil
+
+   ?imaginal>
+     state free  
 ==>
-   +retrieval>
-     kind feature
-   - feature number
+   *imaginal>
+     feature number
      
    =visual>
 )
 
 
 (p feature*pick-texture
-   "Selects the 'texture' feature"
+   "Retrieves a feature"
    =goal>
       step start
       
    =visual>
    - texture nil
-            
-   ?retrieval>
-     state free
-     buffer empty
-==>
-   +retrieval>
-     kind feature
-     feature texture
-   =visual>
-)
 
-(p feature*dont-pick-texture
-   "Retrieves a feature that is not 'texture'"
-   =goal>
-      step start
-      
-   =visual>
-   - texture nil
-            
-   ?retrieval>
-     state free
-     buffer empty
+   =imaginal>
+     kind attention
+     feature nil
+
+   ?imaginal>
+     state free  
 ==>
-   +retrieval>
-     kind feature
-   - feature texture
+   *imaginal>
+     feature texture
      
    =visual>
 )
 
-
 (p feature*pick-background
-   "Selects the 'background' feature"
+   "Retrieves a feature"
    =goal>
       step start
       
    =visual>
-   - texture nil
-            
-   ?retrieval>
-     state free
-     buffer empty
+   - background nil
+
+   =imaginal>
+     kind attention
+     feature nil
+
+   ?imaginal>
+     state free  
 ==>
-   +retrieval>
-     kind feature
+   *imaginal>
      feature background
      
    =visual>
 )
 
-(p feature*dont-pick-background
-   "Retrieves a feature that is not 'background'"
+
+(p feature*end-of-selection
    =goal>
-      step start
-      
+     step start
+
    =visual>
-   - texture nil
-            
-   ?retrieval>
-     state free
-     buffer empty
-==>
-   +retrieval>
-     kind feature
-   - feature background
-     
-   =visual>
-)
-
-
-;;; Encode FEATURE
-;;;
-;;; Once a feature has been selected, encode it and proceed with the next step/
-
-(p feature*encode-feature
-   "Once a feature has been retrieved, select it for examination"
-   =goal>
-      step start
-
-   =retrieval>
-      isa feature
-      kind feature
-      feature =FEATURE
-
-   ?visual>
-      state free
+     row =R
    
-   =visual>
-    - =FEATURE nil     
-      row =R
-    
-==> 
-   =goal>
-      step check
-
-   =visual>
-      
-   +imaginal>
-      feature =FEATURE
-      value =R
-)
-
-(p feature*discard-garbage
-   "Just in case we have picked the wrong feature, discard it"
-   =goal>
-      step start
-
-   =retrieval>
-      isa feature
-      kind feature
-      feature =FEATURE
-
-   =visual>
-     =FEATURE nil     
-      row =R      
+   =imaginal>
+   - feature nil
 ==>
-   =visual>      
-   -retrieval>      
+;   +temporal>
+;      isa time
+;      ticks 0
+   =visual>
+   =imaginal>
+     value =R
+   *goal>
+     step check
 )
-
 
 ;;; ---------------------------------------------------------------- ;;
 ;;; 1.2 FEATURE CHECK
@@ -829,55 +735,6 @@
 
 )
 
-(p find-rule*dont-pick-same
-   "Rule to be suggested when a feauture increases"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =P
-     one =P
-     two =P
-     rule nil
-     
-   ?retrieval>
-     state free
-     buffer empty
-==>
-  =imaginal>
-
-   +retrieval>
-     isa rule
-     kind rule
-   - name same
-     progression possible
-)
-
-
-#| ;; Not yet
-(p find-rule*dont-pick-same
-   "Rule to be suggested when a feauture remains the same"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =P
-     one =P
-     two =P
-     rule nil
-     
-   ?retrieval>
-     state free
-     buffer empty
-==>
-   +retrieval>
-     isa rule
-     kind rule
-   _ name same
-     same predicted 
-)
-|#
-
 (p find-rule*pick-progression
    "Rule to be suggested when a feauture increases"
    =goal>
@@ -929,59 +786,6 @@
      name constant
      progression possible
 )
-
-(p find-rule*dont-pick-constant
-   "Rule to be suggested when a feauture increases"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =X
-     one =Y
-   - one =X
-   - two =Y
-     rule nil
-     
-   ?retrieval>
-     state free
-     buffer empty
-==>
-  =imaginal>
-
-   +retrieval>
-     isa rule
-     kind rule
-   - name constant
-     progression possible
-)
-
-
-(p find-rule*dont-pick-progression
-   "Rule to be suggested when a feauture increases"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =X
-     one =Y
-   > one =X
-   > two =Y
-     rule nil
-     
-   ?retrieval>
-     state free
-     buffer empty
-==>
-  =imaginal>
-
-   +retrieval>
-     isa rule
-     kind rule
-   - name progression
-     progression possible
-)
-
-
 
 (p find-rule*accept-suggestion
    "Very neutral. Accepts any suggestion"
@@ -1802,12 +1606,16 @@
 )  ; End of the Model
 
 
+(spp feature*restart :reward -1)
 (spp check*solution-found-and-time-elapsed :reward -1)
 (spp check*solution-found-and-time-not-elapsed :reward -1)
 (spp check*solution-not-found-row :reward 1)
 (spp check*solution-not-found-column :reward 1)
-;(spp verify*successful :reward 1)
-;(spp verify*not-successful :reward -1)
+(spp verify*successful :reward 1)
+(spp verify*not-successful :reward -1)
+(spp feature*restart :reward -1)
+
+(spp feature*restart :u -1000 :fixed-utility t)
 
 ;(spp-fct `((feature*pick-shape :u ,*bias*)))
 ;(spp-fct `((feature*pick-number :u ,*bias*)))

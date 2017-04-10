@@ -97,7 +97,6 @@
   "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
   (declare (ignore time))
   (let ((module (get-module utility)))
-    
     (when *verbose*
       (format t "BG: ~A, <~A>~%" production reward))
     (let* ((path (production-pathway production))
