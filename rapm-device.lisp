@@ -29,6 +29,8 @@
 
 (defparameter *verbose* nil)
 
+;;; The original reward hook.
+;;; -------------------------
 (defun bg-reward-hook (production reward time)
   "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
   (declare (ignore time))
@@ -45,28 +47,8 @@
 	  (t
 	   nil))))
 
-
-(defun bg-reward-hook-anticorrelated (production reward time)
-  "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
-  (declare (ignore time))
-  (let ((module (get-module utility)))
-    
-    (when *verbose*
-      (format t "BG: ~A, <~A>~%" production reward))
-    (let* ((path (production-pathway production))
-	   (twin (production-twin production)))
-      (case path
-	(pick
-	 (when twin
-	   (linear-update-utility module (intern twin) (* -1 *d2* reward)))
-	 (* *d1* reward))
-	(dontpick
-	 (when twin
-	   (linear-update-utility module (intern twin) (* -1 *d1* reward)))
-	 (* *d2* reward))
-	(othwerise
-	 nil)))))
-
+;;; The anticorrelated reward hook
+;;; ------------------------------
 
 (defun production-pathway (production)
   "Determines if a production is a 'pathway' production, and, if so, which pathway"
@@ -110,6 +92,7 @@
 	  (otherwise nil))))))
 
 
+
 (defun bg-reward-hook-anticorrelated (production reward time)
   "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
   (declare (ignore time))
@@ -130,6 +113,16 @@
 	 (* *d2* reward))
 	(othwerise
 	 nil)))))
+
+;;; The asymmetrical anticorrelated reward hook
+;;; -------------------------------------------
+
+
+(defun all-productions-negative (history)
+  (not (remove-if-not #'(lambda (x) (let ((path (production-pathway x)))
+				      (equal path 'pick)))
+		      history :key #'utility-history-name)))
+
 
 (defun bg-reward-hook-anticorrelated-asymmetrical (production reward time)
   "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
@@ -155,10 +148,31 @@
 	(othwerise
 	 nil)))))
 
-(defun all-productions-negative (history)
-  (not (remove-if-not #'(lambda (x) (let ((path (production-pathway x)))
-				      (equal path 'pick)))
-		      history :key #'utility-history-name)))
+;;; The new version --- works if we have only PICK productions
+;;; ----------------------------------------------------------
+
+(defun conflict-set (production)
+  "Returns the specific conflict set for a pick production"
+  (let ((prefix (production-prefix production))
+	(pathway (production-pathway production)))
+    (when pathway
+      (remove-if-not #'(lambda (x) (and (production-pathway x)
+					(string= (production-prefix x) prefix)))
+		     (no-output (pp))))))
+
+(defun bg-reward-hook-selection (production reward time)
+  "The newest version, with amazing abilities"
+  (declare (ignore time))
+  (let ((module (get-module utility))
+	(path (production-pathway production)))    
+    (when *verbose*
+      (format t "BG: ~A, <~A>~%" production reward))
+    (when path
+      (progn
+	(let ((rivals (remove production (conflict-set production))))
+	  (dolist (rival rivals)
+	    (linear-update-utility module rival (* -1 *d2* reward))))
+	(* *d1* reward)))))
 
 (defparameter *comp-prods* '(FEATURE*PICK-SHAPE FEATURE*DONT-PICK-SHAPE
 			     FEATURE*PICK-NUMBER FEATURE*DONT-PICK-NUMBER
@@ -166,8 +180,9 @@
 			     FEATURE*PICK-BACKGROUND FEATURE*DONT-PICK-BACKGROUND))
 
 (defun prod-utilities ()
-  (dolist (p *comp-prods*)
-    (format t "~A : ~A~%" p (production-u p))))
+  (dolist (prod (no-output (pp)))
+    (when (production-pathway prod)
+      (format t "~A : ~A~%" prod (production-u prod)))))
 
 ;; ---------------------------------------------------------------- ;;
 ;; Some utilities

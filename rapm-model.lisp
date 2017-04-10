@@ -1806,8 +1806,8 @@
 (spp check*solution-found-and-time-not-elapsed :reward -1)
 (spp check*solution-not-found-row :reward 1)
 (spp check*solution-not-found-column :reward 1)
-(spp verify*successful :reward 1)
-(spp verify*not-successful :reward -1)
+;(spp verify*successful :reward 1)
+;(spp verify*not-successful :reward -1)
 
 ;(spp-fct `((feature*pick-shape :u ,*bias*)))
 ;(spp-fct `((feature*pick-number :u ,*bias*)))

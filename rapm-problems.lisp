@@ -137,7 +137,7 @@
 	  
 ;;; Four feature/rules
 
-(defparameter *simple-problem-4-rules*
+(defparameter *simple-problem-4-rules-1*
   '(((number 1 shape triangle texture solid background white)
      (number 2 shape triangle texture striped background black)
      (number 3 shape triangle texture dotted background grey))
@@ -150,13 +150,56 @@
      (number 2 shape circle texture striped background black)
      nil)))
 
-(defparameter *simple-trial-4-rules*
-  (list *simple-problem-4-rules*
+(defparameter *simple-trial-4-rules-1*
+  (list *simple-problem-4-rules-1*
 	'(number 3 shape circle texture dotted background grey)
 	'((number 3 shape circle texture dotted background grey)
 	  (number 2 shape circle texture striped background white)
 	  (number 3 shape triangle texture dotted background grey)
 	  (number 1 shape square texture dotted background black))))
+
+(defparameter *simple-problem-4-rules-2*
+  '(((number 1 shape curve texture solid background white)
+     (number 2 shape curve texture striped background black)
+     (number 3 shape curve texture dotted background grey))
+    
+    ((number 1 shape wave texture solid background white)
+     (number 2 shape wave texture striped background black)
+     (number 3 shape wave texture dotted background grey))
+    
+    ((number 1 shape circle texture solid background white)
+     (number 2 shape circle texture striped background black)
+     nil)))
+
+(defparameter *simple-trial-4-rules-2*
+  (list *simple-problem-4-rules-2*
+	'(number 3 shape circle texture dotted background grey)
+	'((number 3 shape circle texture dotted background grey)
+	  (number 2 shape wave texture striped background black)
+	  (number 3 shape curve texture dotted background grey)
+	  (number 1 shape square texture solid background black))))
+
+
+(defparameter *simple-problem-4-rules-3*
+  '(((number 1 shape curve texture solid background white)
+     (number 1 shape curve texture striped background black)
+     (number 1 shape curve texture dotted background grey))
+    
+    ((number 2 shape wave texture solid background white)
+     (number 2 shape wave texture striped background black)
+     (number 2 shape wave texture dotted background grey))
+    
+    ((number 3 shape circle texture solid background white)
+     (number 3 shape circle texture striped background black)
+     nil)))
+
+(defparameter *simple-trial-4-rules-3*
+  (list *simple-problem-4-rules-3*
+	'(number 3 shape circle texture dotted background grey)
+	'((number 3 shape circle texture dotted background grey)
+	  (number 3 shape wave texture striped background black)
+	  (number 3 shape curve texture dotted background grey)
+	  (number 3 shape square texture solid background black))))
 
 
 (defparameter *test-trial*
@@ -191,6 +234,6 @@
 ;(defparameter *trials* (mapcar #'make-trial
 ;			       (list *simple-trial-3-features*)))
 (defparameter *trials* (mapcar #'make-trial
-			       (list *simple-trial-2-rules*
-				     *simple-trial-3-rules*
-				     *simple-trial-4-rules*)))
+			       (list *simple-trial-4-rules-3*
+				     *simple-trial-4-rules-2*
+				     *simple-trial-4-rules-1*)))

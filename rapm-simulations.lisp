@@ -31,9 +31,9 @@
 		(format file "~{~a~^, ~}~%" (mapcar #'float res))))))))))
 
 
-(defun simulate-d2 (n &key (d2vals '(1/2 1 3/2 2 5/2 3 7/2 4)))
+(defun simulate-d2 (n &key (vals '(1/2 1 3/2 2 5/2 3 7/2 4)))
   (let ((results nil))
-    (dolist (d2 d2vals)
+    (dolist (d2 vals (reverse results))
       (setf *d2* d2)
       (let ((partial nil))
 	(dotimes (j n)
@@ -44,13 +44,16 @@
 		       (mapcar #'trial-accuracy (experiment-log (current-device)))
 		       )
 		partial))
-	(push (apply #'mean partial) results)))
-    (pairlis (mapcar #'float (reverse d2vals)) (mapcar #'float results))))
+	;;(push (apply #'mean partial) results)))
+	(push (cons (float d2) (float (apply #'mean partial))) results)))))
+    
+	
+	;;(pairlis (mapcar #'float (reverse d2vals)) (mapcar #'float results))))
     
 
-(defun simulate-d1 (n &key (d1vals '(1/2 1 3/2 2 5/2 3 7/2 4)))
+(defun simulate-d1 (n &key (vals '(1/2 1 3/2 2 5/2 3 7/2 4)))
   (let ((results nil))
-    (dolist (d1 d1vals)
+    (dolist (d1 vals (reverse results))
       (setf *d1* d1)
       (let ((partial nil))
 	(dotimes (j n)
@@ -62,6 +65,7 @@
 		       (mapcar #'trial-accuracy (experiment-log (current-device)))
 		       )
 		partial))
-	(push (apply #'mean partial) results)))
-    (pairlis (mapcar #'float (reverse d1vals)) (mapcar #'float results))))
+	;;(push (apply #'mean partial) results)))
+	(push (cons (float d1) (float (apply #'mean partial))) results)))))
+    ;;(pairlis (mapcar #'float (reverse vals)) (mapcar #'float results))))
 
