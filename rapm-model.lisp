@@ -1,8 +1,34 @@
 ;;; ==================================================================
 ;;; A model of RAPM
 ;;; ==================================================================
-;;; Devel 7
-;;; 
+;;; (Based on devel version 7)
+;;;
+;;; The model works by iteratively selecting features and rules,
+;;; and internally generating rewards when the features are new
+;;; features (previously unexamined), or when the rules lead to a
+;;; success (a rule is found that explains the patterns).
+;;;
+;;; The general solution algorithm is:
+;;;
+;;;                Raven's  Problem
+;;;                        |
+;;;                 Select Feature
+;;;                        |
+;;;       +-----------+----+---...-------+
+;;;       |           |                  |
+;;;   Feature 1   Feature 2    ...   Feature N
+;;;                                      |
+;;;                                 Select Rule
+;;;
+;;;
+;;;
+;;;                        Rule 1   Rule 2  ...  Rule N
+;;;
+;;;                                
+;;;
+;;;
+;;; The D1/D2 competition
+;;; ---------------------
 ;;; This is a complete rethinking of the competing productions
 ;;; algorithm described in Stocco (2017) and Stocco et al. (2017).
 ;;; In essence:
@@ -10,8 +36,8 @@
 ;;;   1. There are no more "dont" productions.
 ;;;   2. Competition is managed between "pick" productions using the
 ;;;      conflict set.
-;;;   3. Production in the conflict set that did not fire are assigned
-;;;      a negative D2 reward.
+;;;   3. Productions in the conflict set that did not fire are
+;;;      udpated with a negative D2 reward.
 ;;;
 ;;; In the future, the conflict set should be addressed automatically.
 ;;; Here, it is derived from the name and pathway of a production.
@@ -19,7 +45,7 @@
 
 (clear-all)
 (written-for-act-r-version "7.4.0")
-(define-model bar-devel7
+(define-model bar
 
 (sgp :style-warnings nil
      :model-warnings nil
@@ -1286,27 +1312,6 @@
 
 
 
-#|
-(p propose*rule-progression
-   "Rule to be suggested when a feauture remains the same"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =P
-     one =P
-     two =P
-     rule nil
-==>
-   =imaginal>
-     rule same
-   
-   =goal>
-     step verify
-     routine nil
-)
-|#
-
 ;;; ==================================================================
 ;;; CHOICE
 ;;; ==================================================================
@@ -1606,32 +1611,26 @@
 )  ; End of the Model
 
 
-(spp feature*restart :reward -1)
+;(spp feature*restart :reward -1)
 (spp check*solution-found-and-time-elapsed :reward -1)
 (spp check*solution-found-and-time-not-elapsed :reward -1)
 (spp check*solution-not-found-row :reward 1)
 (spp check*solution-not-found-column :reward 1)
 (spp verify*successful :reward 1)
 (spp verify*not-successful :reward -1)
-(spp feature*restart :reward -1)
+;(spp feature*restart :reward -1)
 
-(spp feature*restart :u -1000 :fixed-utility t)
-
-;(spp-fct `((feature*pick-shape :u ,*bias*)))
-;(spp-fct `((feature*pick-number :u ,*bias*)))
-;(spp-fct `((feature*pick-texture :u ,*bias*)))
-;(spp-fct `((feature*pick-background :u ,*bias*)))
-
+;(spp feature*restart :u -1000 :fixed-utility t)
 
 ;;; RAPM-RELOAD
 ;;;
 ;;; Quick reload function that also installs and sets the device properly. 
 ;;;
 (defun rapm-reload (&optional (visicon t))
-  "Reloads the model and sets up the experiment"
+  "Reloads the model and sets up the experiment (and optionally prints the visicon)"
   (reload)
   (install-device (make-instance 'rapm-task))
   (init (current-device))
   (proc-display)
-  (when visicon
+  (when visicon ;; Prints the visicon 
     (print-visicon)))
