@@ -44,11 +44,7 @@
 		       (mapcar #'trial-accuracy (experiment-log (current-device)))
 		       )
 		partial))
-	;;(push (apply #'mean partial) results)))
 	(push (cons (float d2) (float (apply #'mean partial))) results)))))
-    
-	
-	;;(pairlis (mapcar #'float (reverse d2vals)) (mapcar #'float results))))
     
 
 (defun simulate-d1 (n &key (vals '(1/2 1 3/2 2 5/2 3 7/2 4)))
@@ -60,12 +56,10 @@
 	  (rapm-reload nil)  ; Reload
 	  (sgp :v nil)
 	  (no-output (run 10000 :real-time nil))
-	  ;(print (list j (index (current-device)) (mp-time)))
+	  ;(print (list *d1* j (index (current-device)) (mp-time)))
 	  (push (apply #'mean
 		       (mapcar #'trial-accuracy (experiment-log (current-device)))
 		       )
 		partial))
-	;;(push (apply #'mean partial) results)))
 	(push (cons (float d1) (float (apply #'mean partial))) results)))))
-    ;;(pairlis (mapcar #'float (reverse vals)) (mapcar #'float results))))
 

@@ -29,6 +29,7 @@
 
 (defparameter *verbose* nil)
 
+
 ;;; The original reward hook.
 ;;; -------------------------
 (defun bg-reward-hook (production reward time)
@@ -159,6 +160,7 @@
 					(string= (production-prefix x) prefix)))
 		     (no-output (pp))))))
 
+
 (defun bg-reward-hook-selection (production reward time)
   "The newest version, with amazing abilities"
   (declare (ignore time))
@@ -173,10 +175,7 @@
 	    (linear-update-utility module rival (* -1 *d2* reward))))
 	(* *d1* reward)))))
 
-(defparameter *comp-prods* '(FEATURE*PICK-SHAPE FEATURE*DONT-PICK-SHAPE
-			     FEATURE*PICK-NUMBER FEATURE*DONT-PICK-NUMBER
-			     FEATURE*PICK-TEXTURE FEATURE*DONT-PICK-TEXTURE
-			     FEATURE*PICK-BACKGROUND FEATURE*DONT-PICK-BACKGROUND))
+
 
 (defun prod-utilities ()
   (dolist (prod (no-output (pp)))

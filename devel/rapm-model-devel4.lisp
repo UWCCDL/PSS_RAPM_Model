@@ -29,7 +29,7 @@
      :lf 0.01
      :ul t
      :imaginal-activation 10
-     :reward-hook bg-reward-hook
+     :reward-hook bg-reward-hook-anticorrelated
      :alpha 0.3
      :egs 0.2
 ;;     :trace-filter production-firing-only
@@ -624,9 +624,10 @@
       row =R      
  ==>
    =goal>
-     start
+     step start
    
-   =visual>      
+   =visual>
+   -imaginal>  
    -retrieval>      
 )
 
@@ -942,30 +943,6 @@
 
 )
 
-#| ;; Not yet
-(p find-rule*dont-pick-same
-   "Rule to be suggested when a feauture remains the same"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =P
-     one =P
-     two =P
-     rule nil
-     
-   ?retrieval>
-     state free
-     buffer empty
-==>
-   +retrieval>
-     isa rule
-     kind rule
-   _ name same
-     same predicted 
-)
-|#
-
 (p find-rule*pick-progression
    "Rule to be suggested when a feauture increases"
    =goal>
@@ -1069,6 +1046,30 @@
      progression possible
 )
 
+
+(p find-rule*dont-pick-same
+   "Rule to be suggested when a feauture increases"
+   =goal>
+     step find-rule
+
+   =imaginal>
+     zero =P
+     one =P
+     two =P
+     rule nil
+     
+   ?retrieval>
+     state free
+     buffer empty
+==>
+  =imaginal>
+
+   +retrieval>
+     isa rule
+     kind rule
+   - name same
+;     progression possible
+)
 
 
 (p find-rule*accept-suggestion
@@ -1898,13 +1899,14 @@
 (spp check*solution-not-found-column :reward 1)
 (spp verify*successful :reward 1)
 (spp verify*not-successful :reward -1)
+(spp feature*discard-garbage :reward -1)
 
 
 
-;(spp-fct `((feature*pick-shape :u ,*bias*)))
-;(spp-fct `((feature*pick-number :u ,*bias*)))
-;(spp-fct `((feature*pick-texture :u ,*bias*)))
-;(spp-fct `((feature*pick-background :u ,*bias*)))
+(spp-fct `((feature*pick-shape :u ,*bias*)))
+(spp-fct `((feature*pick-number :u ,*bias*)))
+(spp-fct `((feature*pick-texture :u ,*bias*)))
+(spp-fct `((feature*pick-background :u ,*bias*)))
 (spp-fct `((feature*enough :u -100 :fixed-utility t)))
 
 

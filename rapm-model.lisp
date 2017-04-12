@@ -10,21 +10,44 @@
 ;;;
 ;;; The general solution algorithm is:
 ;;;
+;;;                     _______
+;;;                    ( START )
+;;;                     ```````
+;;;                        |
 ;;;                Raven's  Problem
 ;;;                        |
-;;;                 Select Feature
-;;;                        |
-;;;       +-----------+----+---...-------+
-;;;       |           |                  |
-;;;   Feature 1   Feature 2    ...   Feature N
-;;;                                      |
-;;;                                 Select Rule
-;;;
-;;;
-;;;
-;;;                        Rule 1   Rule 2  ...  Rule N
-;;;
-;;;                                
+;;;                   Pick Feature  <-------------------+--------+
+;;;                        |                            |        |
+;;;       +-----------+----+---...-------+              |        |
+;;;       |           |                  |              |        |
+;;;   Feature 1   Feature 2    ...   Feature X          |        |
+;;;                                      |              |        |
+;;;                                   Select            |        |
+;;;                                      |              |        |
+;;;                            Find Prev. Solution      |        |
+;;;                                      |              |        |
+;;;                                    Found?           |        |
+;;;                                   /      \          |        |
+;;;                                 No        Yes      No        |
+;;;                                 |          |      /          |
+;;;                                 |         Long time?         |
+;;;                                 |                 \          | 
+;;;                                 |                 Yes        |
+;;;                                 |                  |         |
+;;;                                 |               ___|___      |
+;;;                                 |              ( DONE! )     |
+;;;                                 |               ```````      |
+;;;           +-------------->  Pick Rule                        |
+;;;           |                     |                            |
+;;;           |           +-------+--+--...----+                 |
+;;;           |           |       |            |                 |
+;;;           |        Rule 1   Rule 2  ...  Rule Y              |
+;;;           |                                |                 |
+;;;           |                           Verify Rule            |
+;;;           |                                |                 |
+;;;           |                            Verified?             |
+;;;           |                           /         \            |  
+;;;           +------------------------- No         Yes ---------+
 ;;;
 ;;;
 ;;; The D1/D2 competition
@@ -36,11 +59,13 @@
 ;;;   1. There are no more "dont" productions.
 ;;;   2. Competition is managed between "pick" productions using the
 ;;;      conflict set.
-;;;   3. Productions in the conflict set that did not fire are
-;;;      udpated with a negative D2 reward.
+;;;   3  The one production that fires sees its utility updated with
+;;;      a positive (reward * D1) value.
+;;;   4. Productions in the conflict set that did not fire are
+;;;      udpated with a negative (D2 * reward) value.
 ;;;
-;;; In the future, the conflict set should be addressed automatically.
-;;; Here, it is derived from the name and pathway of a production.
+;;; In the future, the conflict set should be detected automatically.
+;;; Here, it is derived from the prefix and pathway of a production.
 ;;; ==================================================================
 
 (clear-all)
@@ -61,7 +86,7 @@
      :lf 0.01
      :ul t
      :reward-hook bg-reward-hook-selection
-     :alpha 0.2
+     :alpha 0.1
      :egs 0.01
      :imaginal-activation 10
      :visual-activation 10
@@ -305,6 +330,24 @@
 ;;; ---------------------------------------------------------------- ;;
 ;;; 1.1 FEATURE SELECTION
 ;;; ---------------------------------------------------------------- ;;
+;;; This is the crucial part
+;;;
+;;;                       ______
+;;;                    .-"      "-.
+;;;                   /            \
+;;;       _          |              |          _
+;;;      ( \         |,  .-.  .-.  ,|         / )
+;;;       > "=._     | )(__/  \__)( |     _.=" <
+;;;      (_/"=._"=._ |/     /\     \| _.="_.="\_)
+;;;             "=._ (_     ^^     _)"_.="
+;;;                 "=\__|IIIIII|__/="
+;;;                _.="| \IIIIII/ |"=._
+;;;      _     _.="_.="\          /"=._"=._     _
+;;;     ( \_.="_.="     `--------`     "=._"=._/ )
+;;;      > _.="                            "=._ <
+;;;     (_/                                    \_)
+;;;
+;;;
 ;;; Here are all the productions that compete for feature selection.
 ;;; Feature selection consists of two steps only, picking a feature
 ;;; to examine and encoding it into WM. The process of picking a
@@ -335,10 +378,6 @@
 
    +imaginal>
      kind attention
-   
-;   +temporal>
-;     isa time  
-;     ticks 0  
 )
 
 
@@ -439,9 +478,6 @@
    =imaginal>
    - feature nil
 ==>
-;   +temporal>
-;      isa time
-;      ticks 0
    =visual>
    =imaginal>
      value =R
@@ -523,15 +559,12 @@
     > ticks =MAX  ; Totally random value
  ==>
    =goal>
-   ;;step respond
      step generate
 
    +visual-location>
       kind rapm-problem
 
    -temporal>   ; Stop counting
-   !eval! (reset-declarative-finsts)
-;   !eval! (trigger-reward (* -1 *reward*))
 )
 
 
@@ -564,7 +597,6 @@
    ;; This is ugly but I cannot find a better way to do it.
    ;; Should ask Dan...
    !eval! (reset-declarative-finsts)   
-;   !eval! (trigger-reward (* -1 *reward*))
 )
 
 (p check*solution-not-found-row
@@ -1406,10 +1438,8 @@
 
    +visual-location>
      kind rapm-cell
-;     phase choice
    > screen-x current
-   ;;screen-x lowest
-     :nearest current-x
+    :nearest current-x
        
    =imaginal>  ; keep the imaginal
 )
@@ -1618,7 +1648,6 @@
 (spp check*solution-not-found-column :reward 1)
 (spp verify*successful :reward 1)
 (spp verify*not-successful :reward -1)
-;(spp feature*restart :reward -1)
 
 ;(spp feature*restart :u -1000 :fixed-utility t)
 
