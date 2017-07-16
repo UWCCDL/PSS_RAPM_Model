@@ -176,6 +176,58 @@
 	(* *d1* reward)))))
 
 
+(defun bg-reward-hook-selection2 (production reward time)
+  "The newest version, with amazing abilities"
+  (declare (ignore time))
+  (let ((module (get-module utility))
+	(path (production-pathway production)))    
+    (when *verbose*
+      (format t "BG: ~A, <~A>~%" production reward))
+    (when path
+      (progn
+	(let ((rivals (remove production (conflict-set production))))
+	  (dolist (rival rivals)
+	    (linear-update-utility module rival (* -1 *d2* reward))))
+	(* *d1* reward)))))
+
+
+(defun bg-reward-hook-selection3 (production reward time)
+  "The newest version, with amazing abilities"
+  (declare (ignore time))
+  (let ((module (get-module utility))
+	(path (production-pathway production)))    
+    (when *verbose*
+      (format t "BG: ~A, <~A>~%" production reward))
+    (when path
+      (progn
+	(let ((rivals (remove production (conflict-set production))))
+	  (dolist (rival rivals)
+	    (linear-update-utility module rival (/ (* -1 *d2* reward)
+						   (length rivals)))))
+	(* *d1* reward)))))
+
+
+(defun bg-reward-hook-selection4 (production reward time)
+  "The newest version, with amazing abilities"
+  (declare (ignore time))
+  (let ((module (get-module utility))
+	(path (production-pathway production)))    
+    (when *verbose*
+      (format t "BG: ~A, <~A>~%" production reward))
+    (when path
+      (progn  
+	(let* ((rivals (remove production (conflict-set production)))
+	       (n (length rivals)))
+	  (cond ((plusp reward)
+		 ;(dolist (rival rivals)
+		 ;  (linear-update-utility module rival (/ (* -1 *d2* reward)
+		;					  n)))
+		 (* *d1* reward))
+		((minusp reward)
+		 ;(dolist (rival rivals)
+		 ;  (linear-update-utility module rival (* -1 *d1* reward)))
+		 (/ (* *d2* reward) n))))))))
+
 
 (defun prod-utilities ()
   (dolist (prod (no-output (pp)))

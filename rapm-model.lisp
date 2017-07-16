@@ -85,7 +85,7 @@
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
-     :reward-hook bg-reward-hook-selection
+     :reward-hook bg-reward-hook-selection4
      :alpha 0.1
      :egs 0.01
      :imaginal-activation 10
@@ -970,7 +970,7 @@
    - =COORDINATE two
    
    =imaginal>
-     focus =VAL
+     focus =VALg
      verified yes  
 
 ==>

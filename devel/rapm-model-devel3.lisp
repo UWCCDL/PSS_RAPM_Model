@@ -320,7 +320,7 @@
       step start
       
     ?visual>
-     state free
+      state free
    
    ?imaginal>
       state free
