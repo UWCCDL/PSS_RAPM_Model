@@ -1,19 +1,24 @@
 import random
 import math
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+import matplotlib.cm as cmx
+import numpy as np
 
 class Feature():
     """A class with feature and D1/D2 selectors"""
-    def __init__(self, alpha = 0.2, d1 = 1, d2 = 1, temperature = 0.1, anticorrelated = True):
+    def __init__(self, alpha = 0.2, d1 = 1, d2 = 1, temperature = 0.1, anticorrelated = True, lowbounded = True):
         self._selected = None
-        self.go = random.uniform(-0.1, 0.1)
-        self.nogo = random.uniform(-0.1, 0.1)
+        self.lowbounded = lowbounded
         self.alpha = alpha
         self.d1 = d1
         self.d2 = d2
         self.temperature = temperature
         self.anticorrelated = anticorrelated
+        self.go = random.uniform(-0.1, 0.1)
+        self.nogo = random.uniform(-0.1, 0.1)
         self.select()
-        
+    
     def select(self):
         """Selects whether to keep or discard a feature"""
         t = self.temperature
@@ -66,7 +71,27 @@ class Feature():
     @selected.setter
     def selected(self, val):
         self._selected = val
+        
+    @property
+    def go(self):
+        return self._go
+    
+    @go.setter
+    def go(self, val):
+        if self.lowbounded:
+            val = max(val, 0)
+        self._go = val
 
+    @property
+    def nogo(self):
+        return self._nogo
+    
+    @nogo.setter
+    def nogo(self, val):
+        if self.lowbounded:
+            val = max(val, 0)
+        self._nogo = val
+        
     @property
     def selected_binary(self):
         if self.selected:
@@ -75,10 +100,12 @@ class Feature():
             return 0
         
 class FeatureSelector():
-    def __init__ (self, nfeatures, ncorrect = 1, nruns = 100, temperature = 0.1, alpha = 0.2, d1 = 1,
+    """A class that attempts to solve a categorization problem"""
+    def __init__ (self, nfeatures, ncorrect = 1, maxruns = 100, temperature = 0.1, alpha = 0.2, d1 = 1,
                  d2 = 1, anticorrelated = True):
         self.nfeatures = nfeatures
         self.ncorrect = min(max(ncorrect, 0), nfeatures)
+        self.maxruns = maxruns
         self.features = []
         self.alpha = alpha
         self.d1 = d1
@@ -148,4 +175,20 @@ class FeatureSelector():
     def select_features(self):
         for f in self.features:
             f.select()
-        return 
+        return [x.selected_binary for x in self.features]
+    
+    def update(self, rt):
+        for f in self.features:
+            f.update(rt)
+    
+    def simulate(self):
+        T = self.generate_target()
+        O = self.select_features()
+        j = 0
+        
+        while j < self.maxruns and T != O:
+            self.update(-1)
+            O = self.select_features()
+            j += 1
+            
+        return j
