@@ -99,10 +99,19 @@ class Feature():
         else:
             return 0
         
+    @property
+    def lowbounded(self):
+        return self._lowbounded
+    
+    @lowbounded.setter
+    def lowbounded(self, val):
+        self._lowbounded = val
+        
+        
 class FeatureSelector():
     """A class that attempts to solve a categorization problem"""
     def __init__ (self, nfeatures, ncorrect = 1, maxruns = 100, temperature = 0.1, alpha = 0.2, d1 = 1,
-                 d2 = 1, anticorrelated = True, lowbounded = T):
+                 d2 = 1, anticorrelated = True, lowbounded = True):
         self.nfeatures = nfeatures
         self.ncorrect = min(max(ncorrect, 0), nfeatures)
         self.maxruns = maxruns
@@ -112,7 +121,7 @@ class FeatureSelector():
         self.d2 = d2
         self.temperature = temperature
         self.anticorrelated = anticorrelated
-        self.lowbounde = lowbounded
+        self.lowbounded = lowbounded
         self.build_features()
         
     def build_features(self):
@@ -184,6 +193,7 @@ class FeatureSelector():
         self._lowbounded = val
         for f in self.features:
             f.lowbounded = val
+            
             
     def generate_target(self):
         target = [0 for f in self.features]
