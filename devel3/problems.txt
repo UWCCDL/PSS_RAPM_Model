@@ -1,0 +1,44 @@
+This is easy, and fits nicely with our model: 
+
+background-shape diamond		background-shape square			background-shape triangle			
+foreground-orientation vertical		foreground-orientation vertical		foreground-orientation vertical
+foreground-texture solid		foreground-texture mixed		foreground-texture empty
+
+background-shape square			background-shape triangle		background-shape diamond			
+foreground-orientation horizontal	foreground-orientation horizontal	foreground-orientation horizontal
+foreground-texture emtpty		foreground-texture solid		foreground-texture mixed
+
+background-shape triangle		background-shape diamond					
+foreground-orientation lr-diangonal	foreground-orientation lr-diangonal	
+foreground-texture mixed		foreground-texture empty
+
+But how about this?
+
+horizontal-bar 1			horizontal-bar 0			horizontal-bar 0
+vertical-bar 0				vertical-bar 0				vertical-bar 1
+vertical-curves 2			vertical-curves 0			vertical-curves 0
+horizontal-curves 0			horizontal-curves 3			horizontal-curves 0
+vertical-lines 0			vertical-lines 3			vertical-lines 0
+horizontal-lines 0			horizontal-lines 0			horizontal-lines 2
+
+horizontal-bar 0			horizontal-bar 2			horizontal-bar 0
+vertical-bar 0				vertical-bar 2				vertical-bar 0
+vertical-curves 0			vertical-curves 0			vertical-curves 3
+horizontal-curves 0			horizontal-curves 0			horizontal-curves 1
+vertical-lines 1			vertical-lines 0			vertical-lines 0
+horizontal-lines 3			horizontal-lines 0			horizontal-lines 0
+
+horizontal-bar 0			horizontal-bar 0			horizontal-bar 3
+vertical-bar 3				vertical-bar 0				vertical-bar 0
+vertical-curves 0			vertical-curves 1			vertical-curves 0
+horizontal-curves 2			horizontal-curves 0			horizontal-curves 0
+vertical-lines 0			vertical-lines 0			vertical-lines	2
+horizontal-lines 0			horizontal-lines 1			horizontal-lines 0
+		
+Does it make sense to use placeholders like feature1, feature2?
+
+Or what about the dots? We could use the rule to find an interpretation? (find rule = find interpretation), relying on the possible relationships between, let's say, 4, 5, and 1 dots. (-4 + 5 = 1, in this case).
+
+
+
+

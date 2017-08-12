@@ -1,19 +1,76 @@
 ;;; ==================================================================
 ;;; A model of RAPM
 ;;; ==================================================================
-;;; Devel4 version
-;;; -------------
-;;; Devel 4 follows an idea by Jim Treyens.
-;;; In devel 4, *all* the features of the visual are loaded into the
-;;; imaginal buffer. Then, Pick and Don't Pick productions compete,
-;;; maintaining / removing each feature from the imaginal buffer
-;;; chunk.
-;;; When all the features have been analyzed, the model retrieves.
+;;; (Based on devel version 7)
+;;;
+;;; The model works by iteratively selecting features and rules,
+;;; and internally generating rewards when the features are new
+;;; features (previously unexamined), or when the rules lead to a
+;;; success (a rule is found that explains the patterns).
+;;;
+;;; The general solution algorithm is:
+;;;
+;;;                     _______
+;;;                    ( START )
+;;;                     ```````
+;;;                        |
+;;;                Raven's  Problem
+;;;                        |
+;;;                   Pick Feature  <-------------------+--------+
+;;;                        |                            |        |
+;;;       +-----------+----+---...-------+              |        |
+;;;       |           |                  |              |        |
+;;;   Feature 1   Feature 2    ...   Feature X          |        |
+;;;                                      |              |        |
+;;;                                   Select            |        |
+;;;                                      |              |        |
+;;;                            Find Prev. Solution      |        |
+;;;                                      |              |        |
+;;;                                    Found?           |        |
+;;;                                   /      \          |        |
+;;;                                 No        Yes      No        |
+;;;                                 |          |      /          |
+;;;                                 |         Long time?         |
+;;;                                 |                 \          | 
+;;;                                 |                 Yes        |
+;;;                                 |                  |         |
+;;;                                 |               ___|___      |
+;;;                                 |              ( DONE! )     |
+;;;                                 |               ```````      |
+;;;           +-------------->  Pick Rule                        |
+;;;           |                     |                            |
+;;;           |           +-------+--+--...----+                 |
+;;;           |           |       |            |                 |
+;;;           |        Rule 1   Rule 2  ...  Rule Y              |
+;;;           |                                |                 |
+;;;           |                           Verify Rule            |
+;;;           |                                |                 |
+;;;           |                            Verified?             |
+;;;           |                           /         \            |  
+;;;           +------------------------- No         Yes ---------+
+;;;
+;;;
+;;; The D1/D2 competition
+;;; ---------------------
+;;; This is a complete rethinking of the competing productions
+;;; algorithm described in Stocco (2017) and Stocco et al. (2017).
+;;; In essence:
+;;;
+;;;   1. There are no more "dont" productions.
+;;;   2. Competition is managed between "pick" productions using the
+;;;      conflict set.
+;;;   3  The one production that fires sees its utility updated with
+;;;      a positive (reward * D1) value.
+;;;   4. Productions in the conflict set that did not fire are
+;;;      udpated with a negative (D2 * reward) value.
+;;;
+;;; In the future, the conflict set should be detected automatically.
+;;; Here, it is derived from the prefix and pathway of a production.
 ;;; ==================================================================
 
 (clear-all)
-
-(define-model bar-devel4
+(written-for-act-r-version "7.4.0")
+(define-model bar
 
 (sgp :style-warnings nil
      :model-warnings nil
@@ -24,21 +81,22 @@
      :record-ticks nil
      :esc t
      :mas 8.0
-     :bll 0.5; nil
+     :bll nil 
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
+     :reward-hook bg-reward-hook  ;; The original BG reward hook
+     :alpha 0.05
+     :egs 0.01
      :imaginal-activation 10
-     :reward-hook bg-reward-hook-anticorrelated
-     :alpha 0.3
-     :egs 0.2
-;;     :trace-filter production-firing-only
+     :visual-activation 10
+     :trace-filter production-firing-only
      )
   
 
 ;;; CHUNK TYPES
 ;;;
-;;; Chnunk types. Not needed... but they save lots of warnings.
+;;; Chunk types. Not needed... but they save lots of warnings.
 ;;;
 (chunk-type (rapm-screen (:include visual-object))
 	    kind id)
@@ -59,8 +117,6 @@
 	    id)
 
 (chunk-type sketchpad nature verified problem)
-
-(chunk-type attention kind color texture background shape number)
 
 (chunk-type rapm-goal step routine problem direction span direction-num span-num)
 
@@ -264,115 +320,36 @@
       kind rapm-cell
       screen-x lowest
       screen-y lowest
-
+   +temporal>
+      isa time
+      ticks 0
    ;; Cleans up the reward signals
    !eval! (trigger-reward nil)
 )
 
-(p start*attend-feature-1
-   "The process of attending opens the gate to all the features"
-   =goal>
-     step start
-   
-   =visual>
-     kind rapm-cell
-     feature0 =F0
-     feature1 nil
-
-   ?imaginal>
-     state free
-     buffer empty
-     
-   ==>
-
-   +imaginal>
-     =F0 attended
-)   
-
-
-(p start*attend-feature-2
-   "The process of attending opens the gate to all the features"
-   =goal>
-     step start
-   
-   =visual>
-     kind rapm-cell
-     feature0 =F0
-     feature1 =F1
-     feature2 nil
-
-   ?imaginal>
-     state free
-     buffer empty
-     
-   ==>
-
-   +imaginal>
-     =F0 attended
-     =F1 attended
-)   
-
-
-(p start*attend-feature-3
-   "The process of attending opens the gate to all the features"
-   =goal>
-     step start
-   
-   =visual>
-     kind rapm-cell
-     feature0 =F0
-     feature1 =F1
-     feature2 =F2
-     feature3 nil
-
-   ?imaginal>
-     state free
-     buffer empty
-     
-   ==>
-
-   +imaginal>
-     =F0 attended
-     =F1 attended
-     =F2 attended
-)   
-
-
-(p start*attend-feature-4
-   "The process of attending opens the gate to all the features"
-   =goal>
-     step start
-   
-   =visual>
-     kind rapm-cell
-     feature0 =F0
-     feature1 =F1
-     feature2 =F2
-     feature3 =F3
-     feature4 nil
-
-   ?imaginal>
-     state free
-     buffer empty
-
-==>
-   =visual>
-   +imaginal>
-     =F0 attended
-     =F1 attended
-     =F2 attended
-     =F3 attended
-)   
-
-
 ;;; ---------------------------------------------------------------- ;;
 ;;; 1.1 FEATURE SELECTION
 ;;; ---------------------------------------------------------------- ;;
-;;; Here are all the productions that compete for feature selection.
-;;; Feature selection consists of two steps only, picking a feature
-;;; to examine and encoding it into WM. The process of picking a
-;;; feature consists of multiple Pick/Don't Pick productions, one
-;;; pair for each feature.
+;;; This is the crucial part
+;;;
+;;;                       ______
+;;;                    .-"      "-.
+;;;                   /            \
+;;;       _          |              |          _
+;;;      ( \         |,  .-.  .-.  ,|         / )
+;;;       > "=._     | )(__/  \__)( |     _.=" <
+;;;      (_/"=._"=._ |/     /\     \| _.="_.="\_)
+;;;             "=._ (_     ^^     _)"_.="
+;;;                 "=\__        __/="
+;;;                _.="| \IIIIII/ |"=._
+;;;      _     _.="_.="\  "IIII"  /"=._"=._     _
+;;;     ( \_.="_.="     `--------`     "=._"=._/ )
+;;;      > _.="                            "=._ <
+;;;     (_/                                    \_)
+;;;
+;;; The main idea is that D1 and D2 productions have different effects
+;;; on feature selection. D1 productions select features, while D2
+;;; productions keep filtering them until only one feature remains.
 ;;;
 ;;;   Pick    Don't   Pick  Don't  Pick   ... Don't
 ;;;   Shape   Shape   Num   Num    ...        ...
@@ -383,252 +360,299 @@
 
 ;; This is the crucial part.
 
+(p feature*prepare
+   =goal>
+      step start
+      
+   =visual>
+     isa rapm-cell
+
+   ?imaginal>
+     state free
+     buffer empty
+ ==>
+   =visual>    
+
+   +imaginal>
+     kind attention
+     count 0
+)
 
 
 (p feature*pick-shape
-   "Attends shape"
+   "Retrieves a feature"
    =goal>
       step start
       
+   =visual>
+    - shape nil
+
    =imaginal>
-     shape attended
-
-   ?visual>
-     state free
-   
-   ?imaginal>
-     state free
-==>
-   =goal>     
-      
-   *imaginal>
-      shape shape
-)
-
-(p feature*dont-pick-shape
-   "Does not attend shape"
-   =goal>
-      step start
-      
-   =imaginal>
-     shape attended
-
-   ?visual>
-     state free
-
-   ?imaginal>
-     state free
-
-==>
-   =goal>
-
-   *imaginal>
+     kind attention
      shape nil
+     count =C
+
+   ?imaginal>
+     state free  
+==>
+   !bind! =D (1+ =C)     
+   *imaginal>
+     shape shape
+     count =D
+     
+   =visual>
 )
+
 
 (p feature*pick-number
-   "Attends number"
+   "Retrieves a feature"
    =goal>
       step start
       
+   =visual>
+   - number nil
+
    =imaginal>
-     number attended
-
-   ?visual>
-     state free
-
-   ?imaginal>
-     state free
-==>
-   =goal>
-      
-   *imaginal>
-      number number
-)
-
-(p feature*dont-pick-number
-   "Does not attend number"
-   =goal>
-      step start
-      
-   =imaginal>
-     number attended  
-     
-   ?visual>
-     state free
-
-   ?imaginal>
-     state free
-==>
-   =goal>
-
-   *imaginal>
+     kind attention
      number nil
+     count =C
+
+   ?imaginal>
+     state free  
+==>
+   !bind! =D (1+ =C)          
+   *imaginal>
+     number number
+     count =D
+     
+   =visual>
 )
 
 
 (p feature*pick-texture
-   "Attends texture"
-   =goal>
-     step start
-      
-   =imaginal>
-     texture attended
-
-   ?visual>
-     state free
-
-   ?imaginal>
-     state free
-==>
-   =goal>
-      
-   *imaginal>
-      texture texture
-)
-
-(p feature*dont-pick-texture
-   "Does not attend texture"
+   "Retrieves a feature"
    =goal>
       step start
       
+   =visual>
+   - texture nil
+
    =imaginal>
-     texture attended  
-     
-   ?visual>
-     state free
+     kind attention
+     texture nil
+     count =C
 
    ?imaginal>
-     state free
-
+     state free  
 ==>
-   =goal>
-
+   !bind! =D (1+ =C)     
+     
    *imaginal>
-     texture nil
+     texture texture
+     count =D
+     
+   =visual>
 )
 
 (p feature*pick-background
-   "Attends number"
-   =goal>
-     step start
-      
-   =imaginal>
-     background attended
-
-   ?visual>
-     state free
-
-   ?imaginal>
-     state free
-==>
-   =goal>
-      
-   *imaginal>
-      background background
-)
-
-(p feature*dont-pick-background
-   "Does not attend background"
+   "Retrieves a feature"
    =goal>
       step start
       
+   =visual>
+   - background nil
+
    =imaginal>
-     background attended 
+     kind attention
+     background nil
+     count =C
+
+   ?imaginal>
+     state free  
+==>
+   !bind! =D (1+ =C)     
      
-   ?visual>
-     state free
+   *imaginal>
+     background background
+     count =D
+    
+   =visual>
+)
+
+
+(p feature*end-of-selection
+   =goal>
+     step start
+
+   =visual>
+     row =R
+   
+   =imaginal>
+     feature nil
+   > count 0
 
    ?imaginal>
      state free
-
+   
 ==>
+   =visual>
+   =imaginal>
+     value =R
+
+   *goal>
+     step filter
+)
+
+(p feature*dont-pick-shape
+   "Retrieves a feature"
    =goal>
+      step filter
+      
+   =visual>
+    - shape nil
+
+   =imaginal>
+     kind attention
+     shape shape
+     count =C
+
+   ?imaginal>
+     state free  
+==>
+   !bind! =D (1- =C)     
 
    *imaginal>
-     background nil
+     shape nil
+     count =D
+     
+   =visual>
 )
 
 
-
-
-;;; Encode FEATURE
-;;;
-;;; Once a feature has been selected, encode it and proceed with the next step/
-
-
-(p feature*enough
+(p feature*dont-pick-number
+   "Retrieves a feature"
    =goal>
-     step start
+      step filter
       
-   ?visual>
-     state free
-     buffer full
+   =visual>
+   - number nil
+
+   =imaginal>
+     kind attention
+     number number
+     count =C
+
+   ?imaginal>
+     state free  
+==>
+   !bind! =D (1- =C)
+ 
+   *imaginal>
+     number nil
+     count =D
+     
+   =visual>
+)
+
+
+(p feature*dont-pick-texture
+   "Retrieves a feature"
+   =goal>
+      step filter
+      
+   =visual>
+   - texture nil
+
+   =imaginal>
+     kind attention
+     texture texture
+     count =C
+
+   ?imaginal>
+     state free  
+==>
+   !bind! =D (1- =C)     
+     
+   *imaginal>
+     texture nil
+     count =D
+     
+   =visual>
+)
+
+(p feature*dont-pick-background
+   "Retrieves a feature"
+   =goal>
+      step filter
+      
+   =visual>
+   - background nil
+
+   =imaginal>
+     kind attention
+     background background
+     count =C
+
+   ?imaginal>
+     state free  
+==>
+   !bind! =D (1- =C)     
+     
+   *imaginal>
+     background nil
+     count =D
+    
+   =visual>
+   )
+
+(p feature*retrieve
+   "When only one feature is left, select it"
+   =goal>
+      step filter
+      
+   =imaginal>
+     kind attention
+     feature nil
+     count 1
 
    ?imaginal>
      state free
-     buffer full
-   
+
    ?retrieval>
-     state free
      buffer empty
-==>
-   =goal>
-     step check
-   
+     state free
+ ==>
+   *goal>
+     step select
+   =imaginal>
    +retrieval>
      kind feature
-   
 )
 
-
-(p feature*encode-feature
-   "Once a feature has been retrieved, select it for examination"
+(p feature*select
+   "When only one feature is left, select it"
    =goal>
-      step check
-
-   =retrieval>
-      isa feature
-      kind feature
-      feature =FEATURE
-
-   ?visual>
-      state free
-   
-   =visual>
-    - =FEATURE nil     
-      row =R
-    
-==> 
-   =goal>
-
-   =visual>
+      step select
       
-   +imaginal>
-      feature =FEATURE
-      value =R
-)
-
-(p feature*discard-garbage
-   "Just in case we have picked the wrong feature, discard it"
-   =goal>
-      step check
+   =imaginal>
+     kind attention
+     feature nil
+     count 1
 
    =retrieval>
-      isa feature
-      kind feature
-      feature =FEATURE
-
-   =visual>
-     =FEATURE nil     
-      row =R      
- ==>
-   =goal>
-     step start
+     feature =FEAT
    
-   =visual>
-   -imaginal>  
-   -retrieval>      
+   ?imaginal>
+     state free
+
+   ?retrieval>
+     state free
+==>
+   *goal>
+     step check
+   *imaginal>
+     feature =FEAT
+   ;!eval! (format t "Feature: ~A~%" =FEAT)
 )
 
 ;;; ---------------------------------------------------------------- ;;
@@ -705,15 +729,12 @@
     > ticks =MAX  ; Totally random value
  ==>
    =goal>
-   ;;step respond
      step generate
 
    +visual-location>
       kind rapm-problem
 
    -temporal>   ; Stop counting
-   !eval! (reset-declarative-finsts)
-;   !eval! (trigger-reward (* -1 *reward*))
 )
 
 
@@ -746,7 +767,6 @@
    ;; This is ugly but I cannot find a better way to do it.
    ;; Should ask Dan...
    !eval! (reset-declarative-finsts)   
-;   !eval! (trigger-reward (* -1 *reward*))
 )
 
 (p check*solution-not-found-row
@@ -995,83 +1015,6 @@
      progression possible
 )
 
-(p find-rule*dont-pick-constant
-   "Rule to be suggested when a feauture increases"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =X
-     one =Y
-   - one =X
-   - two =Y
-     rule nil
-     
-   ?retrieval>
-     state free
-     buffer empty
-==>
-  =imaginal>
-
-   +retrieval>
-     isa rule
-     kind rule
-   - name constant
-     progression possible
-)
-
-
-(p find-rule*dont-pick-progression
-   "Rule to be suggested when a feauture increases"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =X
-     one =Y
-   > one =X
-   > two =Y
-     rule nil
-     
-   ?retrieval>
-     state free
-     buffer empty
-==>
-  =imaginal>
-
-   +retrieval>
-     isa rule
-     kind rule
-   - name progression
-     progression possible
-)
-
-
-(p find-rule*dont-pick-same
-   "Rule to be suggested when a feauture increases"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =P
-     one =P
-     two =P
-     rule nil
-     
-   ?retrieval>
-     state free
-     buffer empty
-==>
-  =imaginal>
-
-   +retrieval>
-     isa rule
-     kind rule
-   - name same
-;     progression possible
-)
-
-
 (p find-rule*accept-suggestion
    "Very neutral. Accepts any suggestion"
    =goal>
@@ -1197,7 +1140,7 @@
    - =COORDINATE two
    
    =imaginal>
-     focus =VAL
+     focus =VALg
      verified yes  
 
 ==>
@@ -1314,8 +1257,6 @@
       direction =DIR
       feature =FEATURE
       focus nil  ;; Remove the 'focus' slot. Makes for cleaner chunks
-
-   !eval! (trigger-reward *reward*)
 )
 
 
@@ -1345,7 +1286,6 @@
      row zero
      column zero
    -retrieval>
-   !eval! (trigger-reward (* -1 *reward*))
 )
 
 
@@ -1372,6 +1312,7 @@
    +temporal>
      isa time
      ticks 0
+   !eval! (trigger-reward nil)
 )
 
 
@@ -1573,27 +1514,6 @@
 
 
 
-#|
-(p propose*rule-progression
-   "Rule to be suggested when a feauture remains the same"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =P
-     one =P
-     two =P
-     rule nil
-==>
-   =imaginal>
-     rule same
-   
-   =goal>
-     step verify
-     routine nil
-)
-|#
-
 ;;; ==================================================================
 ;;; CHOICE
 ;;; ==================================================================
@@ -1688,10 +1608,8 @@
 
    +visual-location>
      kind rapm-cell
-;     phase choice
    > screen-x current
-   ;;screen-x lowest
-     :nearest current-x
+    :nearest current-x
        
    =imaginal>  ; keep the imaginal
 )
@@ -1893,32 +1811,26 @@
 )  ; End of the Model
 
 
+;(spp feature*restart :reward -1)
 (spp check*solution-found-and-time-elapsed :reward -1)
 (spp check*solution-found-and-time-not-elapsed :reward -1)
 (spp check*solution-not-found-row :reward 1)
 (spp check*solution-not-found-column :reward 1)
 (spp verify*successful :reward 1)
 (spp verify*not-successful :reward -1)
-(spp feature*discard-garbage :reward -1)
 
-
-
-(spp-fct `((feature*pick-shape :u ,*bias*)))
-(spp-fct `((feature*pick-number :u ,*bias*)))
-(spp-fct `((feature*pick-texture :u ,*bias*)))
-(spp-fct `((feature*pick-background :u ,*bias*)))
-(spp-fct `((feature*enough :u -100 :fixed-utility t)))
-
+(spp feature*retrieve :u 1000 :fixed-utility t)
+(spp feature*end-of-selection :u -1000 :fixed-utility t)
 
 ;;; RAPM-RELOAD
 ;;;
 ;;; Quick reload function that also installs and sets the device properly. 
 ;;;
 (defun rapm-reload (&optional (visicon t))
-  "Reloads the model and sets up the experiment"
+  "Reloads the model and sets up the experiment (and optionally prints the visicon)"
   (reload)
   (install-device (make-instance 'rapm-task))
   (init (current-device))
   (proc-display)
-  (when visicon
+  (when visicon ;; Prints the visicon 
     (print-visicon)))

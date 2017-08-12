@@ -1,0 +1,9 @@
+New scheme
+==========
+
+The principles
+--------------
+
+The principles of the new scheme are simple. A *feature* is not a
+minimal component anymore. Instead, a feature is set of minial visual
+components, which we are going to name, for simplicity, *elements*.

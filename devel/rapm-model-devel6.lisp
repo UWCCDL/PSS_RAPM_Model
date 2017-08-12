@@ -1,19 +1,14 @@
 ;;; ==================================================================
 ;;; A model of RAPM
 ;;; ==================================================================
-;;; Devel4 version
-;;; -------------
-;;; Devel 4 follows an idea by Jim Treyens.
-;;; In devel 4, *all* the features of the visual are loaded into the
-;;; imaginal buffer. Then, Pick and Don't Pick productions compete,
-;;; maintaining / removing each feature from the imaginal buffer
-;;; chunk.
-;;; When all the features have been analyzed, the model retrieves.
+;;; Devel 6.
+;;; Like the original model, but remains on the same feature while
+;;; identifying the rule. 
 ;;; ==================================================================
 
 (clear-all)
-
-(define-model bar-devel4
+(written-for-act-r-version "7.4.0")
+(define-model bar-devel6
 
 (sgp :style-warnings nil
      :model-warnings nil
@@ -24,15 +19,16 @@
      :record-ticks nil
      :esc t
      :mas 8.0
-     :bll 0.5; nil
+     :bll nil 
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
-     :imaginal-activation 10
      :reward-hook bg-reward-hook-anticorrelated
      :alpha 0.3
      :egs 0.2
-;;     :trace-filter production-firing-only
+     :imaginal-activation 10
+     :visual-activation 20
+     :trace-filter production-firing-only
      )
   
 
@@ -59,8 +55,6 @@
 	    id)
 
 (chunk-type sketchpad nature verified problem)
-
-(chunk-type attention kind color texture background shape number)
 
 (chunk-type rapm-goal step routine problem direction span direction-num span-num)
 
@@ -242,7 +236,7 @@
       buffer empty
 ==>
    +visual-location>
-      kind rapm-problem
+     kind rapm-problem
 )
 
 
@@ -265,105 +259,12 @@
       screen-x lowest
       screen-y lowest
 
+   +temporal>
+      isa time
+      ticks 0
    ;; Cleans up the reward signals
    !eval! (trigger-reward nil)
 )
-
-(p start*attend-feature-1
-   "The process of attending opens the gate to all the features"
-   =goal>
-     step start
-   
-   =visual>
-     kind rapm-cell
-     feature0 =F0
-     feature1 nil
-
-   ?imaginal>
-     state free
-     buffer empty
-     
-   ==>
-
-   +imaginal>
-     =F0 attended
-)   
-
-
-(p start*attend-feature-2
-   "The process of attending opens the gate to all the features"
-   =goal>
-     step start
-   
-   =visual>
-     kind rapm-cell
-     feature0 =F0
-     feature1 =F1
-     feature2 nil
-
-   ?imaginal>
-     state free
-     buffer empty
-     
-   ==>
-
-   +imaginal>
-     =F0 attended
-     =F1 attended
-)   
-
-
-(p start*attend-feature-3
-   "The process of attending opens the gate to all the features"
-   =goal>
-     step start
-   
-   =visual>
-     kind rapm-cell
-     feature0 =F0
-     feature1 =F1
-     feature2 =F2
-     feature3 nil
-
-   ?imaginal>
-     state free
-     buffer empty
-     
-   ==>
-
-   +imaginal>
-     =F0 attended
-     =F1 attended
-     =F2 attended
-)   
-
-
-(p start*attend-feature-4
-   "The process of attending opens the gate to all the features"
-   =goal>
-     step start
-   
-   =visual>
-     kind rapm-cell
-     feature0 =F0
-     feature1 =F1
-     feature2 =F2
-     feature3 =F3
-     feature4 nil
-
-   ?imaginal>
-     state free
-     buffer empty
-
-==>
-   =visual>
-   +imaginal>
-     =F0 attended
-     =F1 attended
-     =F2 attended
-     =F3 attended
-)   
-
 
 ;;; ---------------------------------------------------------------- ;;
 ;;; 1.1 FEATURE SELECTION
@@ -383,209 +284,168 @@
 
 ;; This is the crucial part.
 
-
-
 (p feature*pick-shape
-   "Attends shape"
+   "Retrieves a feature"
    =goal>
       step start
       
-   =imaginal>
-     shape attended
-
-   ?visual>
+   =visual>
+    - shape nil
+            
+   ?retrieval>
      state free
-   
-   ?imaginal>
-     state free
+     buffer empty
 ==>
-   =goal>     
-      
-   *imaginal>
-      shape shape
+   +retrieval>
+     kind feature
+     feature shape
+     
+   =visual>
 )
 
 (p feature*dont-pick-shape
-   "Does not attend shape"
+   "Retrieves a feature"
    =goal>
       step start
       
-   =imaginal>
-     shape attended
-
-   ?visual>
+   =visual>
+   - shape nil
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
-
+     buffer empty
 ==>
-   =goal>
-
-   *imaginal>
-     shape nil
+   +retrieval>
+     kind feature
+   - feature shape
+     :recently-retrieved nil
+   =visual>
 )
 
 (p feature*pick-number
-   "Attends number"
+   "Retrieves a feature"
    =goal>
       step start
       
-   =imaginal>
-     number attended
-
-   ?visual>
+   =visual>
+   - number nil
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
+     buffer empty
 ==>
-   =goal>
-      
-   *imaginal>
-      number number
+   +retrieval>
+     kind feature
+     feature number
+     
+   =visual>
 )
 
 (p feature*dont-pick-number
-   "Does not attend number"
+   "Retrieves a feature that is not number"
    =goal>
       step start
       
-   =imaginal>
-     number attended  
-     
-   ?visual>
+   =visual>
+   - number nil
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
+     buffer empty
 ==>
-   =goal>
-
-   *imaginal>
-     number nil
+   +retrieval>
+     kind feature
+   - feature number
+     :recently-retrieved nil
+   =visual>
 )
 
 
 (p feature*pick-texture
-   "Attends texture"
+   "Selects the 'texture' feature"
    =goal>
-     step start
+      step start
       
-   =imaginal>
-     texture attended
-
-   ?visual>
+   =visual>
+   - texture nil
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
+     buffer empty
 ==>
-   =goal>
-      
-   *imaginal>
-      texture texture
+   +retrieval>
+     kind feature
+     feature texture
+   =visual>
 )
 
 (p feature*dont-pick-texture
-   "Does not attend texture"
+   "Retrieves a feature that is not 'texture'"
    =goal>
       step start
       
-   =imaginal>
-     texture attended  
-     
-   ?visual>
+   =visual>
+   - texture nil
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
-
+     buffer empty
 ==>
-   =goal>
-
-   *imaginal>
-     texture nil
+   +retrieval>
+     kind feature
+   - feature texture
+     :recently-retrieved nil
+   =visual>
 )
 
+
 (p feature*pick-background
-   "Attends number"
+   "Selects the 'background' feature"
    =goal>
-     step start
+      step start
       
-   =imaginal>
-     background attended
-
-   ?visual>
+   =visual>
+   - texture nil
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
+     buffer empty
 ==>
-   =goal>
-      
-   *imaginal>
-      background background
+   +retrieval>
+     kind feature
+     feature background
+     
+   =visual>
 )
 
 (p feature*dont-pick-background
-   "Does not attend background"
+   "Retrieves a feature that is not 'background'"
    =goal>
       step start
       
-   =imaginal>
-     background attended 
-     
-   ?visual>
+   =visual>
+   - texture nil
+            
+   ?retrieval>
      state free
-
-   ?imaginal>
-     state free
-
+     buffer empty
 ==>
-   =goal>
-
-   *imaginal>
-     background nil
+   +retrieval>
+     kind feature
+   - feature background
+     :recently-retrieved nil
+   =visual>
 )
-
-
 
 
 ;;; Encode FEATURE
 ;;;
 ;;; Once a feature has been selected, encode it and proceed with the next step/
 
-
-(p feature*enough
-   =goal>
-     step start
-      
-   ?visual>
-     state free
-     buffer full
-
-   ?imaginal>
-     state free
-     buffer full
-   
-   ?retrieval>
-     state free
-     buffer empty
-==>
-   =goal>
-     step check
-   
-   +retrieval>
-     kind feature
-   
-)
-
-
 (p feature*encode-feature
    "Once a feature has been retrieved, select it for examination"
    =goal>
-      step check
+      step start
 
    =retrieval>
       isa feature
@@ -601,6 +461,7 @@
     
 ==> 
    =goal>
+      step check
 
    =visual>
       
@@ -612,7 +473,7 @@
 (p feature*discard-garbage
    "Just in case we have picked the wrong feature, discard it"
    =goal>
-      step check
+      step start
 
    =retrieval>
       isa feature
@@ -622,14 +483,11 @@
    =visual>
      =FEATURE nil     
       row =R      
- ==>
-   =goal>
-     step start
-   
-   =visual>
-   -imaginal>  
+==>
+   =visual>      
    -retrieval>      
 )
+
 
 ;;; ---------------------------------------------------------------- ;;
 ;;; 1.2 FEATURE CHECK
@@ -913,28 +771,21 @@
 ;; ----------------------------------------------------------------
 ;; RULE SELECTION
 ;; ----------------------------------------------------------------
-;; Here are the productions that compete for selecting rules
+;; Here are the productions that compete for selecting rules.
 ;; ----------------------------------------------------------------
 
 ;; Now, how do we 'propose' a rule?
 
 
 (p find-rule*pick-same
-   "Rule to be suggested when a feauture remains the same"
+   "Rule to be suggested when a feature remains the same"
    =goal>
      step find-rule
-
-   =imaginal>
-     zero =P
-     one =P
-     two =P
-     rule nil
      
    ?retrieval>
      state free
      buffer empty
 ==>
-   =imaginal>
    +retrieval>
      isa rule
      kind rule
@@ -943,24 +794,32 @@
 
 )
 
-(p find-rule*pick-progression
+(p find-rule*dont-pick-same
    "Rule to be suggested when a feauture increases"
    =goal>
      step find-rule
-
-   =imaginal>
-     zero =X
-     one =Y
-   > one =X
-   > two =Y
-     rule nil
      
    ?retrieval>
      state free
      buffer empty
 ==>
-  =imaginal>
+   +retrieval>
+     isa rule
+     kind rule
+   - name same
+     progression possible
+     :recently-retrieved nil
+)
 
+(p find-rule*pick-progression
+   "Rule to be suggested when a feauture increases"
+   =goal>
+     step find-rule
+     
+   ?retrieval>
+     state free
+     buffer empty
+==>
    +retrieval>
      isa rule
      kind rule
@@ -974,20 +833,11 @@
    "Rule to be suggested when a feauture increases"
    =goal>
      step find-rule
-
-   =imaginal>
-     zero =X
-     one =Y
-   - one =X
-   - two =Y
-     rule nil
      
    ?retrieval>
      state free
      buffer empty
 ==>
-  =imaginal>
-
    +retrieval>
      isa rule
      kind rule
@@ -999,25 +849,17 @@
    "Rule to be suggested when a feauture increases"
    =goal>
      step find-rule
-
-   =imaginal>
-     zero =X
-     one =Y
-   - one =X
-   - two =Y
-     rule nil
      
    ?retrieval>
      state free
      buffer empty
 ==>
-  =imaginal>
-
    +retrieval>
      isa rule
      kind rule
    - name constant
      progression possible
+     :recently-retrieved nil
 )
 
 
@@ -1025,51 +867,19 @@
    "Rule to be suggested when a feauture increases"
    =goal>
      step find-rule
-
-   =imaginal>
-     zero =X
-     one =Y
-   > one =X
-   > two =Y
-     rule nil
      
    ?retrieval>
      state free
      buffer empty
 ==>
-  =imaginal>
-
    +retrieval>
      isa rule
      kind rule
    - name progression
      progression possible
+     :recently-retrieved nil
 )
 
-
-(p find-rule*dont-pick-same
-   "Rule to be suggested when a feauture increases"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =P
-     one =P
-     two =P
-     rule nil
-     
-   ?retrieval>
-     state free
-     buffer empty
-==>
-  =imaginal>
-
-   +retrieval>
-     isa rule
-     kind rule
-   - name same
-;     progression possible
-)
 
 
 (p find-rule*accept-suggestion
@@ -1077,6 +887,7 @@
    =goal>
      step find-rule
 
+   ;; todo -- Do we need this imaginal check?
    =imaginal>
    - zero nil
    - one nil
@@ -1314,43 +1125,10 @@
       direction =DIR
       feature =FEATURE
       focus nil  ;; Remove the 'focus' slot. Makes for cleaner chunks
-
-   !eval! (trigger-reward *reward*)
 )
-
-
-(p verify*not-successful
-   "When a cell is not verified by the rule, forget and go to start"
-   =goal>
-     step verify
-     direction =DIR
-     span =SPAN
-         
-   =imaginal>
-     nature sketchpad
-     verified no
-
-   =retrieval>
-   - rule nil
-   
-   ?imaginal>
-     state free  
-==>
-   =goal>
-     step start
-
-   ;; Moves attention to the first cell
-   +visual-location>
-     kind rapm-cell
-     row zero
-     column zero
-   -retrieval>
-   !eval! (trigger-reward (* -1 *reward*))
-)
-
 
 (p verify*memorize-solution
-   "Memorizes the solution and resets the temporal counter"
+   "Memorizes the solution and empties the temporal counter"
    =goal>
      step verify
 
@@ -1369,10 +1147,55 @@
      row zero
      column zero
    
-   +temporal>
-     isa time
-     ticks 0
+   ;-temporal>
+   ;  isa time
+   ;  ticks 0
+   !eval! (trigger-reward nil)
 )
+
+
+(p verify*not-successful
+   "When a cell is not verified by the rule, looks for a new rule"
+   =goal>
+     step verify
+     direction =DIR
+     span =SPAN
+         
+   =imaginal>
+     nature sketchpad
+     verified no
+
+   =retrieval>
+   - rule nil
+     direction =DIR
+     value =VAL  ;; Col/Row
+     feature =FEAT
+     zero =ZERO
+     one =ONE
+     two =TWO
+   
+   ?imaginal>
+     state free  
+==>
+   =goal>
+     step find-rule
+
+   +imaginal>
+     direction =DIR
+     feature =FEAT
+     value =VAL
+     zero =ZERO
+     one =ONE
+     two =TWO
+     
+   +visual-location>
+     kind rapm-cell
+     row zero
+     column zero
+   -retrieval>
+)
+
+
 
 
 ;;; ------------------------------------------------------------------
@@ -1437,9 +1260,9 @@
      problem =PID
      :recently-retrieved nil
 
-   +temporal>
-     isa time
-     ticks 0
+;   +temporal>
+;     isa time
+;     ticks 0
 )
 
 ;;; In order to generate a solution, we need to be able to predict
@@ -1570,29 +1393,6 @@
    +visual-location>
      kind rapm-problem  
 )
-
-
-
-#|
-(p propose*rule-progression
-   "Rule to be suggested when a feauture remains the same"
-   =goal>
-     step find-rule
-
-   =imaginal>
-     zero =P
-     one =P
-     two =P
-     rule nil
-==>
-   =imaginal>
-     rule same
-   
-   =goal>
-     step verify
-     routine nil
-)
-|#
 
 ;;; ==================================================================
 ;;; CHOICE
@@ -1892,22 +1692,18 @@
  
 )  ; End of the Model
 
-
+(spp start*create-goal :reward nil)
 (spp check*solution-found-and-time-elapsed :reward -1)
 (spp check*solution-found-and-time-not-elapsed :reward -1)
 (spp check*solution-not-found-row :reward 1)
 (spp check*solution-not-found-column :reward 1)
 (spp verify*successful :reward 1)
 (spp verify*not-successful :reward -1)
-(spp feature*discard-garbage :reward -1)
 
-
-
-(spp-fct `((feature*pick-shape :u ,*bias*)))
-(spp-fct `((feature*pick-number :u ,*bias*)))
-(spp-fct `((feature*pick-texture :u ,*bias*)))
-(spp-fct `((feature*pick-background :u ,*bias*)))
-(spp-fct `((feature*enough :u -100 :fixed-utility t)))
+;(spp-fct `((feature*pick-shape :u ,*bias*)))
+;(spp-fct `((feature*pick-number :u ,*bias*)))
+;(spp-fct `((feature*pick-texture :u ,*bias*)))
+;(spp-fct `((feature*pick-background :u ,*bias*)))
 
 
 ;;; RAPM-RELOAD
