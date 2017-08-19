@@ -373,7 +373,7 @@ class Problem():
             D.append(self.mean_dopamine(self.update( 1 )))  # Positive reward when solution found
             S.remove(O)
             if verbose: print("Solution found: Len(S) = %d" % len(S))
-        return (t, S, D)
+        return (t, S, np.mean(D)/t)
     
     def solved(self, S):
         """Checks whether a problem was solved or not"""
