@@ -384,9 +384,9 @@ class Problem():
         t, S, D = self.simulate(verbose)
         return len(S) == 0
 
-SIMS_TEMPLATE_SETUP = """
-#!/usr/bin/env python
-
+SIMS_TEMPLATE_SETUP = """#!/usr/bin/env python
+import rapm
+nsims = 200
 temp = 0.1
 anticorrelated = True
 lowbounded = True
@@ -394,11 +394,11 @@ lowbounded = True
 d_vals = [x / 100.0 for x in list(range(0, 201, 20))]
 
 F = (4, 5, 6, 7)
-C = (%d)   # (1, 2)
-R = (%d)   # (2, 3, 4)
-A = (%.2f) # (0.1, 0.2, 0.3, 0.4) or (0.25, 0.5, 0.75, 0.1)
+C = (%d,)   # (1, 2)
+R = (%d,)   # (2, 3, 4)
+A = (%.2f,) # (0.1, 0.2, 0.3, 0.4) or (0.25, 0.5, 0.75, 0.1)
 T = (100, 150, 200, 250)
-output = open("simulations-C=%s-R=%s-A=%.2f.txt", "w")
+output = open("simulations-C=%s-R=%s-A=%.3f.txt", "w")
 """
 
 SIMS_TEMPLATE_SCRIPT = """
@@ -430,18 +430,21 @@ for f in F:
                                     s = 1
                                 data = (f, c, r, a, t, d1, d2, t, time, ns, s, activity)
                                 output.write(fstring % data)
+                                output.flush()
+
+output.close()
 """
     
 def generate_scripts():
     """Generates scripts for running concurrent simulations on 24 cores"""
     C = (1, 2)
     R = (2, 3, 4)
-    A = (0.25, 0.5, 0.75, 0.1)
+    A = (0.025, 0.05, 0.075, 0.1)
     for c in C:
         for r in R:
             for a in A:
                 params = (c, r, a) * 2
-                output = open("simulations-C=%s-R=%s-A=%s.py" % params[:3], "w")
+                output = open("simulations-C=%s-R=%s-A=%.3f.py" % params[:3], "w")
                 output.write(SIMS_TEMPLATE_SETUP % params)
                 output.write(SIMS_TEMPLATE_SCRIPT)
  
