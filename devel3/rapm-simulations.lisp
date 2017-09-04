@@ -40,6 +40,7 @@
 	  (rapm-reload nil)  ; Reload
 	  (sgp :v nil)
 	  (no-output (run 10000 :real-time nil))
+	  ;;(format t "~A problems done at time ~a~%" (length (experiment-log (current-device))) (mp-time))
 	  (push (apply #'mean
 		       (mapcar #'trial-accuracy (experiment-log (current-device)))
 		       )

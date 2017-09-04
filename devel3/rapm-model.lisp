@@ -7,7 +7,7 @@
 
 (clear-all)
 
-(define-model bar-devel2
+(define-model bar-2buf
 
 (sgp :style-warnings nil
      :model-warnings nil
@@ -18,16 +18,19 @@
      :record-ticks nil
      :esc t
      :mas 8.0
-     :bll 0.5; nil
-     ;:blc 100.0  ;; Assumes all chunks are incredibly active
-     :lf 0.01
+     :bll 0.9; nil
+     :blc 20
+     ;; :blc 100.0  ;; Assumes all chunks are incredibly active
+     :rt 0 
+     :lf 1
+     :le 1
      :ul t
      :imaginal-activation 10
      :go-activation 10
      :nogo-activation -10
      :reward-hook bg-reward-hook
      :alpha 0.1
-     :egs 0.2
+     :egs 0.01
 ;;     :trace-filter production-firing-only
      )
   
@@ -164,9 +167,9 @@
 			    kind feature
 			    feature background)
 
-	(orientation-feature isa feature
-			     kind feature
-			     feature orientation)
+;	(orientation-feature isa feature
+;			     kind feature
+;			     feature orientation)
 
 	;; Rules
 	(same-rule isa rule
@@ -609,6 +612,35 @@
       value =R
 )
 
+(p feature*discard-garbage
+   "Removes a feature that is not present in the visual chunk"
+   =goal>
+      step check
+
+   =retrieval>
+      isa feature
+      kind feature
+      feature =FEATURE
+
+   ?visual>
+      state free
+   
+   =visual>
+     =FEATURE nil     
+     row =R
+   =nogo>
+     kind attention  
+   ?nogo>
+     buffer full   
+==>
+   =goal>
+      step start   
+
+   =visual>
+
+   *nogo>
+     =FEATURE =FEATURE
+)   
 
 ;;; ---------------------------------------------------------------- ;;
 ;;; 1.2 FEATURE CHECK
@@ -730,7 +762,7 @@
    =visual>
    ;; This is ugly but I cannot find a better way to do it.
    ;; Should ask Dan...
-   !eval! (reset-declarative-finsts)   
+   ;!eval! (reset-declarative-finsts)   
 ;   !eval! (trigger-reward (* -1 *reward*))
 )
 
@@ -904,7 +936,7 @@
 ;; Now, how do we 'propose' a rule?
 
 
-(p find-rule*pick-same
+(p find-rule*ppick-same
    "Rule to be suggested when a feauture remains the same"
    =goal>
      step find-rule
@@ -952,7 +984,7 @@
 )
 |#
 
-(p find-rule*pick-progression
+(p find-rule*ppick-progression
    "Rule to be suggested when a feauture increases"
    =goal>
      step find-rule
@@ -979,7 +1011,7 @@
 )
 
 
-(p find-rule*pick-constant
+(p find-rule*ppick-constant
    "Rule to be suggested when a feauture increases"
    =goal>
      step find-rule
@@ -1004,6 +1036,7 @@
      progression possible
 )
 
+#|
 (p find-rule*dont-pick-constant
    "Rule to be suggested when a feauture increases"
    =goal>
@@ -1028,8 +1061,9 @@
    - name constant
      progression possible
 )
+|#
 
-
+#|
 (p find-rule*dont-pick-progression
    "Rule to be suggested when a feauture increases"
    =goal>
@@ -1054,7 +1088,7 @@
    - name progression
      progression possible
 )
-
+|#
 
 
 (p find-rule*accept-suggestion
