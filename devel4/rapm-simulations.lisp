@@ -31,7 +31,7 @@
 		(format file "~{~a~^, ~}~%" (mapcar #'float res))))))))))
 
 
-(defun simulate-d2 (n &key (vals '(1/2 1 3/2 2 5/2 3 7/2 4)) (v nil))
+(defun simulate-d2 (n &key (vals '(1/2 1 3/2 2 5/2 3 7/2 4)))
   (let ((results nil))
     (dolist (d2 vals (reverse results))
       (setf *d2* d2)
@@ -40,8 +40,7 @@
 	  (rapm-reload nil)  ; Reload
 	  (sgp :v nil)
 	  (no-output (run 10000 :real-time nil))
-	  (when v
-	    (format t "Time = ~A, N=~A~%" (mp-time) (length (experiment-log (current-device)))))
+	  ;;(format t "~A problems done at time ~a~%" (length (experiment-log (current-device))) (mp-time))
 	  (push (apply #'mean
 		       (mapcar #'trial-accuracy (experiment-log (current-device)))
 		       )

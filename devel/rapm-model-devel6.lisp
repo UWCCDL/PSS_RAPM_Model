@@ -7,7 +7,7 @@
 ;;; ==================================================================
 
 (clear-all)
-(written-for-act-r-version "7.4.0")
+;(written-for-act-r-version "7.4.0")
 (define-model bar-devel6
 
 (sgp :style-warnings nil
@@ -23,7 +23,7 @@
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
-     :reward-hook bg-reward-hook-anticorrelated
+     :reward-hook bg-reward-hook ;;-anticorrelated
      :alpha 0.3
      :egs 0.2
      :imaginal-activation 10

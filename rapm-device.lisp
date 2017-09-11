@@ -114,6 +114,27 @@
 	(othwerise
 	 nil)))))
 
+(defun bg-reward-hook-anticorrelated2 (production reward time)
+  "Modified reward function with different parameters for 'Pick' and 'Dont' productions" 
+  (declare (ignore time))
+  (let ((module (get-module utility)))
+    (when *verbose*
+      (format t "BG: ~A, <~A>~%" production reward))
+    (let* ((path (production-pathway production))
+	   (twin (production-twin production)))
+      (case path
+	(pick
+	 (when twin
+	   (linear-update-utility module (intern twin) (* -1 *d2* reward)))
+	 (* *d1* reward))
+	(dontpick
+	 (when twin
+	   (linear-update-utility module (intern twin) (* +1 *d1* reward)))
+	 (* -1 *d2* reward))
+	(othwerise
+	 nil)))))
+
+
 ;;; The asymmetrical anticorrelated reward hook
 ;;; -------------------------------------------
 

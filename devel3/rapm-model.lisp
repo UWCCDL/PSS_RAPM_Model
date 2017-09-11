@@ -11,33 +11,36 @@
 
 (sgp :style-warnings nil
      :model-warnings nil
-     :style-warnings nil
      :auto-attend t
      :er t
-     :ans 0.05
+     :ans 0.1
      :record-ticks nil
      :esc t
-     :mas 8.0
-     :bll 0.9; nil
-     :blc 20
+     :mas 25.0
+     :bll 0.9 ; nil
+     :bll nil
+     :blc 10
      ;; :blc 100.0  ;; Assumes all chunks are incredibly active
      :rt 0 
      :lf 1
      :le 1
      :ul t
-     :imaginal-activation 10
+     :imaginal-activation 2
      :go-activation 10
-     :nogo-activation -10
-     :reward-hook bg-reward-hook
+     :visual-activation 5
+     :nogo-activation -5
+     :reward-hook bg-reward-hook-anticorrelated
      :alpha 0.1
      :egs 0.01
+     :sji-hook simple-sji-hook
+;;     :nsji t
 ;;     :trace-filter production-firing-only
      )
   
 
 ;;; CHUNK TYPES
 ;;;
-;;; Chnunk types. Not needed... but they save lots of warnings.
+;;; Chunk types. Not needed... but they save lots of warnings.
 ;;;
 (chunk-type (rapm-screen (:include visual-object))
 	    kind id)

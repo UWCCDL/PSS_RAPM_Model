@@ -7,7 +7,7 @@
 ;;; ==================================================================
 
 (clear-all)
-(written-for-act-r-version "7.4.0")
+;(written-for-act-r-version "7.4.0")
 (define-model bar-devel5
 
 (sgp :style-warnings nil
@@ -25,7 +25,7 @@
      :ul t
      :reward-hook bg-reward-hook-anticorrelated
      :alpha 0.2
-     :egs 0.01
+     :egs 0.1
      :imaginal-activation 10
      :visual-activation 10
      :trace-filter production-firing-only
@@ -519,7 +519,7 @@
 ==>
 ;   +temporal>
 ;      isa time
-;      ticks 0
+;      ticks 0v
    =visual>
    =imaginal>
      value =R
@@ -1815,11 +1815,11 @@
 (spp feature*restart :reward -1)
 (spp check*solution-found-and-time-elapsed :reward -1)
 (spp check*solution-found-and-time-not-elapsed :reward -1)
-(spp check*solution-not-found-row :reward 1)
-(spp check*solution-not-found-column :reward 1)
+;(spp check*solution-not-found-row :reward 1)
+;(spp check*solution-not-found-column :reward 1)
 (spp verify*successful :reward 1)
 (spp verify*not-successful :reward -1)
-(spp feature*restart :reward -1)
+;(spp feature*restart :reward 1)
 
 (spp feature*restart :u -1000 :fixed-utility t)
 

@@ -38,7 +38,7 @@
 ;;;                                 |              ( DONE! )     |
 ;;;                                 |               ```````      |
 ;;;           +-------------->  Pick Rule                        |
-;;;           |                     |                            |
+vv;;;           |                     |                            |
 ;;;           |           +-------+--+--...----+                 |
 ;;;           |           |       |            |                 |
 ;;;           |        Rule 1   Rule 2  ...  Rule Y              |
@@ -69,7 +69,7 @@
 ;;; ==================================================================
 
 (clear-all)
-(written-for-act-r-version "7.4.0")
+;;(written-for-act-r-version "7.4.0")
 (define-model bar
 
 (sgp :style-warnings nil
@@ -85,7 +85,7 @@
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
-     :reward-hook bg-reward-hook  ;; The original BG reward hook
+     :reward-hook bg-reward-hook-anticorrelated
      :alpha 0.05
      :egs 0.01
      :imaginal-activation 10
@@ -939,7 +939,7 @@
 ;; Now, how do we 'propose' a rule?
 
 
-(p find-rule*pick-same
+(p find-rule*ppick-same
    "Rule to be suggested when a feauture remains the same"
    =goal>
      step find-rule
@@ -963,7 +963,7 @@
 
 )
 
-(p find-rule*pick-progression
+(p find-rule*ppick-progression
    "Rule to be suggested when a feauture increases"
    =goal>
      step find-rule
@@ -990,7 +990,7 @@
 )
 
 
-(p find-rule*pick-constant
+(p find-rule*ppick-constant
    "Rule to be suggested when a feauture increases"
    =goal>
      step find-rule
