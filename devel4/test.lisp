@@ -3,3 +3,4 @@
 (load "rapm-simulations")
 (load "rapm-model")
 (general-simulations 200) ;; :tickvals '(20))
+(quit)
