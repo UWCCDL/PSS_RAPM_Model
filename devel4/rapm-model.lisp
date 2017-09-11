@@ -1643,18 +1643,22 @@
 
 ;(spp feature*restart :reward -1)
 ;(spp check*solution-found-and-time-elapsed :reward -1)
-(spp check*solution-found-and-time-not-elapsed :reward -1)
-;(spp check*solution-not-found-row :reward 1)
-;(spp check*solution-not-found-column :reward 1)
-(spp verify*successful :reward 3)
+;;(spp check*solution-found-and-time-not-elapsed :reward -1)
+(spp-fct `((check*solution-found-and-time-not-elapsed :reward ,*negative-reward*)))
+
+;;(spp check*solution-not-found-row :reward 1)
+;;(spp check*solution-not-found-column :reward 1)
+
+;;(spp verify*successful :reward 3)
+(spp-fct `((verify*successful :reward ,*positive-reward*)))
 ;(spp verify*not-successful :reward -1)
 
 ;(spp feature*restart :u -1000 :fixed-utility t)
 
-(spp-fct `((feature*pick-shape :u ,(random 1.0))))
-(spp-fct `((feature*pick-texture :u ,(random 1.0))))
-(spp-fct `((feature*pick-background :u ,(random 1.0))))
-(spp-fct `((feature*pick-number :u ,(random 1.0))))
+(spp-fct `((feature*pick-shape :u ,(random *initial-value-upper-bound*))))
+(spp-fct `((feature*pick-texture :u ,(random *initial-value-upper-bound*))))
+(spp-fct `((feature*pick-background :u ,(random *initial-value-upper-bound*))))
+(spp-fct `((feature*pick-number :u ,(random *initial-value-upper-bound*))))
 
 
 ;;; RAPM-RELOAD

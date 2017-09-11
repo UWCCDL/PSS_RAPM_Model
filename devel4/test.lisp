@@ -1,0 +1,5 @@
+(load "/actr/actr7/load-act-r.lisp")
+(load "rapm-device")
+(load "rapm-simulations")
+(load "rapm-model")
+(general-simulations 200) ;; :tickvals '(20))

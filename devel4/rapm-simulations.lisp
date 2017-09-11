@@ -64,3 +64,41 @@
 		partial))
 	(push (cons (float d1) (float (apply #'mean partial))) results)))))
 
+
+(defun general-simulations (n &key (fname "new-simulations.txt")
+				(tickvals '(20 30 40 50)))
+  (with-open-file (out fname
+		       :direction :output
+		       :if-exists :overwrite
+		       :if-does-not-exist :create)
+    (let ((names '(ticks pos-reward neg-reward init-value-uppr-bound d1 d2 accuracy problem-rt)))
+      (format out "~{~a~^, ~}~%" names)
+      (dolist (ticks tickvals) ;;'(20 30 40 50))
+	(dolist (pos-rwrd '(2 4 6 8 10))
+	  (dolist (neg-rwrd '(-0.5 -1 -1.5 -2))
+	    (dolist (uppr-bnd '(1 2 3 4))
+	      (dolist (d1 '(1 2 5 10))
+		(dolist (d2 '(1 2 5 10))
+		  (setf *d1* d1)
+		  (setf *d2* d2)
+		  (setf *initial-value-upper-bound* uppr-bnd)
+		  (setf *negative-reward* neg-rwrd)
+		  (setf *positive-reward* pos-rwrd)
+		  (setf *ticks* ticks)
+		
+		  (dotimes (j n)
+		    (rapm-reload nil)  ; Reload
+		    (sgp :v nil)
+		    (no-output (run 10000 :real-time nil))
+		
+		    (let* ((accuracy (float (apply #'mean
+						   (mapcar #'trial-accuracy
+							  (experiment-log
+							   (current-device))))))
+			   (problem-rt (float (apply #'mean
+						    (mapcar #'trial-problem-rt
+							    (experiment-log
+							     (current-device))))))
+			   (vals (list ticks pos-rwrd neg-rwrd uppr-bnd d1 d2 accuracy problem-rt)))
+			   
+		      (format out "~{~a~^, ~}~%" (mapcar #'float vals)))))))))))))

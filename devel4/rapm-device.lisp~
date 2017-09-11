@@ -23,13 +23,9 @@
 
 (defparameter *bias* 0)
 
-(defparameter *positive-reward* 2 "Positive reward when finding a solution")
+(defparameter *reward* 10)
 
-(defparameter *negative-reward* -1 "Negative reward for retrieving the same feature")
-
-(defparameter *initial-value-upper-bound* 1 "Upper bound of the range of initial values")
-
-(defparameter *ticks* 45 "Internal time threshold to decide to respond")
+(defparameter *ticks* 45)
 
 (defparameter *verbose* nil)
 
@@ -223,9 +219,9 @@
 
 
 (defun bg-reward-hook-selection4 (production reward time)
-  "Different parameters, depending on sign of reward"
+  "The newest version, with amazing abilities"
   (declare (ignore time))
-  (let (;(module (get-module utility))
+  (let ((module (get-module utility))
 	(path (production-pathway production)))    
     (when *verbose*
       (format t "BG: ~A, <~A>~%" production reward))
@@ -931,9 +927,9 @@
   (declare (ignore params))
   (let* ((rule (first (no-output (buffer-chunk-fct '(retrieval)))))
 	 (rule-name (chunk-slot-value-fct rule 'rule))
-	 ;;(rule-feature (chunk-slot-value-fct rule 'feature))
+	 (rule-feature (chunk-slot-value-fct rule 'feature))
 	 (current (first (no-output (buffer-chunk-fct '(imaginal)))))
-	 ;;(index (chunk-slot-value-fct rule 'focus))
+	 (index (chunk-slot-value-fct rule 'focus))
 	 (verified 'yes))
     
     ;; A serious verification needs to be done only when we are
