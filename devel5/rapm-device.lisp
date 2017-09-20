@@ -868,6 +868,29 @@
 ;;; ACT-R extensions to imaginal module (imaginal actions)
 ;;; ----------------------------------------------------------------
 
+(defparameter *rapm-features* '(number shape texture background orientation) "Possible features")
+
+(defun chunk-to-cell (chunk)
+  "Turns a chunk into a lisp representation of a cell"
+  (let ((result nil))
+    (dolist (slot *rapm-features* result)
+      (let ((val (chunk-slot-value-fct chunk slot)))
+	(when val
+	  (setf result (append result (list slot val))))))))
+
+(defun compare-cells (&rest params)
+  (declare (ignore params))
+  "Checks whether an internally-imagined cell matches the one being looked at"
+  (let* ((hypothesis (first (no-output
+			     (buffer-chunk-fct '(imaginal)))))
+	 (hypothesis-cell (chunk-to-cell hypothesis))
+	 (test (first (no-output (buffer-chunk-fct '(visual)))))
+	 (test-cell (chunk-to-cell test))) 
+    (if (equal-cell hypothesis-cell test-cell)
+      (set-chunk-slot-value-fct hypothesis 'match 'yes)
+      (set-chunk-slot-value-fct hypothesis 'match 'no))
+    (schedule-event-relative 0.1 #'set-imaginal-free :params nil)))
+
 (defun predict-feature-value (&rest params)
   "Quick and dirty prediction of various properties"
   (declare (ignore params))
