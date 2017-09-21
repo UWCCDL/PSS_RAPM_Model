@@ -65,7 +65,7 @@
 	(push (cons (float d1) (float (apply #'mean partial))) results)))))
 
 
-(defun general-simulations (n &key (fname "new-simulations-selection.txt")
+(defun general-simulations (n &key (fname "new-simulations-selection-model2.txt")
 				(tickvals '(20 30 40 50)))
   (with-open-file (out fname
 		       :direction :output
