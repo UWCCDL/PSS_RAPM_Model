@@ -85,12 +85,10 @@
 		(setf *negative-reward* neg-rwrd)
 		;;  (setf *positive-reward* pos-rwrd)
 		(setf *ticks* ticks)
-		
 		(dotimes (j n)
 		  (rapm-reload nil)  ; Reload
 		  (sgp :v nil)
-		  (no-output (run 10000 :real-time nil))
-		  
+		  (no-output (run 10000 :real-time nil))		  
 		  (let* ((accuracy (float (apply #'mean
 						 (mapcar #'trial-accuracy
 							 (experiment-log
@@ -100,5 +98,4 @@
 							   (experiment-log
 							    (current-device))))))
 			 (vals (list ticks #|pos-rwrd|# neg-rwrd uppr-bnd d1 d2 accuracy problem-rt)))
-		    
-		    (format out "~{~a~^, ~}~%" (mapcar #'float vals)))))))))))))
+		    (format out "~{~a~^, ~}~%" (mapcar #'float vals))))))))))))
