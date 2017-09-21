@@ -16,33 +16,21 @@
   (and (fboundp 'run-n-events)
        (fboundp 'start-environment)))
 
-
 (defparameter *d1* 1)
 
 (defparameter *d2* 1)
 
-(defparameter *bias* 0)
+;;(defparameter *bias* 0)
 
-(defparameter *positive-reward* 2 "Positive reward when finding a solution")
+;;(defparameter *positive-reward* 2.0 "Positive reward when finding a solution")
 
-(defparameter *negative-reward* -1 "Negative reward for retrieving the same feature")
+(defparameter *negative-reward* -1.0 "Negative reward for retrieving the same feature")
 
-(defparameter *initial-value-upper-bound* 1 "Upper bound of the range of initial values")
+(defparameter *initial-value-upper-bound* 1.0 "Upper bound of the range of initial values")
 
-(defparameter *ticks* 45 "Internal time threshold to decide to respond")
+(defparameter *ticks* 30 "Internal time threshold to decide to respond")
 
 (defparameter *verbose* nil)
-
-;;; Simple Sji hook
-;;; ------------------------------------------------------------------
-(defun simple-sji-hook (chunkj chunki)
-  (if (or (chunk-slot-equal chunkj chunki)
-	  (member chunkj  (mapcar #'(lambda (x)
-				      (chunk-slot-value-fct chunki x))
-				  (chunk-filled-slots-list-fct chunki))
-		  :test #'chunk-slot-equal))
-      1
-      0))
 
 
 ;;; The original reward hook.

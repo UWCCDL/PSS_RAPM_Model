@@ -88,7 +88,7 @@
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
-     :reward-hook bg-reward-hook-selection
+     :reward-hook bg-reward-hook-selection4
      :alpha 0.1
      :egs 0.01
      :imaginal-activation 10
@@ -1682,7 +1682,7 @@
 (spp-fct `((verify*successful :reward ,*positive-reward*)))
 ;(spp verify*not-successful :reward -1)
 
-(spp-fct `((choice*respond-current-option :reward ,*positive-reward*)))
+;(spp-fct `((choice*respond-current-option :reward ,*positive-reward*)))
 (spp-fct `((choice*retrieve-best-option :reward ,*negative-reward*)))
 
 ;(spp feature*restart :u -1000 :fixed-utility t)
@@ -1692,7 +1692,7 @@
 (spp-fct `((feature*pick-background :u ,(random *initial-value-upper-bound*))))
 (spp-fct `((feature*pick-number :u ,(random *initial-value-upper-bound*))))
 
-(spp decide*pick-continue :u 12)
+(spp decide*pick-continue :u 0)
 
 ;;; RAPM-RELOAD
 ;;;

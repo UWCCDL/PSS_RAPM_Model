@@ -70,7 +70,7 @@
 
 (clear-all)
 (written-for-act-r-version "7.5.0")
-(define-model bar-devel4
+(define-model bar-devel4-model1
 
 (sgp :style-warnings nil
      :model-warnings nil
@@ -85,7 +85,7 @@
      :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
-     :reward-hook bg-reward-hook-selection2
+     :reward-hook bg-reward-hook-selection4
      :alpha 0.1
      :egs 0.01
      :imaginal-activation 10
@@ -970,7 +970,7 @@
    - =COORDINATE two
    
    =imaginal>
-     focus =VALg
+     focus =VAL
      verified yes  
 
 ==>
@@ -1650,7 +1650,7 @@
 ;;(spp check*solution-not-found-column :reward 1)
 
 ;;(spp verify*successful :reward 3)
-(spp-fct `((verify*successful :reward ,*positive-reward*)))
+;(spp-fct `((verify*successful :reward ,*positive-reward*)))
 ;(spp verify*not-successful :reward -1)
 
 ;(spp feature*restart :u -1000 :fixed-utility t)

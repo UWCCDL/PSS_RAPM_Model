@@ -241,7 +241,7 @@
 		((minusp reward)
 		 ;(dolist (rival rivals)
 		 ;  (linear-update-utility module rival (* -1 *d1* reward)))
-		 (/ (* *d2* reward) n))))))))
+		 (/ (* *d2* reward) 1))))))))
 
 
 (defun prod-utilities ()

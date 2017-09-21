@@ -7,8 +7,8 @@
 ;;; ==================================================================
 
 (clear-all)
-(written-for-act-r-version "7.4.0")
-(define-model bar-devel5
+(written-for-act-r-version "7.5.0")
+(define-model bar-devel-model7
 
 (sgp :style-warnings nil
      :model-warnings nil
