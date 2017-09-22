@@ -3,6 +3,11 @@
 ;;; ----------------------------------------------------------------
 ;;; Contains code for running simulations of the RAPM model
 ;;; ----------------------------------------------------------------
+;;; Author: Andrea Stocco,
+;;;       : University of Washington
+;;;       : Seattle, WA, 98195
+;;;       : stocco@uw.edu
+;;; ------------------------------------------------------------------
 
 (defun simulate (n &optional (res-file "results.csv"))
   (with-open-file (file res-file
@@ -31,7 +36,10 @@
 		(format file "~{~a~^, ~}~%" (mapcar #'float res))))))))))
 
 
-(defun simulate-d2 (n &key (vals '(1/2 1 3/2 2 5/2 3 7/2 4)))
+(defun simulate-d2 (n &key
+			(vals '(1/2 1 3/2 2 5/2 3 7/2 4))
+			(verbose nil))
+  "Quickly simulates the effects of different D2 values"
   (let ((results nil))
     (dolist (d2 vals (reverse results))
       (setf *d2* d2)
@@ -40,15 +48,22 @@
 	  (rapm-reload nil)  ; Reload
 	  (sgp :v nil)
 	  (no-output (run 10000 :real-time nil))
-	  ;;(format t "~A problems done at time ~a~%" (length (experiment-log (current-device))) (mp-time))
+	  (when verbose
+	    (format t "~A problems attempted at time ~a~%"
+		    (length (experiment-log (current-device)))
+		    (mp-time)))
 	  (push (apply #'mean
-		       (mapcar #'trial-accuracy (experiment-log (current-device)))
-		       )
+		       (mapcar #'trial-accuracy (experiment-log (current-device))))
 		partial))
-	(push (cons (float d2) (float (apply #'mean partial))) results)))))
+	(push (cons (float d2)
+		    (float (apply #'mean partial)))
+	      results)))))
     
 
-(defun simulate-d1 (n &key (vals '(1/2 1 3/2 2 5/2 3 7/2 4)))
+(defun simulate-d1 (n &key
+			(vals '(1/2 1 3/2 2 5/2 3 7/2 4))
+			(verbose nil))
+  "Quickly simulates the effects of different D1 values"
   (let ((results nil))
     (dolist (d1 vals (reverse results))
       (setf *d1* d1)
@@ -57,32 +72,39 @@
 	  (rapm-reload nil)  ; Reload
 	  (sgp :v nil)
 	  (no-output (run 10000 :real-time nil))
-	  ;(print (list *d1* j (index (current-device)) (mp-time)))
+	  (when verbose
+	    (format t "~A problems attempted at time ~a~%"
+		    (length (experiment-log (current-device)))
+		    (mp-time)))
 	  (push (apply #'mean
-		       (mapcar #'trial-accuracy (experiment-log (current-device)))
-		       )
+		       (mapcar #'trial-accuracy (experiment-log (current-device))))
 		partial))
-	(push (cons (float d1) (float (apply #'mean partial))) results)))))
+	(push (cons (float d1)
+		    (float (apply #'mean partial)))
+	      results)))))
 
 
-(defun general-simulations (n &key (fname "new-simulations-selection-model2.txt")
-				(tickvals '(20 30 40 50)))
+(defun general-simulations (n &key
+				(fname "simulations-devel4-model2.txt")
+				(tickvals '(20 25 30 35)))
+  "General simulations across all parameters of interest"
   (with-open-file (out fname
 		       :direction :output
 		       :if-exists :overwrite
 		       :if-does-not-exist :create)
-    (let ((names '(ticks #|pos-reward|# neg-reward init-value-uppr-bound d1 d2 accuracy problem-rt)))
+    (let ((names '(ticks #|pos-reward neg-reward|# alpha init-value-uppr-bound d1 d2 accuracy problem-rt)))
       (format out "~{~a~^, ~}~%" names)
-      (dolist (ticks tickvals) ;;'(20 30 40 50))
-;;	(dolist (pos-rwrd '(4 6 8 10)) ;;'(2 4 6 8 10))
-	(dolist (neg-rwrd '(-0.5 -1 -1.5 -2))
-	  (dolist (uppr-bnd '(1)) ;;'(1 2 3 4))
-	    (dolist (d1 '(1 2 5 10))
-	      (dolist (d2 '(1 2 5 10))
+      (dolist (ticks tickvals) 
+	;;	(dolist (pos-rwrd '(4 6 8 10)) ;;'(2 4 6 8 10))
+	;;	(dolist (neg-rwrd '(-0.5 -1 -1.5 -2))
+	(dolist (alpha '(0.025 0.050 0.075 0.100))
+	  (dolist (uppr-bnd '(1.0 2.0 3.0 4.0)) ;;'(1 2 3 4))
+	    (dolist (d1 '(0.1 0.5 1 2 5 10))
+	      (dolist (d2 '(0.1 0.5 1 2 5 10))
 		(setf *d1* d1)
 		(setf *d2* d2)
 		(setf *initial-value-upper-bound* uppr-bnd)
-		(setf *negative-reward* neg-rwrd)
+		;;(setf *negative-reward* neg-rwrd)
 		;;  (setf *positive-reward* pos-rwrd)
 		(setf *ticks* ticks)
 		(dotimes (j n)
@@ -97,5 +119,5 @@
 						   (mapcar #'trial-problem-rt
 							   (experiment-log
 							    (current-device))))))
-			 (vals (list ticks #|pos-rwrd|# neg-rwrd uppr-bnd d1 d2 accuracy problem-rt)))
+			 (vals (list ticks #|pos-rwrd neg-rwrd |# alpha uppr-bnd d1 d2 accuracy problem-rt)))
 		    (format out "~{~a~^, ~}~%" (mapcar #'float vals))))))))))))

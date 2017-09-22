@@ -4,6 +4,11 @@
 ;;; A class that provides an ACT-R GUI interface for a modified
 ;;; version of Raven's Advanced Progressive Matrices
 ;;; ------------------------------------------------------------------
+;;; Author: Andrea Stocco,
+;;;       : University of Washington
+;;;       : Seattle, WA, 98195
+;;;       : stocco@uw.edu
+;;; ------------------------------------------------------------------
 
 ;;; Sets up the logical pathname for all files in the same folder
 ;;;
@@ -16,9 +21,9 @@
   (and (fboundp 'run-n-events)
        (fboundp 'start-environment)))
 
-(defparameter *d1* 1)
+(defparameter *d1* 1 "Dopamine Receptor 1 density")
 
-(defparameter *d2* 1)
+(defparameter *d2* 1 "Dopamine Receptor 2 density")
 
 ;;(defparameter *bias* 0)
 
