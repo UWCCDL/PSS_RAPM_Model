@@ -121,6 +121,6 @@
 							   (experiment-log
 							    (current-device))))))
 			 (reward-bold (cdr (assoc 'problem (cdr (assoc 'reward *striatal-activity*)))))
-			 (rpe-bold (cdr (assoc 'problem (cdr (assoc 'reward *striatal-activity*)))))
+			 (rpe-bold (cdr (assoc 'problem (cdr (assoc 'rpe *striatal-activity*)))))
 			 (vals (list ticks #|pos-rwrd neg-rwrd |# alpha uppr-bnd d1 d2 accuracy problem-rt reward-bold rpe-bold)))
 		    (format out "~{~a~^, ~}~%" (mapcar #'float vals))))))))))))
