@@ -2,5 +2,5 @@
 (load "/projects/actr/models/PSS_RAPM_Model/devel4/rapm-device.lisp")
 (load "/projects/actr/models/PSS_RAPM_Model/devel4/rapm-model.lisp")
 (load "/projects/actr/models/PSS_RAPM_Model/devel4/rapm-simulations.lisp")
-(general-simulations 200) ;; :tickvals '(20))
+(general-simulations 200 :fname "simulations-devel4-model2-bold.txt") ;; :tickvals '(20))
 (quit)
