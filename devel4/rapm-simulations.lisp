@@ -92,7 +92,7 @@
 		       :direction :output
 		       :if-exists :overwrite
 		       :if-does-not-exist :create)
-    (let ((names '(ticks #|pos-reward neg-reward|# alpha init-value-uppr-bound d1 d2 accuracy problem-rt)))
+    (let ((names '(ticks #|pos-reward neg-reward|# alpha init-value-uppr-bound d1 d2 accuracy problem-rt reward-bold rpe-bold)))
       (format out "~{~a~^, ~}~%" names)
       (dolist (ticks tickvals) 
 	;;	(dolist (pos-rwrd '(4 6 8 10)) ;;'(2 4 6 8 10))
@@ -110,6 +110,7 @@
 		(dotimes (j n)
 		  (rapm-reload nil)  ; Reload
 		  (sgp :v nil)
+		  (reset-striatal-activity)
 		  (no-output (run 10000 :real-time nil))		  
 		  (let* ((accuracy (float (apply #'mean
 						 (mapcar #'trial-accuracy
@@ -119,5 +120,7 @@
 						   (mapcar #'trial-problem-rt
 							   (experiment-log
 							    (current-device))))))
-			 (vals (list ticks #|pos-rwrd neg-rwrd |# alpha uppr-bnd d1 d2 accuracy problem-rt)))
+			 (reward-bold (cdr (assoc 'problem (cdr (assoc 'reward *striatal-activity*)))))
+			 (rpe-bold (cdr (assoc 'problem (cdr (assoc 'reward *striatal-activity*)))))
+			 (vals (list ticks #|pos-rwrd neg-rwrd |# alpha uppr-bnd d1 d2 accuracy problem-rt reward-bold rpe-bold)))
 		    (format out "~{~a~^, ~}~%" (mapcar #'float vals))))))))))))

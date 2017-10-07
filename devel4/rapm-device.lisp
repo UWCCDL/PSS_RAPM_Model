@@ -25,9 +25,19 @@
 
 (defparameter *d2* 1 "Dopamine Receptor 2 density")
 
-;;(defparameter *bias* 0)
+(defparameter *default-striatal-activity*
+  '((reward .
+     ((problem . 0.0) (choice . 0.0)))
+    (rpe .
+     ((problem . 0.0) (choice . 0.0))))
+  "Default init values for striatal BOLD response")
 
-;;(defparameter *positive-reward* 2.0 "Positive reward when finding a solution")
+(defparameter *striatal-activity* *default-striatal-response*
+  "Summary of cumulative striatum response")
+
+(defun reset-striatal-activity ()
+  (setf *striatal-activity* *default-striatal-activity*))
+
 
 (defparameter *negative-reward* -1.0 "Negative reward for retrieving the same feature")
 
@@ -35,7 +45,11 @@
 
 (defparameter *ticks* 30 "Internal time threshold to decide to respond")
 
+;;; Boolean parameters
+
 (defparameter *verbose* nil)
+
+(defparameter *calculate-striatal-activity* t)
 
 
 ;;; The original reward hook.
@@ -214,10 +228,38 @@
 						   (length rivals)))))
 	(* *d1* reward)))))
 
+(defun production-utility (production)
+  (caar (no-output (spp-fct `((,production) :u)))))
 
+(defun compute-striatal-activity (production reward)
+  "Computes predicted striatal activity (as a function of dopamine response)"
+  (when *calculate-striatal-activity*
+    (let ((q (production-utility production))
+	  (rpe 0.0)
+	  (rt 0.0)
+	  (phase (task-phase (current-device))))
+      (when (member phase '(problem choice))
+	(if (plusp reward)
+	    (progn
+	      (setf rt (* *d1* reward))
+	      (setf rpe (- (* *d1* reward) q)))
+	    (progn
+	      (setf rt (* *d2* reward))
+	      (setf rpe (- (* *d2* reward) q))))
+
+	;; Update the two possible counters for BOLD
+	(let ((reward-accum (cdr (assoc 'reward *striatal-activity*)))
+	      (rpe-accum (cdr (assoc 'rpe *striatal-activity*)))
+	      (alpha (car (no-output (sgp-fct '(:alpha))))))
+	  (incf (cdr (assoc phase reward-accum)) rt)
+	  (incf (cdr (assoc phase rpe-accum)) (* alpha rpe)))))))
+  
+;;; THE REAL ONE
+;;;
 (defun bg-reward-hook-selection4 (production reward time)
   "Different parameters, depending on sign of reward"
   (declare (ignore time))
+  (compute-striatal-activity production reward)
   (let (;(module (get-module utility))
 	(path (production-pathway production)))    
     (when *verbose*
@@ -227,13 +269,8 @@
 	(let* ((rivals (remove production (conflict-set production)))
 	       (n (length rivals)))
 	  (cond ((plusp reward)
-		 ;(dolist (rival rivals)
-		 ;  (linear-update-utility module rival (/ (* -1 *d2* reward)
-		;					  n)))
 		 (* *d1* reward))
 		((minusp reward)
-		 ;(dolist (rival rivals)
-		 ;  (linear-update-utility module rival (* -1 *d1* reward)))
 		 (/ (* *d2* reward) n))))))))
 
 

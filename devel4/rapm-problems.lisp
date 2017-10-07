@@ -4,6 +4,21 @@
 ;;; Lisp definition of the RAPM problems used by Lauren Graham
 ;;; ------------------------------------------------------------------
 
+(defparameter *rapm-features*
+  '(number shape texture background)
+  "Arbitrarily named features")
+
+(defparameter *feature-values*
+  '((number . (1 2 3))
+    (shape . (square diamond circle triangle))
+    (background . (white grey black))
+    (texture . (solid striped dotted))))
+
+(defparameter *rules* '(progression constant same))
+
+(defun generate-problem (nfeatures)
+  nil)
+
 (defparameter *test-problem*
   '(((number 1 shape triangle)
      (number 2 shape triangle)
