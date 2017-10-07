@@ -32,7 +32,7 @@
      ((problem . 0.0) (choice . 0.0))))
   "Default init values for striatal BOLD response")
 
-(defparameter *striatal-activity* *default-striatal-response*
+(defparameter *striatal-activity* *default-striatal-activity*
   "Summary of cumulative striatum response")
 
 (defun reset-striatal-activity ()
