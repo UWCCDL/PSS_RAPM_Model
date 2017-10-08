@@ -25,18 +25,22 @@
 
 (defparameter *d2* 1 "Dopamine Receptor 2 density")
 
-(defparameter *default-striatal-activity*
+(defparameter *striatal-activity*
   '((reward .
      ((problem . 0.0) (choice . 0.0)))
     (rpe .
      ((problem . 0.0) (choice . 0.0))))
   "Default init values for striatal BOLD response")
 
-(defparameter *striatal-activity* *default-striatal-activity*
-  "Summary of cumulative striatum response")
-
 (defun reset-striatal-activity ()
-  (setf *striatal-activity* *default-striatal-activity*))
+  "Resets striatal activity"
+  (setf *striatal-activity*
+	(list (cons 'reward (list (cons 'problem 0.0)
+				  (cons 'choice 0.0)))
+	      (cons 'rpe (list (cons 'problem 0.0)
+			       (cons 'choice 0.0))))))
+
+;;  (setf *striatal-activity* *default-striatal-activity*))
 
 
 (defparameter *negative-reward* -1.0 "Negative reward for retrieving the same feature")
