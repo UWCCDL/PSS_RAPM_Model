@@ -14,10 +14,30 @@
     (background . (white grey black))
     (texture . (solid striped dotted))))
 
-(defparameter *rules* '(progression constant same))
+
+(defparameter *rapm-rules* '(progression constant same))
+
+(defun generate-progression (args)
+  '(1 2 3))
+
+(defun generate-constant (arg)
+  (when arg
+    arg
+    (scramble '(1 2 3))))
+
 
 (defun generate-problem (nfeatures)
-  nil)
+  (let* ((feats (subseq (scramble* *rapm-features*)
+			0 nfeatures))
+	 (problem nil))
+    ;; Set up an empty problem
+    (dotimes (i 9)
+      (push nil problem))
+
+    ;; Create features
+    (dolist (f feats)
+      (let ((rules (subseq 0 2 (scramble *rapm-rules))))
+	;; First is vertical 
 
 (defparameter *test-problem*
   '(((number 1 shape triangle)
