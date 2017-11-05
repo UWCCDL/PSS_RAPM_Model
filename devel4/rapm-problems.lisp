@@ -126,7 +126,7 @@
 	(dolist (f-index f-indices)
 	  (let* ((val (second (nth f-index newoption)))
 		 (newval (pick (remove val '(1 2 3)))))
-	    (print (list 'index f-index 'val val 'newval newval)) 
+	    ;;(print (list 'index f-index 'val val 'newval newval)) 
 	    (setf (second (nth f-index newoption)) newval)))
 	
 	;; Now, we need to retransform the features from int-values
@@ -149,8 +149,8 @@
 
 (defun generate-trials (num)
   (let ((res nil))
-    (dotimes (i num)
-      (push (generate-trials 4) res)))) 
+    (dotimes (i num res)
+      (push (generate-trial 4) res)))) 
 
 (defparameter *test-problem*
   '(((number 1 shape triangle)
