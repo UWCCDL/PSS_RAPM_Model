@@ -86,19 +86,21 @@
 
 (defun general-simulations (n &key
 				(fname "simulations-devel4-model2.txt")
-				(tickvals '(20 25 30 35)))
+				(tickvals '(20 25 30 35))
+				(upprbndvals '(1.0 2.0 3.0 4.0))
   "General simulations across all parameters of interest"
   (with-open-file (out fname
 		       :direction :output
 		       :if-exists :overwrite
 		       :if-does-not-exist :create)
-    (let ((names '(ticks #|pos-reward neg-reward|# alpha init-value-uppr-bound d1 d2 accuracy problem-rt reward-bold rpe-bold)))
+    (let ((names '(ticks #|pos-reward neg-reward|# alpha init-value-uppr-bound d1 d2 accuracy problem-rt reward-bold rpe-bold))
+	  (counter 0))
       (format out "~{~a~^, ~}~%" names)
       (dolist (ticks tickvals) 
 	;;	(dolist (pos-rwrd '(4 6 8 10)) ;;'(2 4 6 8 10))
 	;;	(dolist (neg-rwrd '(-0.5 -1 -1.5 -2))
 	(dolist (alpha '(0.025 0.050 0.075 0.100))
-	  (dolist (uppr-bnd '(1.0 2.0 3.0 4.0)) ;;'(1 2 3 4))
+	  (dolist (uppr-bnd upprbndvals);;'(1.0 2.0 3.0 4.0)) ;;'(1 2 3 4))
 	    (dolist (d1 '(0.1 0.5 1 2 5 10))
 	      (dolist (d2 '(0.1 0.5 1 2 5 10))
 		(setf *d1* d1)
@@ -107,6 +109,7 @@
 		;;(setf *negative-reward* neg-rwrd)
 		;;  (setf *positive-reward* pos-rwrd)
 		(setf *ticks* ticks)
+		(format t "Set #~A~%" (* (incf counter) n))
 		(dotimes (j n)
 		  (rapm-reload nil)  ; Reload
 		  (sgp :v nil)
