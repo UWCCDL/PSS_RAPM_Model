@@ -109,7 +109,7 @@
 		;;(setf *negative-reward* neg-rwrd)
 		;;  (setf *positive-reward* pos-rwrd)
 		(setf *ticks* ticks)
-		(format t "Set #~A~%" (* (incf counter) n))
+		;(format t "Set #~A~%" (* (incf counter) n))
 		(dotimes (j n)
 		  (rapm-reload nil)  ; Reload
 		  (sgp :v nil)
