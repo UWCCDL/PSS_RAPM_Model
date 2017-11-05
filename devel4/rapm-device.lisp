@@ -593,7 +593,7 @@
    (index :accessor index
 	  :initform nil)
    (trials :accessor trials
-	   :initform (scramble* *trials*))
+	   :initform (generate-trials 16)) ;(scramble* *trials*))
    (current-trial :accessor current-trial
 		  :initform nil)
    (experiment-log :accessor experiment-log

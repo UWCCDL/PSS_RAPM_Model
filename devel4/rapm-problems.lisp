@@ -4,40 +4,153 @@
 ;;; Lisp definition of the RAPM problems used by Lauren Graham
 ;;; ------------------------------------------------------------------
 
+(defun seq (start end &optional (step 1))
+  "Creates a ranges"
+  (let ((results nil)
+	(partial start))
+    (cond ((and (< start end)
+		(plusp step))
+	   (loop while (< partial end) do
+	     (push partial results)
+	     (incf partial step)))
+	  ((and (> start end)
+		(minusp step))
+	   (loop while (> partial end) do
+	     (push partial results)
+	     (incf partial step)))
+	  (t
+	   nil))
+    (reverse results)))
+
 (defparameter *rapm-features*
   '(number shape texture background)
   "Arbitrarily named features")
 
 (defparameter *feature-values*
-  '((number . (1 2 3))
-    (shape . (square diamond circle triangle))
-    (background . (white grey black))
-    (texture . (solid striped dotted))))
+  '((number . ((1 . one)
+	       (2 . two)
+	       (3 . three)))
+    (shape . ((1 . triangle)
+	      (2 . square)
+	      (3 . circle)))
+    (background . ((1 . white)
+		   (2 . grey)
+		   (3 . black)))
+    (texture . ((1 . empty)
+		(2 . striped)
+		(3 . filled))))
+  "Feature-specific mappings from internal values to symbolic values")
 
+(defun assoc-value (feature int-value)
+  (let ((mappings (cdr (assoc feature *feature-values*))))
+    (when mappings
+      (cdr (assoc int-value mappings)))))  
 
-(defparameter *rapm-rules* '(progression constant same))
+(defun rassoc-value (feature s-value)
+  (let ((mappings (cdr (assoc feature *feature-values*))))
+    (when mappings
+      (car (rassoc s-value mappings)))))  
 
-(defun generate-progression (args)
-  '(1 2 3))
+(defparameter *rapm-rules* '(rule-same rule-progression rule-constant))
 
-(defun generate-constant (arg)
-  (when arg
-    arg
-    (scramble '(1 2 3))))
+(defun print-mat (mat)
+  (dotimes (j (length mat))
+    (print (nth j mat))))
 
+(defun rotate-matrix (mat)
+  (let ((n (length mat))
+        (newmat nil))
+    (dotimes (row n (reverse newmat))
+      (let ((newrow nil))
+	(dotimes (col n)
+	  (push  (nth row (nth col mat)) newrow))
+	(push (reverse newrow) newmat)))))
+
+(defun rule-progression ()
+  '((1 2 3)
+    (1 2 3)
+    (1 2 3)))
+
+(defun rule-constant ()
+  (scramble* '((1 1 1) (2 2 2) (3 3 3))))
+
+(defun rule-same ()
+  (let ((template (scramble* '(1 2 3)))
+	(result nil))
+    (dotimes (j 3 result)
+      (push template result))))
+
+(defun rule-distribution ()
+  (scramble* '((1 2 3) (2 3 1) (3 1 2))))
 
 (defun generate-problem (nfeatures)
   (let* ((feats (subseq (scramble* *rapm-features*)
 			0 nfeatures))
 	 (problem nil))
     ;; Set up an empty problem
-    (dotimes (i 9)
-      (push nil problem))
+    (dotimes (r 3)
+      (let ((row nil))
+	(dotimes (cell 3)
+	  (push nil row))
+	(push row problem)))
 
     ;; Create features
-    (dolist (f feats)
-      (let ((rules (subseq 0 2 (scramble *rapm-rules))))
-	;; First is vertical 
+    (dolist (feature feats problem)
+      (let ((matrix (funcall (pick *rapm-rules*))))
+	(when (pick (scramble '(t nil)))
+	  (setf matrix (rotate-matrix matrix)))
+	(dotimes (row 3)
+	  (dotimes (col 3)
+	    (let* ((int-val (nth col (nth row matrix)))
+		   (feat-val (assoc-value feature int-val)))
+	      (setf (nth col (nth row problem))
+		    (append (list feature feat-val)
+			    (nth col (nth row problem)))))))))))
+
+
+(defun generate-options (problem)
+  (let* ((correct (problem-cell problem 2 2))
+	 (paired (divide-into-pairs correct))
+	 (abstracted (mapcar #'(lambda (pair)
+				 (list (first pair)
+				       (rassoc-value (first pair)
+						     (second pair))))
+			     paired))
+	 (options (list correct)))
+    ;; Now generate options with 1, 2, or 3 different features
+    (dolist (changes '(1 2 3) options)
+      (let ((f-indices (subseq (scramble (seq 0 (length abstracted))) 0 changes))
+	    (newoption (mapcar #'(lambda (x) (copy-seq x))
+			       abstracted)))
+	;; modify the new option
+	(dolist (f-index f-indices)
+	  (let* ((val (second (nth f-index newoption)))
+		 (newval (pick (remove val '(1 2 3)))))
+	    (print (list 'index f-index 'val val 'newval newval)) 
+	    (setf (second (nth f-index newoption)) newval)))
+	
+	;; Now, we need to retransform the features from int-values
+	;; to symbolic values and flatten it before adding it to
+	;; the list of options
+	(let* ((newpaired (mapcar #'(lambda (pair)
+				      (list (first pair)
+					    (assoc-value (first pair)
+							 (second pair))))
+				  newoption))
+	       (foil (flatten newpaired)))
+	  (push foil options))))))
+      
+(defun generate-trial (nfeatures)
+  (let* ((problem (generate-problem nfeatures))
+	 (correct (problem-cell problem 2 2))
+	 (options (generate-options problem)))
+    (setf (nth 2 (nth 2 problem)) nil)
+    (list problem correct options)))
+
+(defun generate-trials (num)
+  (let ((res nil))
+    (dotimes (i num)
+      (push (generate-trials 4) res)))) 
 
 (defparameter *test-problem*
   '(((number 1 shape triangle)
