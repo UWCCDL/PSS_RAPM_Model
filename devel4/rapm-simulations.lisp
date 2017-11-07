@@ -87,7 +87,7 @@
 (defun general-simulations (n &key
 				(fname "simulations-devel4-model2.txt")
 				(tickvals '(20 25 30 35))
-				(upprbndvals '(1.0 2.0 3.0 4.0))
+				(upprbndvals '(1.0 2.0 3.0 4.0)))
   "General simulations across all parameters of interest"
   (with-open-file (out fname
 		       :direction :output
