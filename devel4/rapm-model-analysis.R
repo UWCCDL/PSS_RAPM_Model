@@ -53,7 +53,8 @@ axis.range <- function(orig.data, borders=1/2) {
   c(ymin, ymax, yunit) 
 }
 
-plot.model.parameters <- function(data, variable, factor1, factor2, factor2name = factor2, rng=NULL, legpos="bottomleft", abs=NULL, main=paste(variable, "by", factor2), subtitle=NULL, points=NULL, colors=NULL, fgs=NULL, lwds=NULL,...) {
+plot.model.parameters <- function(data, variable, factor1, factor2, 
+                                  factor2name = factor2, rng=NULL, leg=T, legpos="bottomleft", abs=NULL, main=paste(variable, "by", factor2), subtitle=NULL, points=NULL, colors=NULL, fgs=NULL, lwds=NULL,...) {
   oldmar <- par("mar")
   par(mar=c(3,3,1,1))
   levels <- levels(factor(data[[factor2]]))
@@ -117,25 +118,54 @@ plot.model.parameters <- function(data, variable, factor1, factor2, factor2name 
     l.names <-c(l.names, paste(levels[l], sep=""))
   }
   #title(main=main, ylab=variable, xlab=factor1, sub=subtitle)
-  legend(legpos, legend=paste(factor2name, "=", l.names), pch=l.points, lty=1, pt.bg=l.colors, col=l.colors, pt.cex=CEX, bty="n")
+  if (leg) {
+    legend(legpos, legend=paste(factor2name, "=", l.names), 
+           pch=l.points, lty=1, pt.bg=l.colors, col=l.colors, pt.cex=CEX, bty="n")
+  }
   par(mar = oldmar)
 }
 
 tiff("Fig2C.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
-plot.model.parameters(model, "Accuracy", "D1", "Ticks", "Wait time", rng=c(0.5, 1.02, 0.1), legpos = "topleft")
-mtext("Impact of Positive Feedback", side=1, line=4)
+plot.model.parameters(model, "Accuracy", "D1", "Ticks", "Wait time", 
+                      leg=F, rng=c(0.5, 1.02, 0.1), legpos = "topleft")
+vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
+legend(x = 1, y=1.07,
+       #ncol = 2,
+       legend = vals, 
+       lwd = 1, 
+       lty = 1, 
+       pch = 21,
+       pt.cex=2,
+       bty = "n",
+       y.intersp = 0.6,
+       col =   grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model$Ticks))) - 1)))),
+       pt.bg = grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model$Tick))) - 1)))))
+mtext(expression(paste("Impact of Positive Feedback ", pi)), side=1, line=4)
 mtext("RAPM Accuracy", side=2, line=3)
 dev.off()
 
 tiff("Fig2D.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
-plot.model.parameters(model, "Accuracy", "D2", "Ticks", "Wait time", rng=c(0.5, 1.02, 0.1), legpos = "topleft")
-mtext("Impact of Negative Feedback", side=1, line=4)
+plot.model.parameters(model, "Accuracy", "D2", "Ticks", "Wait time", leg=F, 
+                      rng=c(0.5, 1.02, 0.1), legpos = "topleft")
+vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
+legend(x = 1, y=1.07, 
+       legend = vals, 
+       lwd = 1, 
+       lty = 1, 
+       pch = 21,
+       pt.cex=2,
+       bty = "n",
+       y.intersp = 0.6,
+       col =   grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model$Ticks))) - 1)))),
+       pt.bg = grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model$Tick))) - 1)))))
+mtext(expression(paste("Impact of Negative Feedback ", nu)), side=1, line=4)
 mtext("RAPM Accuracy", side=2, line=3)
 dev.off()
 
 model.redux <- aggregate(model[c("Accuracy", "Latency", "RpeActivity", "RewardActivity", "RpeBold", "RewardBold")], list(Wait=model$Ticks, a=model$D2), mean)
 
-plot.model.bold <- function(data, variable, factor1, factor2, factor2name = factor2, rng=NULL, xrng=NULL, legpos="bottomleft", abs=NULL, main=paste(variable, "by", factor2), subtitle=NULL, points=NULL, colors=NULL, fgs=NULL, lwds=NULL,...) {
+plot.model.bold <- function(data, variable, factor1, factor2, 
+                            factor2name = factor2, rng=NULL, xrng=NULL, leg=T, legpos="bottomleft", abs=NULL, main=paste(variable, "by", factor2), subtitle=NULL, points=NULL, colors=NULL, fgs=NULL, lwds=NULL,...) {
   oldmar <- par("mar")
   par(mar=c(3,3,1,1))
   levels <- levels(factor(data[[factor2]]))
@@ -205,7 +235,9 @@ plot.model.bold <- function(data, variable, factor1, factor2, factor2name = fact
     l.names <-c(l.names, paste(levels[l], sep=""))
   }
   #title(main=main, ylab=variable, xlab=factor1, sub=subtitle)
-  legend(legpos, legend=paste(factor2name, "=", l.names), pch=l.points, lty=1, pt.bg=l.colors, col=l.colors, pt.cex=CEX, bty="n")
+  if (leg) {
+    legend(legpos, legend=paste(factor2name, "=", l.names), pch=l.points, lty=1, pt.bg=l.colors, col=l.colors, pt.cex=CEX, bty="n")
+  }
   par(mar=oldmar)
 }
 
@@ -213,6 +245,17 @@ plot.model.bold <- function(data, variable, factor1, factor2, factor2name = fact
 tiff("Fig2E.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
 plot.model.bold(model.redux, "Accuracy", "RpeActivity", "Wait", "Wait time", rng=c(0.5, 1.02, 0.1), 
                 legpos = "topright", leg=F, xrng=c(-4, 1, 1))
+vals <- parse(text = paste("italic(tau) ==", unique(model.redux$Wait)))
+legend(x = -1.6, y=1.07, 
+       legend = vals, 
+       lwd = 1, 
+       lty = 1, 
+       pch = 21,
+       pt.cex=2,
+       bty = "n",
+       y.intersp = 0.6,
+       col =   grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model.redux$Wait))) - 1)))),
+       pt.bg = grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model.redux$Wait))) - 1)))))
 mtext("Simulated BOLD Signal", side=1, line=4)
 mtext("RAPM Accuracy", side=2, line=3)
 dev.off()
