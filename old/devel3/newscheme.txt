@@ -1,0 +1,69 @@
+New scheme
+==========
+
+The principles
+--------------
+
+The principles of the new scheme are simple. A *feature* is not a
+minimal component anymore. Instead, a feature is set of minial visual
+components, which we are going to name, for simplicity,
+*elements*. Incidentally, I believe that Marco Ragni's model worked a
+bit like that. It also makes the visual system more plausible.
+
+Anyway, a cell in the Raven's matrix is a set of elements:
+
+   +-----------+
+   | Cell X    |
+   +-----------+
+   | Element 1 |
+   | Element 2 |
+   | ....      |
+   | Element N |
+   +-----------+
+
+A feature is a particular set of elements. So, a specific feature F is
+a hypothesis on a group of elements. This hypothesis can be expressed
+in the form of a "filter" that gates specific element:
+
+   +-----------+     +--------+     +-----------+
+   | Cell X    | --> | Filter | --> | Feature Y |
+   +-----------+     +--------+     +-----------+
+   | Element 1 |         -          |           |
+   | Element 2 |         +          | Element 2 |
+   | Element 3 |         -          |           |
+   | Element 4 |         -          |           |
+   | Element 5 |         +          | Element 5 |
+   | Element 6 |         -          |           |
+   | Element 7 |         +          | Element 7 |
+   +-----------+                    +-----------+
+
+An example is the "cross" feature, which could be interpreted as follows 
+
+   +-------------+     +--------+     +-----------+
+   | Cell X      | --> | Filter | --> | Feature Y |
+   +-------------+     +--------+     +-----------+
+   | Horiz. line |         +          |           |
+   | Vert. line  |         +          | Cross     |
+   +-------------+                    +-----------+
+
+Or could be interpreted as two different features
+
+   +-------------+     +--------+     +-------------+
+   | Cell X      | --> | Filter | --> | Feature W   |
+   +-------------+     +--------+     +-------------+
+   | Horiz. line |         -          |             |
+   | Vert. line  |         +          | Vert. line  |
+   +-------------+                    +-------------+
+
+   +-------------+     +--------+     +-------------+
+   | Cell X      | --> | Filter | --> | Feature Z   |
+   +-------------+     +--------+     +-------------+
+   | Horiz. line |         +          | Horiz. line |
+   | Vert. line  |         -          |             |
+   +-------------+                    +-------------+
+
+Considerations
+--------------
+
+In many ways, this is identical to hiding relevant features within
+irrelevant ones, isn't it? Well, not really

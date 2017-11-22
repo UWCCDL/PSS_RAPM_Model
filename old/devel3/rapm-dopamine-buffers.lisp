@@ -1,0 +1,17 @@
+(require-compiled "GOAL-STYLE-MODULE" "ACT-R-support:goal-style-module")
+
+(defun dopamine-module-exists? ()
+  (multiple-value-bind (mod exists)
+      (get-module-fct 'dopamine)
+    (declare (ignore mod))
+    exists))
+
+(define-module dopamine
+    (go nogo)
+  nil
+  :version "1.0"
+  :documentation "Declarative memory filters based on D1/D2 productions"
+  :query goal-style-query
+  :request goal-style-request
+  :buffer-mod goal-style-mod-request)
+  
