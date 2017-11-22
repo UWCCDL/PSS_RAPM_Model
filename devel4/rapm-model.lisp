@@ -1,7 +1,12 @@
 ;;; ==================================================================
-;;; A simple model of RAPM
+;;; A simple model of Raven's (Advanced) Progressive Matrices
 ;;; ==================================================================
-;;; (Based on devel version 7)
+;;; Author: (c) 2017, Andrea Stocco
+;;;         University of Washington,
+;;;         Seattle, WA 98195
+;;;         Email: stocco@uw.edu
+;;; ==================================================================
+;;; (Based on development version 7)
 ;;;
 ;;; The model works by iteratively selecting features and rules,
 ;;; and internally generating rewards when the features are new
@@ -59,13 +64,9 @@
 ;;;   1. There are no more "dont" productions.
 ;;;   2. Competition is managed between "pick" productions using the
 ;;;      conflict set.
-;;;   3  The one production that fires sees its utility updated with
-;;;      a positive (reward * D1) value.
-;;;   4. Productions in the conflict set that did not fire are
-;;;      udpated with a negative (D2 * reward) value.
+;;;   3. Production utilities get updated based on the sign of
+;;;      reward; positive and negative rewards have different impacts.
 ;;;
-;;; In the future, the conflict set should be detected automatically.
-;;; Here, it is derived from the prefix and pathway of a production.
 ;;; ==================================================================
 
 (clear-all)
@@ -288,6 +289,34 @@
 ;;;                           |
 ;;;                         *END*
 ;;; ------------------------------------------------------------------
+;;; To understand how the model interacts with the problem, we need to
+;;; briefly outline how the problems are represented in the model's
+;;; virtual device and visual field. A problem is represented like
+;;; this:
+;;;
+;;;   +---------------------------------------------+
+;;;   | rapm-problem                                |
+;;;   |                                             |
+;;;   | +-----------+  +-----------+  +-----------+ |
+;;;   | | rapm-cell |  | rapm-cell |  | rapm-cell | |
+;;;   | | row1,col1 |  | row1,col2 |  | row1,col3 | | 
+;;;   | | features  |  | features  |  | features  | |
+;;;   | +-----------+  +-----------+  +-----------+ |
+;;;   |                                             |
+;;;   | +-----------+  +-----------+  +-----------+ |
+;;;   | | rapm-cell |  | rapm-cell |  | rapm-cell | |
+;;;   | | row2,col1 |  | row2,col2 |  | row2,col3 | | 
+;;;   | | features  |  | features  |  | features  | |
+;;;   | +-----------+  +-----------+  +-----------+ |
+;;;   |                                             |
+;;;   | +-----------+  +-----------+  +-----------+ |
+;;;   | | rapm-cell |  | rapm-cell |  | rapm-cell | |
+;;;   | | row3,col1 |  | row3,col2 |  | row3,col3 | | 
+;;;   | | features  |  | features  |  | features  | |
+;;;   | +-----------+  +-----------+  +-----------+ |
+;;;   +---------------------------------------------+
+;;;
+;;; ------------------------------------------------------------------
 
 (p start*attend-problem
    "Attends a problem"
@@ -354,9 +383,9 @@
 ;;; feature consists of multiple Pick/Don't Pick productions, one
 ;;; pair for each feature.
 ;;;
-;;;   Pick    Don't   Pick  Don't  Pick   ... Don't
-;;;   Shape   Shape   Num   Num    ...        ...
-;;;       \      \    \    /     /          /
+;;;       Pick    Pick     Pick       Pick 
+;;;      Shape   Number    Texture  Orientation
+;;;         \       \         /        /
 ;;;          Encode The Selected Feature
 ;;;
 ;;; ---------------------------------------------------------------- ;;

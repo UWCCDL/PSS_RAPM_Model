@@ -125,7 +125,7 @@ plot.model.parameters <- function(data, variable, factor1, factor2,
   par(mar = oldmar)
 }
 
-tiff("Fig2C.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+tiff("~/Fig2C.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
 plot.model.parameters(model, "Accuracy", "D1", "Ticks", "Wait time", 
                       leg=F, rng=c(0.5, 1.02, 0.1), legpos = "topleft")
 vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
@@ -144,7 +144,7 @@ mtext(expression(paste("Impact of Positive Feedback ", pi)), side=1, line=4)
 mtext("RAPM Accuracy", side=2, line=3)
 dev.off()
 
-tiff("Fig2D.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+tiff("~/Fig2D.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
 plot.model.parameters(model, "Accuracy", "D2", "Ticks", "Wait time", leg=F, 
                       rng=c(0.5, 1.02, 0.1), legpos = "topleft")
 vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
@@ -242,7 +242,7 @@ plot.model.bold <- function(data, variable, factor1, factor2,
 }
 
 
-tiff("Fig2E.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+tiff("~/Fig2E.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
 plot.model.bold(model.redux, "Accuracy", "RpeActivity", "Wait", "Wait time", rng=c(0.5, 1.02, 0.1), 
                 legpos = "topright", leg=F, xrng=c(-4, 1, 1))
 vals <- parse(text = paste("italic(tau) ==", unique(model.redux$Wait)))
