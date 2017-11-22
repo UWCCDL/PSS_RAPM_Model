@@ -1,6 +1,0 @@
-(load "/actr/actr7/load-act-r.lisp")
-(load "rapm-device.lisp")
-(load "./devel/rapm-model.lisp")
-(load "rapm-simulations.lisp")
-(simulate 20 "new-test.csv")
-(quit)
