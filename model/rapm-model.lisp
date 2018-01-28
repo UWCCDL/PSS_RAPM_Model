@@ -78,6 +78,7 @@
      :style-warnings nil
      :auto-attend t
      :er t
+     :show-focus t  ;; Experimental
      :ans 0.05
      :record-ticks nil
      :esc t

@@ -20,6 +20,9 @@
   "Cheap hack to check whether ACTR is loaded"
   (member :act-r *features*))
 
+(defparameter *experimental-window-visible?* t
+  "Whether a window is visible for demo purposes")
+
 (defparameter *d1* 1 "Dopamine Receptor 1 density")
 
 (defparameter *d2* 1 "Dopamine Receptor 2 density")
@@ -614,7 +617,15 @@
     (setf (current-trial task) (make-trial (nth (index task) (trials task))))
     (setf (task-phase task) 'problem)
     (when (act-r-loaded?)
-      (set-trial-problem-onset (current-trial task) (mp-time)))))
+      (set-trial-problem-onset (current-trial task) (mp-time)))
+    (when *experimental-window-visible?*
+      (setf *window*
+	    (open-exp-window "INST Experiment"                                    
+			     :visible t
+			     :width 400
+			     :height 300
+			     :x 600
+			     :y 600)))))
 
 (defparameter *phase-transitions* '((problem . pause1) (pause1 . choice)
 				    (choice . pause2) (pause2 . problem)))
