@@ -18,8 +18,7 @@
 
 (defun act-r-loaded? ()
   "Cheap hack to check whether ACTR is loaded"
-  (and (fboundp 'run-n-events)
-       (fboundp 'start-environment)))
+  (member :act-r *features*))
 
 (defparameter *d1* 1 "Dopamine Receptor 1 density")
 
@@ -55,7 +54,7 @@
 
 (defparameter *calculate-striatal-activity* t)
 
-
+#|
 ;;; The original reward hook.
 ;;; -------------------------
 (defun bg-reward-hook (production reward time)
@@ -77,6 +76,7 @@
 ;;; The anticorrelated reward hook
 ;;; ------------------------------
 
+|#
 (defun production-pathway (production)
   "Determines if a production is a 'pathway' production, and, if so, which pathway"
   (let* ((pname (symbol-name production))
@@ -91,7 +91,7 @@
 	      (t
 	       nil))))))
 
-
+#|
 (defun production-pathway-action (production)
   "If we have a 'path' production, determines its gate (action)"
   (when (production-pathway production)
@@ -100,11 +100,12 @@
       (subseq pname (+ start 5)))))
 
 
+|#
 (defun production-prefix (production)
   (let* ((pname (symbol-name production))
 	 (i (position #\* pname)))
     (subseq pname 0 i)))
-
+#|
 
 (defun production-twin (production)
   (let ((path (production-pathway production)))
@@ -177,6 +178,7 @@
 ;;; The new version --- works if we have only PICK productions
 ;;; ----------------------------------------------------------
 
+|#
 (defun conflict-set (production)
   "Returns the specific conflict set for a pick production"
   (let ((prefix (production-prefix production))
@@ -185,7 +187,7 @@
       (remove-if-not #'(lambda (x) (and (production-pathway x)
 					(string= (production-prefix x) prefix)))
 		     (no-output (pp))))))
-
+#|
 
 (defun bg-reward-hook-selection (production reward time)
   "The newest version, with amazing abilities"
@@ -235,6 +237,8 @@
 (defun production-utility (production)
   (caar (no-output (spp-fct `((,production) :u)))))
 
+|#
+
 (defun compute-striatal-activity (production reward)
   "Computes predicted striatal activity (as a function of dopamine response)"
   (when *calculate-striatal-activity*
@@ -257,6 +261,7 @@
 	      (alpha (car (no-output (sgp-fct '(:alpha))))))
 	  (incf (cdr (assoc phase reward-accum)) rt)
 	  (incf (cdr (assoc phase rpe-accum)) (* alpha rpe)))))))
+
   
 ;;; THE REAL ONE
 ;;;
