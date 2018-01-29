@@ -143,9 +143,11 @@
 (defun generate-trial (nfeatures)
   (let* ((problem (generate-problem nfeatures))
 	 (correct (problem-cell problem 2 2))
-	 (options (generate-options problem)))
+	 (options (generate-options problem))
+	 (metadata "random problem"))
+	   
     (setf (nth 2 (nth 2 problem)) nil)
-    (list problem correct options)))
+    (list problem correct options metadata)))
 
 (defun generate-trials (num)
   (let ((res nil))

@@ -23,6 +23,9 @@
 (defparameter *experimental-window-visible?* t
   "Whether a window is visible for demo purposes")
 
+(defparameter *window* nil
+  "A pointer to the experimental Tcl/Tk window")
+
 (defparameter *d1* 1 "Dopamine Receptor 1 density")
 
 (defparameter *d2* 1 "Dopamine Receptor 2 density")
@@ -620,12 +623,16 @@
       (set-trial-problem-onset (current-trial task) (mp-time)))
     (when *experimental-window-visible?*
       (setf *window*
-	    (open-exp-window "INST Experiment"                                    
+	    (open-exp-window "Raven's Progressive Matrices" 
 			     :visible t
-			     :width 400
-			     :height 300
-			     :x 600
-			     :y 600)))))
+			     :width 800
+			     :height 800
+			     :x 200
+			     :y 200))
+      (add-items-to-exp-window    
+       (make-instance 'image-vdi :file "A3B1C2_1r.gif"
+		      :dialog-item-text "Problem"
+		      :x-pos 100 :y-pos 0 :width 600 :height 600)))))
 
 (defparameter *phase-transitions* '((problem . pause1) (pause1 . choice)
 				    (choice . pause2) (pause2 . problem)))
@@ -678,7 +685,15 @@
 	       (set-trial-choice-onset (current-trial task) (mp-time))))
 	(schedule-event-relative 0 #'proc-display :params nil)
 	(when (member next-phase '(pause1 pause2))
-	  (schedule-event-relative 1 #'next :params (list task)))))))
+	  (schedule-event-relative 1 #'next :params (list task)))
+
+	;; If we have a window, update the window
+	(when (and *experimental-window-visible?*
+		   *window*)
+	  (add-items-to-exp-window    
+	   (make-instance 'image-vdi :file "A3B1C2_1_Answersr.gif"
+			  :dialog-item-text "Choice"
+			  :x-pos 100 :y-pos 100 :width 600 :height 600)))))))
 	      
 	
 
@@ -780,7 +795,7 @@
 			 column ,(convert-to-name j)
 			 row-num ,i
 			 column-num ,j
-			 screen-x ,(* j 200)
+			 screen-x ,(+ (* j 200) 100)
 			 screen-y ,(* i 200)
 			 problem ,pid
 			 height 200 
