@@ -914,6 +914,11 @@
     (proc-display :clear t)))
 
 
+(defmethod device-update-attended-loc ((tm rapm-task) xyloc)
+ "Updates the attention focus on the window"
+ (when *window*
+   (device-update-attended-loc *window* xyloc))) 
+
 ;;; ----------------------------------------------------------------
 ;;; ACT-R extensions to imaginal module (imaginal actions)
 ;;; ----------------------------------------------------------------
