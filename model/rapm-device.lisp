@@ -448,10 +448,18 @@
        (valid-cell? (second trl))
        (valid-options? (third trl))))
 
+(defun has-metadata? (trl)
+  (and (valid-trial? trl)
+       (and (stringp (first (last trl)))))) 
+
+(defun trial-metadata (trl)
+  (if (has-metadata? trl)
+      (first (last trl)))) 
 
 (defun make-trial (trl)
   "Generates a fully useable trial from a three-item list"
   (let* ((new-options (scramble* (trial-options trl)))
+	 (metadata (trial-metadata trl))
 	 (correct (position (trial-solution trl)
 			    new-options
 			    :test #'equal-cell)))
@@ -463,7 +471,9 @@
 	  0                                ; Problem onset
 	  0                                ; Problem offset
 	  0                                ; Choice onset
-	  0)))                             ; Choice response time
+	  0                                ; Choice response time
+	  metadata)))
+
 
 
 ;;; The trial problem
