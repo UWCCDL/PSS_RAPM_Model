@@ -564,7 +564,6 @@
 (defun set-trial-choice-response-time (trl val)
   (setf (nth 8 trl) val))
 
-
 ;;; Accuracy and RTs
 
 (defun trial-accuracy (trl)
@@ -640,7 +639,7 @@
 			     :x 200
 			     :y 200))
       (add-items-to-exp-window    
-       (make-instance 'image-vdi :file "A3B1C2_1r.gif"
+       (make-instance 'image-vdi :file (generate-image-name (current-trial task))
 		      :dialog-item-text "Problem"
 		      :x-pos 100 :y-pos 0 :width 600 :height 600)))))
 
@@ -700,10 +699,19 @@
 	;; If we have a window, update the window
 	(when (and *experimental-window-visible?*
 		   *window*)
-	  (add-items-to-exp-window    
-	   (make-instance 'image-vdi :file "A3B1C2_1_Answersr.gif"
-			  :dialog-item-text "Choice"
-			  :x-pos 100 :y-pos 100 :width 600 :height 600)))))))
+	  (remove-all-items-from-rpm-window *window*)
+	  (cond ((equal current-phase 'problem)
+		 (add-items-to-exp-window    
+		  (make-instance 'image-vdi :file (generate-image-name (current-trial task)
+								       current-phase)
+				 :dialog-item-text "Problem"
+				 :x-pos 100 :y-pos 0 :width 600 :height 600)))
+		((equal current-phase 'choice)
+		 (add-items-to-exp-window
+		  (make-instance 'image-vdi :file (generate-image-name (current-trial task)
+								       current-phase) 
+				 :dialog-item-text "Choice"
+				 :x-pos 0 :y-pos 0 :width 800 :height 400)))))))))
 	      
 	
 
@@ -821,8 +829,8 @@
 		id ,(generate-pid problem)
 		screen-x 0
 		screen-y 0
-		height 400
-		width 600)
+		height 800
+		width 800)
 	  results)
 
     ;; Creates the chunks
@@ -849,7 +857,7 @@
 		     row-num ,0
 		     column-num ,i
 		     screen-x ,(* i 200)
-		     screen-y 100
+		     screen-y 0
 		     problem ,pid
 		     height 200 
 		     width 200
@@ -941,8 +949,15 @@
 
 (defmethod device-update-attended-loc ((tm rapm-task) xyloc)
  "Updates the attention focus on the window"
- (when *window*
-   (device-update-attended-loc *window* xyloc))) 
+ (when (and *window*
+	    xyloc)
+   (let* ((visloc (first (buffer-chunk-fct '(visual-location))))
+	  (w (/ (chunk-slot-value-fct visloc 'width) 2))
+	  (h (/ (chunk-slot-value-fct visloc 'width) 2))
+	  (newloc (vector (+ (svref xyloc 0) w)
+			  (+ (svref xyloc 1) h)
+			  (svref xyloc 2))))
+     (device-update-attended-loc *window* newloc))))
 
 ;;; ----------------------------------------------------------------
 ;;; ACT-R extensions to imaginal module (imaginal actions)

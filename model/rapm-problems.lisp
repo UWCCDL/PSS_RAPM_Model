@@ -140,11 +140,10 @@
 	       (foil (flatten newpaired)))
 	  (push foil options))))))
       
-(defun generate-trial (nfeatures)
+(defun generate-trial (nfeatures &optional (metadata "A1"))
   (let* ((problem (generate-problem nfeatures))
 	 (correct (problem-cell problem 2 2))
-	 (options (generate-options problem))
-	 (metadata "random problem"))
+	 (options (generate-options problem)))
 	   
     (setf (nth 2 (nth 2 problem)) nil)
     (list problem correct options metadata)))
