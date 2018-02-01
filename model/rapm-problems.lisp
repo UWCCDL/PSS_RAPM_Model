@@ -42,22 +42,27 @@
   "Feature-specific mappings from internal values to symbolic values")
 
 (defun assoc-value (feature int-value)
+  "Returns the symbol associated to the numeric value of a feature"
   (let ((mappings (cdr (assoc feature *feature-values*))))
     (when mappings
       (cdr (assoc int-value mappings)))))  
 
 (defun rassoc-value (feature s-value)
+  "Returns the numeric value (e.g., 2) associated with the name of a feature's (e.g., shape) value (e.g., square"
   (let ((mappings (cdr (assoc feature *feature-values*))))
     (when mappings
       (car (rassoc s-value mappings)))))  
 
-(defparameter *rapm-rules* '(rule-same rule-progression rule-constant))
+(defparameter *rapm-rules* '(rule-same rule-progression rule-constant)
+  "the simple rules implemented in the model. Can be extended easily")
 
 (defun print-mat (mat)
+  "Pretty-prints a matrix"
   (dotimes (j (length mat))
     (print (nth j mat))))
 
 (defun rotate-matrix (mat)
+  "Rotates a matrix"
   (let ((n (length mat))
         (newmat nil))
     (dotimes (row n (reverse newmat))
@@ -107,8 +112,14 @@
 		    (append (list feature feat-val)
 			    (nth col (nth row problem)))))))))))
 
+(defun feature-number (problem)
+  "Determines the number of features in a problem"
+  (let* ((flat (apply #'append problem))
+	 (n (apply #'max (mapcar #'length flat))))
+    (/ n 2)))
 
-(defun generate-options (problem)
+
+(defun generate-options (problem &optional (solution-position nil))
   (let* ((correct (problem-cell problem 2 2))
 	 (paired (divide-into-pairs correct))
 	 (abstracted (mapcar #'(lambda (pair)
@@ -119,7 +130,7 @@
 	 (options (list correct)))
     ;; Now generate options with 1, 2, or 3 different features
     (dolist (changes '(1 2 3) options)
-      (let ((f-indices (subseq (scramble (seq 0 (length abstracted))) 0 changes))
+      (let ((f-indices (subseq (scramble (seq 0 (length abstracted))) 0 (min changes (feature-number problem))))
 	    (newoption (mapcar #'(lambda (x) (copy-seq x))
 			       abstracted)))
 	;; modify the new option
@@ -138,17 +149,35 @@
 							 (second pair))))
 				  newoption))
 	       (foil (flatten newpaired)))
-	  (push foil options))))))
+	  (push foil options))))
+    
+    ;; If we want the solution in a specific position, we swap the values
+
+    (if (and solution-position
+	     options
+	     (numberp solution-position)
+	     (< solution-position 4))
+	(let ((alternatives (subseq options 0 3)))
+	  (append (subseq alternatives 0 solution-position)
+		  (list (nth 3 options))
+		  (subseq alternatives solution-position)))
+	(scramble options))))
+
+    
       
-(defun generate-trial (nfeatures &optional (metadata "A1"))
+(defun generate-trial (nfeatures &optional
+				   (metadata "Randomly Generated Raven Problem")
+				   (solution-position nil))
+  "Generates a random trial"
   (let* ((problem (generate-problem nfeatures))
 	 (correct (problem-cell problem 2 2))
-	 (options (generate-options problem)))
+	 (options (generate-options problem solution-position)))
 	   
     (setf (nth 2 (nth 2 problem)) nil)
     (list problem correct options metadata)))
 
 (defun generate-trials (num)
+  "Generates @NUM random trials with 4 features each"
   (let ((res nil))
     (dotimes (i num res)
       (push (generate-trial 4) res)))) 
@@ -375,13 +404,6 @@
 	  (shape diamond))))
 
 
-
-
-;(defparameter *trials* (mapcar #'make-trial
-;			       (list *simple-trial* *simple-trial-2*)))
-
-;(defparameter *trials* (mapcar #'make-trial
-;			       (list *simple-trial-3-features*)))
 (defparameter *trials* (mapcar #'make-trial
 			       (list *simple-trial-4-rules-3*
 				     *simple-trial-4-rules-2*

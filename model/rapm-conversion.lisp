@@ -5,7 +5,7 @@
 (defparameter *sandia-features* '((a . shape)
 				  (b . background)
 				  (c . orientation)
-				  (d . size)
+				  (d . texture)  ;; Should be 'size
 				  (e . number)))
 
 (defparameter *sandia-rules* '((1 . same-row)
@@ -45,7 +45,7 @@
 	    distribution)))
 
 
-(defparameter *sandia-subset*
+(defparameter *matzen-subset*
   '(("A1B2" 1)
     ("A1B3" 1)
     ("A1B4" 1)
@@ -136,11 +136,53 @@
     ("E1" 1)
     ("E2" 1)
     ("E3" 1)
-    ("E4" 1)))
+    ("E4" 1))
+  "List of problems selected from Matzen's set of 1000")
 
 
 (defun expand-code (str)
   "Expands a Matzen code string into a lisp list"
-  nil)
-(defun create-problem-from-sandia-code (code)
-  ())
+  (let* ((char-list (map-into (make-sequence 'list (length str))
+			      #'(lambda (x) x) str))
+	 (sym-list (mapcar #'(lambda (x) (read-from-string (format nil "~A" x)))
+			   char-list)))
+    (divide-into-pairs sym-list))) 
+
+
+(defun generate-problem-from-matzen-code (code)
+  (let* ((feats (mapcar #'create-feature-distribution-from-code
+			(expand-code code)))
+	 (raw-cells (reduce #'(lambda (x y) (mapcar #'append x y)) feats))
+	 (paired-cells (mapcar #'divide-into-pairs raw-cells))
+	 (paired-features (mapcar #'(lambda (cell)
+				      (mapcar #'(lambda (fv-pair)
+						  (list (first fv-pair)
+							(assoc-value (first fv-pair)
+								     (second fv-pair))))
+					      cell))
+				  paired-cells)))
+    (make-square (mapcar #'flatten paired-features))))
+    
+
+(defun generate-trial-from-matzen-code (code &optional (solution-position nil))
+  "Generates a trial from a Matzen problem's metadata (e.g., A3B1D2, 3)"
+  (let* ((problem (generate-problem-from-matzen-code code))
+	 (correct (problem-cell problem 2 2))
+	 (options (generate-options problem solution-position)))
+    (setf (nth 2 (nth 2 problem)) nil)
+    (list problem correct options code)))
+
+(defun generate-matzen-trials ()
+  (mapcar #'(lambda (x) (generate-trial-from-matzen-code (first x) (second x)))
+	  *matzen-subset*))
+
+(defun rapm-demo (&optional (visicon t))
+  "Reloads the model and sets up the experiment (and optionally prints the visicon)"
+  (reload)
+  (install-device (make-instance 'rapm-task))
+  (setf (trials (current-device)) (generate-matzen-trials)) 
+  (init (current-device))
+  (proc-display)
+  (when visicon ;; Prints the visicon 
+    (print-visicon)))
+
