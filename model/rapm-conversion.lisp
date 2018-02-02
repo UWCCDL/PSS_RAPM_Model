@@ -174,7 +174,9 @@
 
 (defun generate-matzen-trials ()
   (mapcar #'(lambda (x) (generate-trial-from-matzen-code (first x) (second x)))
-	  *matzen-subset*))
+	  ;;*matzen-subset*))
+	  (remove-if #'(lambda (x) (or (find #\3 x)
+				       (find #\4 x))) *matzen-subset* :key #'first)))
 
 (defun rapm-demo (&optional (visicon t))
   "Reloads the model and sets up the experiment (and optionally prints the visicon)"

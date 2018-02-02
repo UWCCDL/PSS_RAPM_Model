@@ -711,7 +711,7 @@
 		  (make-instance 'image-vdi :file (generate-image-name (current-trial task)
 								       current-phase) 
 				 :dialog-item-text "Choice"
-				 :x-pos 0 :y-pos 0 :width 800 :height 400)))))))))
+				 :x-pos 0 :y-pos 200 :width 800 :height 400)))))))))
 	      
 	
 
@@ -781,8 +781,8 @@
 			     screen-x 0
 			     screen-y 0
 			     ;problem ,pid
-			     height 400 
-			     width 600))))
+			     height 800 
+			     width 800))))
 
 (defun generate-feature-slots (cell)
   (let ((i -1)
@@ -857,7 +857,7 @@
 		     row-num ,0
 		     column-num ,i
 		     screen-x ,(* i 200)
-		     screen-y 0
+		     screen-y 200
 		     problem ,pid
 		     height 200 
 		     width 200
@@ -951,7 +951,7 @@
  "Updates the attention focus on the window"
  (when (and *window*
 	    xyloc)
-   (let* ((visloc (first (buffer-chunk-fct '(visual-location))))
+   (let* ((visloc (no-output (first (buffer-chunk-fct '(visual-location)))))
 	  (w (/ (chunk-slot-value-fct visloc 'width) 2))
 	  (h (/ (chunk-slot-value-fct visloc 'width) 2))
 	  (newloc (vector (+ (svref xyloc 0) w)
