@@ -41,7 +41,7 @@
 		(3 . filled))))
   "Feature-specific mappings from internal values to symbolic values")
 
-(defparameter *defaulat-num-features* 4
+(defparameter *default-num-features* 4
   "Default number of features/rules per problem")
 
 (defun assoc-value (feature int-value)
