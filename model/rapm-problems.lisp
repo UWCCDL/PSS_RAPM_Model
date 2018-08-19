@@ -41,6 +41,9 @@
 		(3 . filled))))
   "Feature-specific mappings from internal values to symbolic values")
 
+(defparameter *defaulat-num-features* 4
+  "Default number of features/rules per problem")
+
 (defun assoc-value (feature int-value)
   "Returns the symbol associated to the numeric value of a feature"
   (let ((mappings (cdr (assoc feature *feature-values*))))
@@ -176,11 +179,20 @@
     (setf (nth 2 (nth 2 problem)) nil)
     (list problem correct options metadata)))
 
-(defun generate-trials (num)
+
+(defun generate-trials (num &optional (nfeatures *default-num-features*))
   "Generates @NUM random trials with 4 features each"
   (let ((res nil))
     (dotimes (i num res)
-      (push (generate-trial 4) res)))) 
+      (push (generate-trial nfeatures) res)))) 
+
+
+;;; ------------------------------------------------------------------
+;;; PROBLEMS FOR UNIT TESTING
+;;; ------------------------------------------------------------------
+;;; These are just problems used to make sure that the model can
+;;; perform the task
+;;; ------------------------------------------------------------------
 
 (defparameter *test-problem*
   '(((number 1 shape triangle)
@@ -195,6 +207,7 @@
      (number 2 shape circle)
      nil)))
 
+
 (defparameter *simple-problem*
   '(((shape triangle)
      (shape triangle)
@@ -207,6 +220,7 @@
     ((shape triangle)
      (shape triangle)
      nil)))
+
 
 (defparameter *simple-problem-2*
   '(((shape circle)
@@ -236,6 +250,7 @@
      (number 1 shape circle)
      nil)))
 
+
 (defparameter  *simple-trial-2-features*
   (list *simple-problem-2-features*
 	'(shape circle number 1)
@@ -259,6 +274,7 @@
      (number 1 shape circle texture solid)
      nil)))
 
+
 (defparameter  *simple-trial-3-features*
   (list *simple-problem-3-features*
 	'(shape circle number 1 texture solid)
@@ -281,6 +297,7 @@
     ((number 1 shape circle)
      (number 2 shape circle)
      nil)))
+
 
 (defparameter  *simple-trial-2-rules*
   (list *simple-problem-2-rules*

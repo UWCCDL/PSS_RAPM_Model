@@ -383,6 +383,7 @@
        (every #'(lambda (x) (member x lst1 :test #'equalp)) lst2)))
 
 (defun valid-cell? (c)
+  "A cell is a RAPM cell iff it's a list made of an even number of symbols"
   (and (listp c)
        (evenp (length c))
        (every #'atom c)))

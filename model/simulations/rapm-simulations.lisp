@@ -97,33 +97,33 @@
 	  (counter 0))
       (format out "~{~a~^, ~}~%" names)
       (dolist (ticks tickvals) 
-	;;	(dolist (pos-rwrd '(4 6 8 10)) ;;'(2 4 6 8 10))
-	;;	(dolist (neg-rwrd '(-0.5 -1 -1.5 -2))
-	(dolist (alpha '(0.025 0.050 0.075 0.100))
-	  (dolist (uppr-bnd upprbndvals);;'(1.0 2.0 3.0 4.0)) ;;'(1 2 3 4))
-	    (dolist (d1 '(0.1 0.5 1 2 5 10))
-	      (dolist (d2 '(0.1 0.5 1 2 5 10))
-		(setf *d1* d1)
-		(setf *d2* d2)
-		(setf *initial-value-upper-bound* uppr-bnd)
-		;;(setf *negative-reward* neg-rwrd)
-		;;  (setf *positive-reward* pos-rwrd)
-		(setf *ticks* ticks)
-		;(format t "Set #~A~%" (* (incf counter) n))
-		(dotimes (j n)
-		  (rapm-reload nil)  ; Reload
-		  (sgp :v nil)
-		  (reset-striatal-activity)
+		;;	(dolist (pos-rwrd '(4 6 8 10)) ;;'(2 4 6 8 10))
+		;;	(dolist (neg-rwrd '(-0.5 -1 -1.5 -2))
+		(dolist (alpha '(0.025 0.050 0.075 0.100))
+		  (dolist (uppr-bnd upprbndvals);;'(1.0 2.0 3.0 4.0)) ;;'(1 2 3 4))
+			(dolist (d1 '(0.1 0.5 1 2 5 10))
+			  (dolist (d2 '(0.1 0.5 1 2 5 10))
+				(setf *d1* d1)
+				(setf *d2* d2)
+				(setf *initial-value-upper-bound* uppr-bnd)
+				;;(setf *negative-reward* neg-rwrd)
+				;;  (setf *positive-reward* pos-rwrd)
+				(setf *ticks* ticks)
+										;(format t "Set #~A~%" (* (incf counter) n))
+				(dotimes (j n)
+				  (rapm-reload nil)  ; Reload
+				  (sgp :v nil)
+				  (reset-striatal-activity)
 		  (no-output (run 10000 :real-time nil))		  
 		  (let* ((accuracy (float (apply #'mean
-						 (mapcar #'trial-accuracy
-							 (experiment-log
-							  (current-device))))))
-			 (problem-rt (float (apply #'mean
-						   (mapcar #'trial-problem-rt
-							   (experiment-log
-							    (current-device))))))
-			 (reward-bold (cdr (assoc 'problem (cdr (assoc 'reward *striatal-activity*)))))
-			 (rpe-bold (cdr (assoc 'problem (cdr (assoc 'rpe *striatal-activity*)))))
-			 (vals (list ticks #|pos-rwrd neg-rwrd |# alpha uppr-bnd d1 d2 accuracy problem-rt reward-bold rpe-bold)))
+										 (mapcar #'trial-accuracy
+												 (experiment-log
+												  (current-device))))))
+				 (problem-rt (float (apply #'mean
+										   (mapcar #'trial-problem-rt
+												   (experiment-log
+													(current-device))))))
+				 (reward-bold (cdr (assoc 'problem (cdr (assoc 'reward *striatal-activity*)))))
+				 (rpe-bold (cdr (assoc 'problem (cdr (assoc 'rpe *striatal-activity*)))))
+				 (vals (list ticks #|pos-rwrd neg-rwrd |# alpha uppr-bnd d1 d2 accuracy problem-rt reward-bold rpe-bold)))
 		    (format out "~{~a~^, ~}~%" (mapcar #'float vals))))))))))))

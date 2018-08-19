@@ -1,6 +1,6 @@
 # Model analysis
 source("functions.R")
-sims <- read.table(unzip("new-simulations.zip"),
+sims <- read.table("new-simulations.txt",
                                 header=T,
                                 sep=","
 )
