@@ -3,5 +3,5 @@
 (load "/projects/actr/models/PSS_RAPM_Model/model/rapm-device.lisp")
 (load "/projects/actr/models/PSS_RAPM_Model/model/rapm-model.lisp")
 (load "/projects/actr/models/PSS_RAPM_Model/model/rapm-simulations.lisp")
-(general-simulations 200 :fname "simulations-devel4-newchoice-newprobs-newbold-tick-30-upper-3.0-difficulty1.txt" :tickvals '(30) :upprbndvals '(3.0) :difficulty '(1))
+(general-simulations 200 :fname "simulations-devel4-newchoice-newprobs-newbold-tick-30-upper-3.0-difficulty-1.txt" :tickvals '(30) :upprbndvals '(3.0) :difficulty '(1))
 (quit)

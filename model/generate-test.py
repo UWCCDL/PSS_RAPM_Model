@@ -5,7 +5,7 @@ MAIN="""
 (load "/projects/actr/models/PSS_RAPM_Model/model/rapm-device.lisp")
 (load "/projects/actr/models/PSS_RAPM_Model/model/rapm-model.lisp")
 (load "/projects/actr/models/PSS_RAPM_Model/model/rapm-simulations.lisp")
-(general-simulations 200 :fname "simulations-devel4-newchoice-newprobs-newbold-tick-%s-upper-%s-difficulty%s.txt" :tickvals '(%d) :upprbndvals '(%0.1f) :difficulty '(%d))
+(general-simulations 200 :fname "simulations-devel4-newchoice-newprobs-newbold-tick-%s-upper-%s-difficulty-%s.txt" :tickvals '(%d) :upprbndvals '(%0.1f) :difficulty '(%d))
 (quit)
 """
 
