@@ -20,7 +20,7 @@
   "Cheap hack to check whether ACTR is loaded"
   (member :act-r *features*))
 
-(defparameter *experimental-window-visible?* t
+(defparameter *experimental-window-visible?* nil
   "Whether a window is visible for demo purposes")
 
 (defparameter *window* nil
@@ -622,7 +622,7 @@
   (:documentation "A manager for Lauren's version of the RAPM task"))
 
 (defmethod init ((task rapm-task))
-  "Initializes the PSS task manager"
+  "Initializes the RAPM task manager"
   (when (not (null (trials task)))
     (setf (index task) 0)
     (setf (experiment-log task) nil)
