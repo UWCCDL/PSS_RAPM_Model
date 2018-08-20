@@ -769,7 +769,7 @@
 	(trial (current-trial task)))
     (cond ((equal phase 'problem)
 	   (build-vis-locs-for-problem trial vismod))
-	  ((equal phase 'choice) VVV
+	  ((equal phase 'choice) 
 	   (build-vis-locs-for-choice trial vismod))
 	  (t
 	   (build-vis-locs-for-pauses phase vismod)))))
