@@ -2,7 +2,7 @@
 source("../../PSS_model/functions.R")
 #model <- read.table("simulations-devel4-model2-bold.txt", header = T, sep = ",")
 #model <- read.table("simulations-devel4-newchoice-bold.txt", header = T, sep = ",")
-model <- read.table("simulations-global.txt", header = T, sep = ",")
+model <- read.table("simulations-acrossfeatures/simulations-global.txt", header = T, sep = ",")
 names(model) <- c("Ticks", "Alpha", "InitValues", "Features", "D1", "D2", "Accuracy", "Latency", "RewardBold", "RpeBold")
 
 model <- subset(model, model$Ticks > 20)
