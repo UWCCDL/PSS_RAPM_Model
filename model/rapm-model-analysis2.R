@@ -1,10 +1,18 @@
+library(matlab)
 # Testbed for model analysis
 source("../../PSS_model/functions.R")
 #model <- read.table("simulations-devel4-model2-bold.txt", header = T, sep = ",")
 #model <- read.table("simulations-devel4-newchoice-bold.txt", header = T, sep = ",")
-model <- read.table("simulations-acrossfeatures/simulations-global.txt", header = T, sep = ",")
+model <- read.table(unzip("simulations-acrossfeatures/simulations-across-features.zip"), 
+                    header = T, sep = ",")
 names(model) <- c("Ticks", "Alpha", "InitValues", "Features", "D1", "D2", "Accuracy", "Latency", "RewardBold", "RpeBold")
 
+model4 <- read.table("simulations/simulations-devel4-newchoice-newprobs-newbold.txt", header=T, sep=",")
+names(model4) <- c("Ticks", "Alpha", "InitValues",  "D1", "D2", "Accuracy", "Latency", "RewardBold", "RpeBold")
+
+model4$Features <- 4
+
+model <- merge(model, model4, all=T)
 model <- subset(model, model$Ticks > 20)
 
 model$RewardActivity <- model$RewardBold / model$Latency
@@ -125,9 +133,99 @@ plot.model.parameters <- function(data, variable, factor1, factor2,
   par(mar = oldmar)
 }
 
-tiff("~/Fig2C.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
-plot.model.parameters(model, "Accuracy", "D1", "Ticks", "Wait time", 
-                      leg=F, rng=c(0.5, 1.02, 0.1), legpos = "topleft")
+# Amazing stuff.
+
+# Comparison to human data
+
+f <- read.table("firestorm.txt", header=T)
+f$CorrRT[f$CorrRT ==0] <- NA
+
+f$CorrRT <- f$CorrRT / 1000
+f$AllRT <- f$AllRT / 1000
+
+f$Stimulation <- "Stimulation"
+f$Stimulation[f$BlockCondition == "ShamMFG"] <- "Sham"
+f$Stimulation[f$BlockCondition == "ShamIPG"] <- "Sham"
+
+f$Features <- 4
+f$Features[f$Problem == "Rel1"] <- 1
+f$Features[f$Problem == "Rel2"] <- 2
+f$Features[f$Problem == "Rel3"] <- 3
+
+hd_ms <- tapply(f$AllRT, f$Features, mean)
+hd_sds <- tapply(f$AllRT, f$Features, sd)
+
+hd_acc_ms <- tapply(f$ACC, f$Features, mean)
+hd_acc_sds <- tapply(f$ACC, f$Features, sd)
+
+md <- aggregate(model[c("Latency", "Accuracy")], 
+                      list(Ticks=model$Ticks,
+                           Alpha=model$Alpha,
+                           Features=model$Features,
+                           InitValues=model$InitValues,
+                           D1=model$D1,
+                           D2=model$D2),
+                mean)
+
+tiff("~/Fig3A.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+plot.model.parameters(md, "Accuracy", "Features", "Ticks",
+                      rng=c(0.25,1, 0.25), legpos = "topleft", 
+                      factor2name = "Wait Time", leg=F,
+                      colors = heat_hcl(4))
+polygon(x=c(1:4, 4:1),
+        y=c(hd_acc_ms + hd_acc_sds,
+            rev(hd_acc_ms - hd_acc_sds)),
+        border=NA,
+        col="#88888822")
+vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
+legend(x = 1, y=0.5,
+       #ncol = 2,
+       legend = vals, 
+       lwd = 1, 
+       lty = 1, 
+       pch = 21,
+       pt.cex=2,
+       bty = "n",
+       y.intersp = 0.6,
+       col =   grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))),
+       pt.bg = grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))))
+lines(x=1:4, y=hd_acc_ms, lwd=2, lty=3, col="black")
+mtext("Number of Features", side=1, line=4)
+mtext("Latency", side=2, line=3)
+dev.off()
+
+tiff("~/Fig3B.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+plot.model.parameters(md, "Latency", "Features", "Ticks", 
+                      rng=c(0,25,5), legpos = "topleft", 
+                      factor2name = "Wait Time", leg=F,
+                      colors = heat.colors(6))
+polygon(x=c(1:4, 4:1),
+        y=c(hd_ms + hd_sds,
+            rev(hd_ms - hd_sds)),
+        border=NA,
+        col="#99999922")
+vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
+legend(x = 1, y=25,
+       #ncol = 2,
+       legend = vals, 
+       lwd = 1, 
+       lty = 1, 
+       pch = 21,
+       pt.cex=2,
+       bty = "n",
+       y.intersp = 0.6,
+       col =   grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))),
+       pt.bg = grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))))
+lines(x=1:4, y=hd_ms, lwd=2, lty=3, col="black")
+mtext("Number of Features", side=1, line=4)
+mtext("Latency", side=2, line=3)
+dev.off()
+
+tiff("~/Fig3C.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+plot.model.parameters(md, "Accuracy", "D1", "Ticks", "Wait time", 
+                      leg=F, rng=c(0.5, 1.02, 0.1), legpos = "topleft",
+                      colors = heat.colors(6))
+
 vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
 legend(x = 1, y=1.07,
        #ncol = 2,
@@ -144,9 +242,10 @@ mtext(expression(paste("Impact of Positive Feedback ", pi)), side=1, line=4)
 mtext("RAPM Accuracy", side=2, line=3)
 dev.off()
 
-tiff("~/Fig2D.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+tiff("~/Fig3D.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
 plot.model.parameters(model, "Accuracy", "D2", "Ticks", "Wait time", leg=F, 
-                      rng=c(0.5, 1.02, 0.1), legpos = "topleft")
+                      rng=c(0.5, 1.02, 0.1), legpos = "topleft",
+                      colors=heat.colors(6))
 vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
 legend(x = 1, y=1.07, 
        legend = vals, 
@@ -242,7 +341,7 @@ plot.model.bold <- function(data, variable, factor1, factor2,
 }
 
 
-tiff("~/Fig2E.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+tiff("~/Fig3E.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
 plot.model.bold(model.redux, "Accuracy", "RpeActivity", "Wait", "Wait time", rng=c(0.5, 1.02, 0.1), 
                 legpos = "topright", leg=F, xrng=c(-4, 1, 1))
 vals <- parse(text = paste("italic(tau) ==", unique(model.redux$Wait)))
