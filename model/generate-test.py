@@ -9,8 +9,8 @@ MAIN="""
 (quit)
 """
 
-count=64
-for tickval in [22]:
+count=16
+for tickval in [22,25,30,35]:
     for upper in [1.0, 2.0, 3.0, 4.0]:
         for difficulty in [3, 2, 1]:
             count += 1
