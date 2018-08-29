@@ -1097,7 +1097,8 @@
 	      )))
 	
     (set-chunk-slot-value-fct current 'verified verified)
-    (schedule-event-relative 0.05 #'set-imaginal-free :params nil)))
+	;; Below, time was 0.1
+    (schedule-event-relative 0.5 #'set-imaginal-free :params nil)))
 
 
 ;; Loads the definition of the problems and the correct value of

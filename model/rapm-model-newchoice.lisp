@@ -82,7 +82,8 @@
      :esc t
      :mas 8.0
      :bll nil 
-     :blc 100.0  ;; Assumes all chunks are incredibly active
+	 ;;:blc 100.0  ;; Assumes all chunks are incredibly active
+	 :blc 100.0  ;; Assumes all chunks are incredibly active
      :lf 0.01
      :ul t
      :reward-hook bg-reward-hook-selection4
@@ -301,6 +302,20 @@
       kind rapm-problem
 )
 
+(p start*attend-when-problem-changed
+   "Attends a problem"
+   ?goal>
+     buffer empty
+   
+   ?visual-location>
+     buffer full
+
+   ?visual>
+     buffer empty	 
+==>
+   +visual-location>
+      kind rapm-problem
+)
 
 (p start*create-goal
    ?goal>
@@ -1463,6 +1478,11 @@
 ==>
    =imaginal>
      response =NUM
+
+   ;;; Added 8/29/18
+   +visual-location>
+   kind rapm-choice
+   ;;; End addition
 )
 
 (p choice*next-option

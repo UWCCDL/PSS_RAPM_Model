@@ -3,7 +3,7 @@ library(matlab)
 source("../../PSS_model/functions.R")
 #model <- read.table("simulations-devel4-model2-bold.txt", header = T, sep = ",")
 #model <- read.table("simulations-devel4-newchoice-bold.txt", header = T, sep = ",")
-model <- read.table(unzip("simulations-acrossfeatures/simulations-across-features.zip"), 
+model <- read.table(unzip("simulations-across-features/simulations-across-features.zip"), 
                     header = T, sep = ",")
 names(model) <- c("Ticks", "Alpha", "InitValues", "Features", "D1", "D2", "Accuracy", "Latency", "RewardBold", "RpeBold")
 
