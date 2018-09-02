@@ -245,28 +245,48 @@
 
 |#
 
+(defun compute-striatal-activity-hook (production reward time) 
+  "Computes predicted striatal activity (as a function of dopamine response)"
+  (declare (ignore time))
+  (when *calculate-striatal-activity*
+    (let ((q (production-utility production))
+		  (rpe 0.0)
+		  (rt 0.0)
+		  (phase (task-phase (current-device))))
+      (when (member phase '(problem choice))
+		(setf rt reward)
+		(setf rpe (- reward q))
+	  		
+		;; Update the two possible counters for BOLD
+		(let ((reward-accum (cdr (assoc 'reward *striatal-activity*)))
+			  (rpe-accum (cdr (assoc 'rpe *striatal-activity*)))
+			  (alpha (car (no-output (sgp-fct '(:alpha))))))
+		  (incf (cdr (assoc phase reward-accum)) rt)
+		  (incf (cdr (assoc phase rpe-accum)) (* alpha rpe)))))))
+
+
 (defun compute-striatal-activity (production reward)
   "Computes predicted striatal activity (as a function of dopamine response)"
   (when *calculate-striatal-activity*
     (let ((q (production-utility production))
-	  (rpe 0.0)
-	  (rt 0.0)
-	  (phase (task-phase (current-device))))
+		  (rpe 0.0)
+		  (rt 0.0)
+		  (phase (task-phase (current-device))))
       (when (member phase '(problem choice))
-	(if (plusp reward)
-	    (progn
-	      (setf rt (* *d1* reward))
-	      (setf rpe (- (* *d1* reward) q)))
-	    (progn
-	      (setf rt (* *d2* reward))
-	      (setf rpe (- (* *d2* reward) q))))
-
+		(if (plusp reward)
+			(progn
+			  (setf rt (* *d1* reward))
+			  (setf rpe (- (* *d1* reward) q)))
+			(progn
+			  (setf rt (* *d2* reward))
+			  (setf rpe (- (* *d2* reward) q))))
+		
 	;; Update the two possible counters for BOLD
-	(let ((reward-accum (cdr (assoc 'reward *striatal-activity*)))
-	      (rpe-accum (cdr (assoc 'rpe *striatal-activity*)))
-	      (alpha (car (no-output (sgp-fct '(:alpha))))))
-	  (incf (cdr (assoc phase reward-accum)) rt)
-	  (incf (cdr (assoc phase rpe-accum)) (* alpha rpe)))))))
+		(let ((reward-accum (cdr (assoc 'reward *striatal-activity*)))
+			  (rpe-accum (cdr (assoc 'rpe *striatal-activity*)))
+			  (alpha (car (no-output (sgp-fct '(:alpha))))))
+		  (incf (cdr (assoc phase reward-accum)) rt)
+		  (incf (cdr (assoc phase rpe-accum)) (* alpha rpe)))))))
 
   
 ;;; THE REAL ONE

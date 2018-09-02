@@ -87,7 +87,8 @@
      ;:lf 0.01
      :ul t
      ;;:reward-hook bg-reward-hook-selection4
-     :alpha 0.1
+	 :reward-hook compute-striatal-activity-hook
+	 :alpha 0.1
      :egs 0.01
      :imaginal-activation 10
      :visual-activation 10

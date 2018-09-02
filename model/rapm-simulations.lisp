@@ -85,7 +85,7 @@
 
 
 (defun general-simulations (n &key
-								(fname "simulations-devel4-model2.txt")
+								(fname "simulations.txt")
 								(tickvals '(20 25 30 35))
 								(upprbndvals '(1.0 2.0 3.0 4.0))
 								(difficulty (list *default-num-features*))
@@ -95,7 +95,7 @@
 		       :direction :output
 		       :if-exists :overwrite
 		       :if-does-not-exist :create)
-    (let ((names '(ticks #|pos-reward neg-reward|# alpha init-value-uppr-bound fetures d1 d2 accuracy problem-rt reward-bold rpe-bold)))
+    (let ((names '(ticks #|pos-reward neg-reward|# alpha init-value-uppr-bound features d1 d2 accuracy problem-rt reward-bold rpe-bold)))
 		  ;;(counter 0))
       (format out "~{~a~^, ~}~%" names)
       (dolist (ticks tickvals) 
