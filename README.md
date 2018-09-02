@@ -68,7 +68,7 @@ A series of four shell scripts manages the various Lisp files:
   1. `run-sims.sh` will launcha new instance of SBCL (by default; modify
   the Python script to use a different Lisp interpreter) on each Lisp
   test file. Each process' PID will be saved to a `pids.txt` file.
-  2. 'kill-sims.sh` will abort all the SBCL processes spawned by
+  2. `kill-sims.sh` will abort all the SBCL processes spawned by
   `run-sims.sh`. The script will kill, in series, all the processes
   with a PID listed in `pids.txt` (you should run this as `sudo`).
   3. `merge.sh` will merge all the generated files into a single text
