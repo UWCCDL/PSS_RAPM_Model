@@ -44,21 +44,21 @@
     (dolist (d2 vals (reverse results))
       (setf *d2* d2)
       (let ((partial nil))
-	(dotimes (j n)
-	  (rapm-reload nil)  ; Reload
-	  (sgp :v nil)
-	  (no-output (run 10000 :real-time nil))
-	  (when verbose
-	    (format t "~A problems attempted at time ~a~%"
-		    (length (experiment-log (current-device)))
-		    (mp-time)))
-	  (push (apply #'mean
-		       (mapcar #'trial-accuracy (experiment-log (current-device))))
-		partial))
-	(push (cons (float d2)
-		    (float (apply #'mean partial)))
-	      results)))))
-    
+		(dotimes (j n)
+		  (rapm-reload nil)  ; Reload
+		  (sgp :v nil)
+		  (no-output (run 10000 :real-time nil))
+		  (when verbose
+			(format t "~A problems attempted at time ~a~%"
+					(length (experiment-log (current-device)))
+					(mp-time)))
+		  (push (apply #'mean
+					   (mapcar #'trial-accuracy (experiment-log (current-device))))
+				partial))
+		(push (cons (float d2)
+					(float (apply #'mean partial)))
+			  results)))))
+
 
 (defun simulate-d1 (n &key
 			(vals '(1/2 1 3/2 2 5/2 3 7/2 4))
@@ -68,20 +68,20 @@
     (dolist (d1 vals (reverse results))
       (setf *d1* d1)
       (let ((partial nil))
-	(dotimes (j n)
-	  (rapm-reload nil)  ; Reload
-	  (sgp :v nil)
-	  (no-output (run 10000 :real-time nil))
-	  (when verbose
-	    (format t "~A problems attempted at time ~a~%"
-		    (length (experiment-log (current-device)))
-		    (mp-time)))
-	  (push (apply #'mean
-		       (mapcar #'trial-accuracy (experiment-log (current-device))))
-		partial))
-	(push (cons (float d1)
-		    (float (apply #'mean partial)))
-	      results)))))
+		(dotimes (j n)
+		  (rapm-reload nil)  ; Reload
+		  (sgp :v nil)
+		  (no-output (run 10000 :real-time nil))
+		  (when verbose
+			(format t "~A problems attempted at time ~a~%"
+					(length (experiment-log (current-device)))
+					(mp-time)))
+		  (push (apply #'mean
+					   (mapcar #'trial-accuracy (experiment-log (current-device))))
+				partial))
+		(push (cons (float d1)
+					(float (apply #'mean partial)))
+			  results)))))
 
 
 (defun general-simulations (n &key
@@ -95,8 +95,8 @@
 		       :direction :output
 		       :if-exists :overwrite
 		       :if-does-not-exist :create)
-    (let ((names '(ticks #|pos-reward neg-reward|# alpha init-value-uppr-bound d1 d2 accuracy problem-rt reward-bold rpe-bold))
-		  (counter 0))
+    (let ((names '(ticks #|pos-reward neg-reward|# alpha init-value-uppr-bound fetures d1 d2 accuracy problem-rt reward-bold rpe-bold)))
+		  ;;(counter 0))
       (format out "~{~a~^, ~}~%" names)
       (dolist (ticks tickvals) 
 		;;	(dolist (pos-rwrd '(4 6 8 10)) ;;'(2 4 6 8 10))

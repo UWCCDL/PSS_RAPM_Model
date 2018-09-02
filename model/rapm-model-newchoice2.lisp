@@ -86,7 +86,7 @@
 	 :blc 2.0  ;; Assumes all chunks are incredibly active
      ;:lf 0.01
      :ul t
-     :reward-hook bg-reward-hook-selection4
+     ;;:reward-hook bg-reward-hook-selection4
      :alpha 0.1
      :egs 0.01
      :imaginal-activation 10
@@ -983,6 +983,9 @@
      kind rapm-cell
      =COORDINATE =VAL
    - =COORDINATE two
+
+   ?imaginal>
+     state free
    
    =imaginal>
      focus =VAL
@@ -1707,9 +1710,14 @@
  
 )  ; End of the Model
 
+;; Performance monitoring points---when R+/- is triggered.
 
-(spp-fct `((check*solution-found-and-time-not-elapsed :reward ,*negative-reward*)))
-(spp-fct `((choice*respond-current-option :reward 1)))
+(spp-fct `((check*solution-found-and-time-not-elapsed :reward ,(* *d2* -1))))
+(spp-fct `((check*solution-found-and-time-elapsed :reward ,(* *d2* -1))))
+(spp-fct `((choice*respond-current-option :reward ,(* *d1* 1))))
+
+;; Randomization of feature utilities (initial biases)
+
 (spp-fct `((feature*pick-shape :u ,(random *initial-value-upper-bound*))))
 (spp-fct `((feature*pick-texture :u ,(random *initial-value-upper-bound*))))
 (spp-fct `((feature*pick-background :u ,(random *initial-value-upper-bound*))))

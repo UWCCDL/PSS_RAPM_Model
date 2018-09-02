@@ -1098,7 +1098,7 @@
 
 	;; Old code
     (set-chunk-slot-value-fct current 'verified verified)
-    (schedule-event-relative 0.25 #'set-imaginal-free :params nil)))
+    (schedule-event-relative 0.1 #'set-imaginal-free :params nil)))
 
 	;; New code
 
