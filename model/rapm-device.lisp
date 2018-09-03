@@ -262,7 +262,10 @@
 			  (rpe-accum (cdr (assoc 'rpe *striatal-activity*)))
 			  (alpha (car (no-output (sgp-fct '(:alpha))))))
 		  (incf (cdr (assoc phase reward-accum)) rt)
-		  (incf (cdr (assoc phase rpe-accum)) (* alpha rpe)))))))
+		  (incf (cdr (assoc phase rpe-accum)) (* alpha rpe)))
+
+		;; Return nil---R(t) calculations proceed as normal
+		nil))))
 
 
 (defun compute-striatal-activity (production reward)
@@ -301,12 +304,12 @@
       (format t "BG: ~A, <~A>~%" production reward))
     (when path
       (progn  
-	(let* ((rivals (remove production (conflict-set production)))
-	       (n (length rivals)))
-	  (cond ((plusp reward)
-		 (* *d1* reward))
-		((minusp reward)
-		 (/ (* *d2* reward) n))))))))
+		(let* ((rivals (remove production (conflict-set production)))
+			   (n (length rivals)))
+		  (cond ((plusp reward)
+				 (* *d1* reward))
+				((minusp reward)
+				 (/ (* *d2* reward) n))))))))
 
 
 (defun prod-utilities ()
