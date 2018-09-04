@@ -83,16 +83,17 @@
      :mas 8.0
      :bll nil 
 	 ;;:blc 100.0  ;; Assumes all chunks are incredibly active
-	 :blc 2.0  ;; Assumes all chunks are incredibly active
-     ;:lf 0.01
+	 :blc 1.5  ;; Assumes all chunks are incredibly active
+	 ;;:lf 0.01
+	 ;;:rt 1.0
      :ul t
      ;;:reward-hook bg-reward-hook-selection4
 	 ;; Just a reward hook to calculate predicted BOLD responses 
 	 :reward-hook compute-striatal-activity-hook
 	 :alpha 0.1
-     :egs 0.01
-     :imaginal-activation 10
-     :visual-activation 10
+     :egs 0.05
+     :imaginal-activation 0 ;; 10
+     :visual-activation 1 ;; 10
      :trace-filter production-firing-only
      )
   
