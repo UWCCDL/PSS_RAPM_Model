@@ -351,9 +351,9 @@
 ;;; ------------------------------------------------------------------
 
 (defparameter *number-names* '((0 . zero) (1 . one) (2 . two)
-			       (3 . three) (4 . four) (5 . five)
-			       (6 . six) (7 . seven) (8 . eight)
-			       (9 . nine) (10 . ten))
+							   (3 . three) (4 . four) (5 . five)
+							   (6 . six) (7 . seven) (8 . eight)
+							   (9 . nine) (10 . ten))
   "Maps numbers onto their symbolic names")
 
 (defparameter *responses* '(("j" . 0) ("k" . 1) ("l" . 2) (";" . 3))
@@ -370,11 +370,11 @@
 
 (defun generate-pid (problem)
   "Generates an ID for a problem"
-  (if (assoc problem *pid* :test #'equal-problem)
+  (if (assoc problem *pid* :test #'eql) ;;#'equal-problem)
       (rest (assoc problem *pid* :test #'equal-problem))
       (let ((id (1+ (apply #'max (cons 0 (mapcar #'rest *pid*))))))
-	(push (cons problem id) *pid*)
-	id)))
+		(push (cons problem id) *pid*)
+		id)))
   
 ;;; ------------------------------------------------------------------
 ;;; CELLS AND PROBLEMS: PROCESSING AND DEFINITION

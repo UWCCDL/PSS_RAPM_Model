@@ -87,6 +87,7 @@
      ;:lf 0.01
      :ul t
      ;;:reward-hook bg-reward-hook-selection4
+	 ;; Just a reward hook to calculate predicted BOLD responses 
 	 :reward-hook compute-striatal-activity-hook
 	 :alpha 0.1
      :egs 0.01
@@ -130,7 +131,6 @@
 
 (chunk-type rule kind same different progression name)
 
-;; (chunk-type direction kind direction span direction-num span-num) 
 
 ;;; DECLARATIVE MEMORY
 ;;; 

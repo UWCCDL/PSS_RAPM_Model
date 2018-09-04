@@ -14,7 +14,7 @@ source("../../PSS_model/functions.R")
 
 #model <- merge(model, model4, all=T)
 #model <- subset(model, model$Ticks > 20)
-model <- read.table("partial", header=F, sep=",")
+model <- read.table("partial.txt", header=T, sep=",")
 names(model) <- c("Ticks", "Alpha", "InitValues", "Features", "D1", "D2", "Accuracy", "Latency", "RewardBold", "RpeBold")
 
 
@@ -30,6 +30,10 @@ md <- aggregate(model[c("Latency", "Accuracy")],
                      D1=model$D1,
                      D2=model$D2),
                 mean)
+
+md4 <- subset(md, md$Features == 4)
+model.redux <- aggregate(model4[c("Accuracy", "Latency", "RpeActivity", "RewardActivity", "RpeBold", "RewardBold")], 
+                         list(Wait=model4$Ticks, a=model4$D2), mean)
 
 
 ## AXIS.RANGE
@@ -231,7 +235,7 @@ figure3B <- function() {
 }
 
 
-md4 <- subset(md, md$Features == 4)
+
 
 figure3C <- function() {
   plot.model.parameters(md4, "Accuracy", "D1", "Ticks", "Wait time", 
@@ -250,7 +254,8 @@ figure3C <- function() {
          y.intersp = 0.6,
          col =   kolors, #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model$Ticks))) - 1)))),
          pt.bg = kolors) #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model$Tick))) - 1)))))
-  mtext(expression(paste("Impact of Positive Feedback ", pi)), side=1, line=4, cex=par("cex"))
+  #mtext(expression(paste("Impact of Positive Feedback ", pi)), side=1, line=4, cex=par("cex"))
+  mtext(expression(paste("Impact of Positive Feedback ", italic(R), "+")), side=1, line=4, cex=par("cex"))
   mtext("RAPM Accuracy", side=2, line=2.5, cex=par("cex"))
 
 }
@@ -271,7 +276,9 @@ figure3D <- function() {
          y.intersp = 0.6,
          col =   kolors, #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model$Ticks))) - 1)))),
          pt.bg = kolors)#grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model$Tick))) - 1)))))
-  mtext(expression(paste("Impact of Negative Feedback ", nu)), side=1, line=4, cex=par("cex"))
+  #mtext(expression(paste("Impact of Negative Feedback ", nu)), side=1, line=4, cex=par("cex"))
+  mtext(expression(paste("Impact of Negative Feedback ", italic(R), "-")), 
+        side=1, line=4, cex=par("cex"))
   mtext("RAPM Accuracy", side=2, line=2.5, cex=par("cex"))
 }
 
@@ -292,8 +299,6 @@ figure3D()
 dev.off()
 
 model4 <- subset(model, model$Features==4)
-model.redux <- aggregate(model4[c("Accuracy", "Latency", "RpeActivity", "RewardActivity", "RpeBold", "RewardBold")], 
-                         list(Wait=model4$Ticks, a=model4$D2), mean)
 plot.model.bold <- function(data, variable, factor1, factor2, 
                             factor2name = factor2, rng=NULL, xrng=NULL, leg=T, legpos="bottomleft", abs=NULL, main=paste(variable, "by", factor2), subtitle=NULL, points=NULL, colors=NULL, fgs=NULL, lwds=NULL,...) {
   oldmar <- par("mar")
@@ -413,6 +418,6 @@ figure3 <- function() {
   mtext(expression(bold("(E)")), side=3, line=1, at=c(-5.65), col="black", cex=1.5*par("cex"))
 }
 
-png("~/Fig3.png", width=6, height = 5, res=300, units = "in")
+png("~/Fig3Z.png", width=6, height = 5, res=300, units = "in")
 figure3()
 dev.off()
