@@ -32,6 +32,7 @@ md <- aggregate(model[c("Latency", "Accuracy")],
                 mean)
 
 md4 <- subset(md, md$Features == 4)
+model4 <- subset(model, model$Features==4)
 model.redux <- aggregate(model4[c("Accuracy", "Latency", "RpeActivity", "RewardActivity", "RpeBold", "RewardBold")], 
                          list(Wait=model4$Ticks, a=model4$D2), mean)
 

@@ -132,7 +132,9 @@
 			     paired))
 	 (options (list correct)))
     ;; Now generate options with 1, 2, or 3 different features
-    (dolist (changes '(1 2 3) options)
+    ;; (dolist (changes '(1 2 3) options)
+	;; Makes the task more interesting by having only options with one difference.
+    (dolist (changes '(1 1 1) options)
       (let ((f-indices (subseq (scramble (seq 0 (length abstracted))) 0 (min changes (feature-number problem))))
 	    (newoption (mapcar #'(lambda (x) (copy-seq x))
 			       abstracted)))

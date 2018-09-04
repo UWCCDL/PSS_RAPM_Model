@@ -83,6 +83,27 @@
 					(float (apply #'mean partial)))
 			  results)))))
 
+(defun sim-across-difficulty (n)
+  "Quick way to run sanity checks across problem difficulty" 
+  (let ((results-acc nil)
+		(results-rt nil))
+	(dolist (nfeat '(1 2 3 4))
+	  (setf *default-num-features* nfeat)
+	  (let ((partial-acc nil)
+			(partial-rt nil))
+		(dotimes (j n)
+		  (rapm-reload nil)  ; Reload
+		  (sgp :v nil)
+		  (reset-striatal-activity)
+		  (no-output (run 10000 :real-time nil))
+		  (push (mean-acc) partial-acc)
+		  (push (mean-rt) partial-rt))
+		(push (apply #'mean partial-rt) results-rt)
+		(push (apply #'mean partial-acc) results-acc)))
+	(list (reverse results-acc)
+		  (reverse results-rt))))
+		
+				
 
 (defun general-simulations (n &key
 								(fname "simulations.txt")
@@ -92,11 +113,11 @@
 								)
   "General simulations across all parameters of interest"
   (with-open-file (out fname
-		       :direction :output
-		       :if-exists :overwrite
-		       :if-does-not-exist :create)
+					   :direction :output
+					   :if-exists :overwrite
+					   :if-does-not-exist :create)
     (let ((names '(ticks #|pos-reward neg-reward|# alpha init-value-uppr-bound features d1 d2 accuracy problem-rt reward-bold rpe-bold)))
-		  ;;(counter 0))
+	  ;;(counter 0))
       (format out "~{~a~^, ~}~%" names)
       (dolist (ticks tickvals) 
 		;;	(dolist (pos-rwrd '(4 6 8 10)) ;;'(2 4 6 8 10))
@@ -109,8 +130,8 @@
 				  (setf *d1* d1)
 				  (setf *d2* d2)
 				  (setf *initial-value-upper-bound* uppr-bnd)
-				  ;;(setf *negative-reward* neg-rwrd)
-				  ;;  (setf *positive-reward* pos-rwrd)
+				  ;; (setf *negative-reward* neg-rwrd)
+				  ;; (setf *positive-reward* pos-rwrd)
 				  (setf *ticks* ticks)
 				  (setf *default-num-features* dfclt)
 				  ;;`(format t "Set #~A~%" (* (incf counter) n))

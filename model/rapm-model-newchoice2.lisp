@@ -81,9 +81,9 @@
      :record-ticks nil
      :esc t
      :mas 8.0
-     :bll nil 
+     :bll nil
 	 ;;:blc 100.0  ;; Assumes all chunks are incredibly active
-	 :blc 1.5  ;; Assumes all chunks are incredibly active
+	 :blc 2  ;; Assumes all chunks are incredibly active
 	 ;;:lf 0.01
 	 ;;:rt 1.0
      :ul t
@@ -91,9 +91,9 @@
 	 ;; Just a reward hook to calculate predicted BOLD responses 
 	 :reward-hook compute-striatal-activity-hook
 	 :alpha 0.1
-     :egs 0.05
+     :egs 0.5
      :imaginal-activation 0 ;; 10
-     :visual-activation 1 ;; 10
+     :visual-activation 0 ;; 10
      :trace-filter production-firing-only
      )
   
@@ -103,19 +103,19 @@
 ;;; Chunk types. Not needed... but they save lots of warnings.
 ;;;
 (chunk-type (rapm-screen (:include visual-object))
-	    kind id)
+			kind id)
 
 (chunk-type (rapm-cell (:include visual-object))
-	    kind row column row-num column-num problem
-	    phase shape number background texture
-	    feature0 feature1 feature2 feature3 feature4
-	    feature5 feature6 feature7 feature8 feature9)
+			kind row column row-num column-num problem
+			phase shape number background texture
+			feature0 feature1 feature2 feature3 feature4
+			feature5 feature6 feature7 feature8 feature9)
 
 (chunk-type (rapm-cell-location (:include visual-location))
-	    row column row-num column-num problem
-	    shape number background texture
-	    feature0 feature1 feature2 feature3 feature4
-	    feature5 feature6 feature7 feature8 feature9)
+			row column row-num column-num problem
+			shape number background texture
+			feature0 feature1 feature2 feature3 feature4
+			feature5 feature6 feature7 feature8 feature9)
 
 (chunk-type (rapm-screen-location (:include visual-location))
 	    id)

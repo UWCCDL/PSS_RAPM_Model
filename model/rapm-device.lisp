@@ -1126,6 +1126,23 @@
 	;; New code
 
 
+;;; ------------------------------------------------------------------
+;;; Quick debug
+;;; ------------------------------------------------------------------
+
+(defun mean-acc ()
+  (let ((trials (experiment-log (current-device))))
+	(float (/ (reduce #'+ (mapcar #'trial-accuracy trials))
+			  (length trials)))))
+
+(defun mean-rt ()
+  (let ((trials (experiment-log (current-device))))
+	(float (/ (reduce #'+ (mapcar #'trial-problem-rt trials))
+			  (length trials)))))
+
+(defun ncompleted ()
+  (length (experiment-log (current-device))))
+
 ;; Loads the definition of the problems and the correct value of
 ;; the *trials* parameter
 (load (translate-logical-pathname "RAPM:rapm-problems.lisp"))
