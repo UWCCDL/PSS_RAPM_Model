@@ -77,7 +77,7 @@
      :style-warnings nil
      :auto-attend t
      :er t
-     :ans 0.05
+     :ans 0.05 ;; 0.05
      :record-ticks nil
      :esc t
      :mas 8.0
@@ -91,7 +91,7 @@
 	 ;; Just a reward hook to calculate predicted BOLD responses 
 	 :reward-hook compute-striatal-activity-hook
 	 :alpha 0.1
-     :egs 0.5
+     :egs 0.1
      :imaginal-activation 0 ;; 10
      :visual-activation 0 ;; 10
      :trace-filter production-firing-only

@@ -18,6 +18,7 @@ model <- read.table("partial.txt", header=T, sep=",")
 names(model) <- c("Ticks", "Alpha", "InitValues", "Features", "D1", "D2", "Accuracy", "Latency", "RewardBold", "RpeBold")
 
 
+
 model$RewardActivity <- model$RewardBold / model$Latency
 
 model$RpeActivity <- model$RpeBold / model$Latency
@@ -175,8 +176,27 @@ hd_sds <- tapply(f$AllRT, f$Features, sd)
 hd_acc_ms <- tapply(f$ACC, f$Features, mean)
 hd_acc_sds <- tapply(f$ACC, f$Features, sd)
 
+# Data from Matzen et al
 
-## Co
+matzen <- c(86.8965517241379,
+            74.8275862068966,
+            55,
+            38.1034482758621
+)/100
+
+spm <- c(90.5172413793104,
+         72.5862068965517,
+         NA,
+         53.7931034482759
+)/100
+
+santarnecchi <- 1 - c(4.938271604938273,
+                      15.432098765432103,
+                      41.04938271604939,
+                      42.592592592592595)/100
+santarnecchi.rt <- c(5.0, 10.0, 14.6, 23.0)
+
+## Colors
 kolors <- heat_hcl(5)
 
 
@@ -185,11 +205,23 @@ figure3A <- function() {
                         rng=c(0.25,1.02, 0.25), legpos = "topleft", 
                         factor2name = "Wait Time", leg=F,
                         colors = kolors)
-  polygon(x=c(1:4, 4:1),
-          y=c(hd_acc_ms + hd_acc_sds,
-              rev(hd_acc_ms - hd_acc_sds)),
-          border=NA,
-          col="#88888822")
+  # polygon(x=c(1:4, 4:1),
+  #         y=c(hd_acc_ms + hd_acc_sds,
+  #             rev(hd_acc_ms - hd_acc_sds)),
+  #         border=NA,
+  #         col="#88888822")
+  # lines(x=1:4, y=hd_acc_ms, lwd=2, lty=3, col="black")
+  lines(x=1:4, y=matzen, lty=3, col="grey", lwd=2)
+  #points(x=1:4, y=matzen, pch=0, col="grey", cex=3, lwd=5, bg="grey")
+
+  lines(x=1:4, y=santarnecchi, lty=3, col="black", lwd=2)
+  #points(x=1:4, y=santarnecchi, pch=0, col="darkgrey", cex=3, lwd=5, bg="darkgrey")
+  
+    
+  #lines(x=1:4, y=spr, lwd=2, lty=3, col="darkgrey")
+  #points(x=1:4, y=spr, pch=0, col="darkgrey", cex=2)
+  
+  
   vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
   legend(x = 1, y=0.5,
          #ncol = 2,
@@ -202,7 +234,6 @@ figure3A <- function() {
          y.intersp = 0.6,
          col =   kolors, #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))),
          pt.bg = kolors) #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))))
-  lines(x=1:4, y=hd_acc_ms, lwd=2, lty=3, col="black")
   mtext("Number of Features", side=1, line=4, cex=par("cex"))
   mtext("RAPM Accuracy", side=2, line=2.5, cex=par("cex"))
 }
@@ -213,11 +244,16 @@ figure3B <- function() {
                         rng=c(0,30,5), legpos = "topleft", 
                         factor2name = "Wait Time", leg=F,
                         colors = kolors)
-  polygon(x=c(1:4, 4:1),
-          y=c(hd_ms + hd_sds,
-              rev(hd_ms - hd_sds)),
-          border=NA,
-          col="#99999922")
+  # polygon(x=c(1:4, 4:1),
+  #         y=c(hd_ms + hd_sds,
+  #             rev(hd_ms - hd_sds)),
+  #         border=NA,
+  #         col="#99999922")
+  #lines(x=1:4, y=hd_ms, lwd=2, lty=3, col="black")
+  
+  lines(x=1:4, y=santarnecchi.rt, lty=3, col="black", lwd=2)
+  #points(x=1:4, y=santarnecchi.rt, pch=0, col="darkgrey", cex=3, lwd=5, bg="darkgrey")
+  
   vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
   legend(x = 1, y=25,
          #ncol = 2,
@@ -230,7 +266,6 @@ figure3B <- function() {
          y.intersp = 0.6,
          col =   kolors, #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))),
          pt.bg = kolors) #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))))
-  lines(x=1:4, y=hd_ms, lwd=2, lty=3, col="black")
   mtext("Number of Features", side=1, line=4, cex=par("cex"))
   mtext("RAPM Solution Time", side=2, line=2.5, cex=par("cex"))
 }
@@ -240,7 +275,7 @@ figure3B <- function() {
 
 figure3C <- function() {
   plot.model.parameters(md4, "Accuracy", "D1", "Ticks", "Wait time", 
-                        leg=F, rng=c(0.5, 1.02, 0.1), legpos = "topleft",
+                        leg=F, rng=c(0.25, 1.02, 0.1), legpos = "topleft",
                         colors = kolors)
   
   vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
@@ -264,7 +299,7 @@ figure3C <- function() {
 
 figure3D <- function() {
   plot.model.parameters(md4, "Accuracy", "D2", "Ticks", "Wait time", leg=F, 
-                        rng=c(0.5, 1.02, 0.1), legpos = "topleft",
+                        rng=c(0.25, 1.02, 0.1), legpos = "topleft",
                         colors=kolors)
   vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
   legend(x = 1, y=1.07, 
@@ -379,7 +414,7 @@ plot.model.bold <- function(data, variable, factor1, factor2,
 
 
 figure3E <- function() {
-  plot.model.bold(model.redux, "Accuracy", "RpeActivity", "Wait", "Wait time", rng=c(0.5, 1.02, 0.1), 
+  plot.model.bold(model.redux, "Accuracy", "RpeActivity", "Wait", "Wait time", rng=c(0.25, 1.02, 0.1), 
                 legpos = "topright", leg=F, xrng=c(-4, 1, 1))
   vals <- parse(text = paste("italic(tau) ==", unique(model.redux$Wait)))
   legend(x = -1.6, y=1.07, 
