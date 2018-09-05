@@ -5,12 +5,13 @@ MAIN="""
 (load "/projects/actr/models/PSS_RAPM_Model/model/rapm-device.lisp")
 (load "/projects/actr/models/PSS_RAPM_Model/model/rapm-model-newchoice2.lisp")
 (load "/projects/actr/models/PSS_RAPM_Model/model/rapm-simulations.lisp")
-(general-simulations 100 :fname "simulations-august2018-tick-%s-upper-%s-difficulty-%s.txt" :tickvals '(%d) :upprbndvals '(%0.1f) :difficulty '(%d))
+(general-simulations 100 :fname "simulations-september2018-tick-%s-upper-%s-difficulty-%s.txt" :tickvals '(%d) :upprbndvals '(%0.1f) :difficulty '(%d))
 (quit)
 """
 
-count=16
-for tickval in [22,25,30,35]:
+count=0  # Starting point for filenames
+
+for tickval in [24,28,32,36]:
     for upper in [1.0, 2.0, 3.0, 4.0]:
         for difficulty in [4, 3, 2, 1]:
             count += 1
