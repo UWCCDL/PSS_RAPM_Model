@@ -16,11 +16,7 @@ source("../../PSS_model/functions.R")
 #model <- subset(model, model$Ticks > 20)
 model <- read.table("partial.txt", header=T, sep=",")
 names(model) <- c("Ticks", "Alpha", "InitValues", "Features", "D1", "D2", "Accuracy", "Latency", "RewardBold", "RpeBold")
-
-
-
 model$RewardActivity <- model$RewardBold / model$Latency
-
 model$RpeActivity <- model$RpeBold / model$Latency
 
 md <- aggregate(model[c("Latency", "Accuracy")], 
@@ -36,6 +32,66 @@ md4 <- subset(md, md$Features == 4)
 model4 <- subset(model, model$Features==4)
 model.redux <- aggregate(model4[c("Accuracy", "Latency", "RpeActivity", "RewardActivity", "RpeBold", "RewardBold")], 
                          list(Wait=model4$Ticks, a=model4$D2), mean)
+
+md$Beta1 <- 0
+md$Beta2 <- 0
+for (t in unique(md$Ticks)) {
+  for (a in unique(md$Alpha)) {
+    for (i in unique(md$InitValues)) {
+      for (d1 in unique(md$D1)) {
+        for (d2 in unique(md$D2)) {
+          vals <- subset(md, md$Ticks == t &
+                         md$Alpha == a &
+                         md$InitValues == i &
+                         md$D1 == d1 & 
+                         md$D2 == d2)
+          vals <- vals[order(vals$Features),]
+          m1 <- lm(vals$Accuracy ~ vals$Features)
+          m2 <- lm(vals$Latency ~ vals$Features)
+          md$Beta1[md$Ticks == t &
+                     md$Alpha == a &
+                     md$InitValues == i &
+                     md$D1 == d1 & 
+                     md$D2 == d2] <- m1$coefficients[2]
+          
+          md$Beta2[md$Ticks == t &
+                     md$Alpha == a &
+                     md$InitValues == i &
+                     md$D1 == d1 & 
+                     md$D2 == d2] <- m2$coefficients[2]
+        }
+      } 
+    }
+  } 
+}
+
+getcol<-function(num) {
+  t<-unique(md$Ticks)
+  kolors[t==num][1]
+}
+
+vgetcol <- Vectorize(getcol)
+
+figure.psp <- function() {
+  oldmar <- par("mar")
+  par(mar=c(3,4,2,1))
+  plot(md$Beta1, md$Beta2, xlim=c(-0.25, 0.25), 
+       ylim=c(-7,7), pch=21,  #3 
+       #col=NA, 
+       #bg="#EE222211",
+       #col="#EE222211", 
+       col=vgetcol(md$Ticks),
+       cex=0.1, 
+       xlab=c("Accuracy Beta"), 
+       ylab="Latency Beta")
+  abline(h=0, lty=3, lwd=2, col="darkgrey")
+  abline(v=0, lty=3, lwd=2, col="darkgrey")
+  par(mar=oldmar)
+}
+
+tiff("~/FigPSP.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+figure.psp()
+dev.off()
 
 
 ## AXIS.RANGE
@@ -234,8 +290,19 @@ figure3A <- function() {
          y.intersp = 0.6,
          col =   kolors, #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))),
          pt.bg = kolors) #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))))
+  
+  # legend(x = 1.25, y=1.07,
+  #        legend = c("Matzen (2010)", "Santarnecchi\n(2013)"), 
+  #        lwd = 2, 
+  #        lty = 3, 
+  #        #pch = 21,
+  #        pt.cex=2,
+  #        bty = "n",
+  #        y.intersp = 0.6,
+  #        col =   c("darkgrey", "black"),
+  #        pt.bg = kolors) #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))))
   mtext("Number of Features", side=1, line=4, cex=par("cex"))
-  mtext("RAPM Accuracy", side=2, line=2.5, cex=par("cex"))
+  mtext("Problem Accuracy", side=2, line=2.5, cex=par("cex"))
 }
 
 
@@ -255,7 +322,7 @@ figure3B <- function() {
   #points(x=1:4, y=santarnecchi.rt, pch=0, col="darkgrey", cex=3, lwd=5, bg="darkgrey")
   
   vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
-  legend(x = 1, y=25,
+  legend(x = 1, y=32,
          #ncol = 2,
          legend = vals, 
          lwd = 1, 
@@ -267,15 +334,13 @@ figure3B <- function() {
          col =   kolors, #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))),
          pt.bg = kolors) #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(md$Ticks))) - 1)))))
   mtext("Number of Features", side=1, line=4, cex=par("cex"))
-  mtext("RAPM Solution Time", side=2, line=2.5, cex=par("cex"))
+  mtext("Problem Solution Time", side=2, line=2.5, cex=par("cex"))
 }
-
-
 
 
 figure3C <- function() {
   plot.model.parameters(md4, "Accuracy", "D1", "Ticks", "Wait time", 
-                        leg=F, rng=c(0.25, 1.02, 0.1), legpos = "topleft",
+                        leg=F, rng=c(0.25, 1.02, 0.25), legpos = "topleft",
                         colors = kolors)
   
   vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
@@ -292,14 +357,14 @@ figure3C <- function() {
          pt.bg = kolors) #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model$Tick))) - 1)))))
   #mtext(expression(paste("Impact of Positive Feedback ", pi)), side=1, line=4, cex=par("cex"))
   mtext(expression(paste("Impact of Positive Feedback ", italic(R), "+")), side=1, line=4, cex=par("cex"))
-  mtext("RAPM Accuracy", side=2, line=2.5, cex=par("cex"))
+  mtext("Problem Accuracy", side=2, line=2.5, cex=par("cex"))
 
 }
 
 
 figure3D <- function() {
   plot.model.parameters(md4, "Accuracy", "D2", "Ticks", "Wait time", leg=F, 
-                        rng=c(0.25, 1.02, 0.1), legpos = "topleft",
+                        rng=c(0.25, 1.02, 0.25), legpos = "topleft",
                         colors=kolors)
   vals <- parse(text = paste("italic(tau) ==", unique(model$Ticks)))
   legend(x = 1, y=1.07, 
@@ -315,7 +380,7 @@ figure3D <- function() {
   #mtext(expression(paste("Impact of Negative Feedback ", nu)), side=1, line=4, cex=par("cex"))
   mtext(expression(paste("Impact of Negative Feedback ", italic(R), "-")), 
         side=1, line=4, cex=par("cex"))
-  mtext("RAPM Accuracy", side=2, line=2.5, cex=par("cex"))
+  mtext("Problem Accuracy", side=2, line=2.5, cex=par("cex"))
 }
 
 tiff("~/Fig3A.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
@@ -334,7 +399,6 @@ tiff("~/Fig3D.tiff", res=300, width=3, height=3.5, units = "in", compression = "
 figure3D()
 dev.off()
 
-model4 <- subset(model, model$Features==4)
 plot.model.bold <- function(data, variable, factor1, factor2, 
                             factor2name = factor2, rng=NULL, xrng=NULL, leg=T, legpos="bottomleft", abs=NULL, main=paste(variable, "by", factor2), subtitle=NULL, points=NULL, colors=NULL, fgs=NULL, lwds=NULL,...) {
   oldmar <- par("mar")
@@ -414,7 +478,7 @@ plot.model.bold <- function(data, variable, factor1, factor2,
 
 
 figure3E <- function() {
-  plot.model.bold(model.redux, "Accuracy", "RpeActivity", "Wait", "Wait time", rng=c(0.25, 1.02, 0.1), 
+  plot.model.bold(model.redux, "Accuracy", "RpeActivity", "Wait", "Wait time", rng=c(0.25, 1.02, 0.25), 
                 legpos = "topright", leg=F, xrng=c(-4, 1, 1))
   vals <- parse(text = paste("italic(tau) ==", unique(model.redux$Wait)))
   legend(x = -1.6, y=1.07, 
@@ -423,12 +487,13 @@ figure3E <- function() {
          lty = 1, 
          pch = 21,
          pt.cex=2,
+         ncol = 1,
          bty = "n",
          y.intersp = 0.6,
          col =   kolors, #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model.redux$Wait))) - 1)))),
          pt.bg = kolors)#grey(seq(0.25, 0.75, 0.5/max(1, (length(levels(factor(model.redux$Wait))) - 1)))))
   mtext("Simulated BOLD Signal", side=1, line=4, cex = par("cex"))
-  mtext("RAPM Accuracy", side=2, line=2.5, cex=par("cex"))
+  mtext("Problem Accuracy", side=2, line=2.5, cex=par("cex"))
 }
 
 tiff("~/Fig3E.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
