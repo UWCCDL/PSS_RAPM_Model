@@ -1,12 +1,7 @@
 ;;; ==================================================================
-;;; A simple model of Raven's (Advanced) Progressive Matrices
+;;; A simple model of RAPM
 ;;; ==================================================================
-;;; Author: (c) 2017, Andrea Stocco
-;;;         University of Washington,
-;;;         Seattle, WA 98195
-;;;         Email: stocco@uw.edu
-;;; ==================================================================
-;;; (Based on development version 7)
+;;; (Based on devel version 7)
 ;;;
 ;;; The model works by iteratively selecting features and rules,
 ;;; and internally generating rewards when the features are new
@@ -64,34 +59,41 @@
 ;;;   1. There are no more "dont" productions.
 ;;;   2. Competition is managed between "pick" productions using the
 ;;;      conflict set.
-;;;   3. Production utilities get updated based on the sign of
-;;;      reward; positive and negative rewards have different impacts.
+;;;   3  The one production that fires sees its utility updated with
+;;;      a positive (reward * D1) value.
+;;;   4. Productions in the conflict set that did not fire are
+;;;      udpated with a negative (D2 * reward) value.
 ;;;
+;;; In the future, the conflict set should be detected automatically.
+;;; Here, it is derived from the prefix and pathway of a production.
 ;;; ==================================================================
 
 (clear-all)
 (written-for-act-r-version "7.5.0")
-(define-model bar-devel4-model1
+(define-model bar-devel4-model2
 
 (sgp :style-warnings nil
      :model-warnings nil
      :style-warnings nil
      :auto-attend t
      :er t
-     :show-focus t  ;; Experimental
-     :ans 0.05
+     :ans 0.05 ;; 0.05
      :record-ticks nil
      :esc t
      :mas 8.0
-     :bll nil 
-     :blc 100.0  ;; Assumes all chunks are incredibly active
-     :lf 0.01
+     :bll nil
+	 ;;:blc 100.0  ;; Assumes all chunks are incredibly active
+	 :blc 2  ;; Assumes all chunks are incredibly active
+	 ;;:lf 0.01
+	 ;;:rt 1.0
      :ul t
-     :reward-hook bg-reward-hook-selection4
-     :alpha 0.1
-     :egs 0.01
-     :imaginal-activation 10
-     :visual-activation 10
+     ;;:reward-hook bg-reward-hook-selection4
+	 ;; Just a reward hook to calculate predicted BOLD responses 
+	 :reward-hook compute-striatal-activity-hook
+	 :alpha 0.1
+     :egs 0.1
+     :imaginal-activation 0 ;; 10
+     :visual-activation 0 ;; 10
      :trace-filter production-firing-only
      )
   
@@ -101,19 +103,19 @@
 ;;; Chunk types. Not needed... but they save lots of warnings.
 ;;;
 (chunk-type (rapm-screen (:include visual-object))
-	    kind id)
+			kind id)
 
 (chunk-type (rapm-cell (:include visual-object))
-	    kind row column row-num column-num problem
-	    phase shape number background texture
-	    feature0 feature1 feature2 feature3 feature4
-	    feature5 feature6 feature7 feature8 feature9)
+			kind row column row-num column-num problem
+			phase shape number background texture
+			feature0 feature1 feature2 feature3 feature4
+			feature5 feature6 feature7 feature8 feature9)
 
 (chunk-type (rapm-cell-location (:include visual-location))
-	    row column row-num column-num problem
-	    shape number background texture
-	    feature0 feature1 feature2 feature3 feature4
-	    feature5 feature6 feature7 feature8 feature9)
+			row column row-num column-num problem
+			shape number background texture
+			feature0 feature1 feature2 feature3 feature4
+			feature5 feature6 feature7 feature8 feature9)
 
 (chunk-type (rapm-screen-location (:include visual-location))
 	    id)
@@ -130,7 +132,6 @@
 
 (chunk-type rule kind same different progression name)
 
-;; (chunk-type direction kind direction span direction-num span-num) 
 
 ;;; DECLARATIVE MEMORY
 ;;; 
@@ -290,34 +291,6 @@
 ;;;                           |
 ;;;                         *END*
 ;;; ------------------------------------------------------------------
-;;; To understand how the model interacts with the problem, we need to
-;;; briefly outline how the problems are represented in the model's
-;;; virtual device and visual field. A problem is represented like
-;;; this:
-;;;
-;;;   +---------------------------------------------+
-;;;   | rapm-problem                                |
-;;;   |                                             |
-;;;   | +-----------+  +-----------+  +-----------+ |
-;;;   | | rapm-cell |  | rapm-cell |  | rapm-cell | |
-;;;   | | row1,col1 |  | row1,col2 |  | row1,col3 | | 
-;;;   | | features  |  | features  |  | features  | |
-;;;   | +-----------+  +-----------+  +-----------+ |
-;;;   |                                             |
-;;;   | +-----------+  +-----------+  +-----------+ |
-;;;   | | rapm-cell |  | rapm-cell |  | rapm-cell | |
-;;;   | | row2,col1 |  | row2,col2 |  | row2,col3 | | 
-;;;   | | features  |  | features  |  | features  | |
-;;;   | +-----------+  +-----------+  +-----------+ |
-;;;   |                                             |
-;;;   | +-----------+  +-----------+  +-----------+ |
-;;;   | | rapm-cell |  | rapm-cell |  | rapm-cell | |
-;;;   | | row3,col1 |  | row3,col2 |  | row3,col3 | | 
-;;;   | | features  |  | features  |  | features  | |
-;;;   | +-----------+  +-----------+  +-----------+ |
-;;;   +---------------------------------------------+
-;;;
-;;; ------------------------------------------------------------------
 
 (p start*attend-problem
    "Attends a problem"
@@ -331,6 +304,20 @@
       kind rapm-problem
 )
 
+(p start*attend-when-problem-changed
+   "Attends a problem"
+   ?goal>
+     buffer empty
+   
+   ?visual-location>
+     buffer full
+
+   ?visual>
+     buffer empty	 
+==>
+   +visual-location>
+      kind rapm-problem
+)
 
 (p start*create-goal
    ?goal>
@@ -384,9 +371,9 @@
 ;;; feature consists of multiple Pick/Don't Pick productions, one
 ;;; pair for each feature.
 ;;;
-;;;       Pick    Pick     Pick       Pick 
-;;;      Shape   Number    Texture  Orientation
-;;;         \       \         /        /
+;;;   Pick    Don't   Pick  Don't  Pick   ... Don't
+;;;   Shape   Shape   Num   Num    ...        ...
+;;;       \      \    \    /     /          /
 ;;;          Encode The Selected Feature
 ;;;
 ;;; ---------------------------------------------------------------- ;;
@@ -998,6 +985,9 @@
      kind rapm-cell
      =COORDINATE =VAL
    - =COORDINATE two
+
+   ?imaginal>
+     state free
    
    =imaginal>
      focus =VAL
@@ -1444,11 +1434,63 @@
 
    +visual-location>
      kind rapm-cell
+;     phase choice
      screen-x lowest
+
 )
 
+(p choice*compare-option
+   "Compares an option to the internal solution"
+   =goal>
+     step choice
 
-(p choice*scan-options
+   =visual>
+     kind rapm-cell
+     phase choice
+        
+   =imaginal>
+     nature missing-cell
+     match nil
+
+   ?imaginal>
+     state free
+   
+   ?visual>
+     state free
+==>
+  +imaginal-action>
+    action compare-cells
+  =visual>
+  =imaginal>
+) 
+
+(p choice*respond-current-option
+   "If we have a matching cell, respond"
+   =goal>
+     step choice
+
+   =visual>
+     kind rapm-cell
+     phase choice
+     column =NUM
+        
+   =imaginal>
+     nature missing-cell
+     match yes
+     
+   ?visual>
+     state free  
+==>
+   =imaginal>
+     response =NUM
+
+   ;;; Added 8/29/18
+   +visual-location>
+   kind rapm-choice
+   ;;; End addition
+)
+
+(p choice*next-option
    "When we have a solution, scan the available options"
    =goal>
      step choice
@@ -1459,17 +1501,18 @@
         
    =imaginal>
      nature missing-cell
-   
+     match no
+     
    ?visual>
      state free  
 ==>
-
    +visual-location>
      kind rapm-cell
    > screen-x current
     :nearest current-x
        
-   =imaginal>  ; keep the imaginal
+   =imaginal>
+     match nil 
 )
 
 (p choice*retrieve-best-option
@@ -1502,6 +1545,24 @@
      kind rapm-choice  
 )
 
+(p choice*mark-best-option-from-retrieval
+   "Identifies the column number of the best option retrieved"
+   =goal>
+     step choice
+
+   =imaginal>
+     nature missing-cell
+     response nil
+   
+   =retrieval>  
+     kind rapm-cell
+     phase choice
+     column =NUM 
+==>
+   *imaginal>
+     response =NUM
+)   
+   
 (p choice*respond-index
    "Responds with index to a cell with column index 0"
    =goal>
@@ -1509,12 +1570,8 @@
 
    =imaginal>
      nature missing-cell
+     response zero
    
-   =retrieval>  
-     kind rapm-cell
-     phase choice
-     column zero 
-
    ?manual>
      preparation free
      processor free
@@ -1536,11 +1593,7 @@
 
    =imaginal>
      nature missing-cell
-
-   =retrieval>  
-     kind rapm-cell
-     phase choice
-     column one
+     response one
 
    ?manual>
      preparation free
@@ -1564,13 +1617,8 @@
 
    =imaginal>
      nature missing-cell
-
+     response two
      
-   =retrieval>  
-     kind rapm-cell
-     phase choice
-     column two
-
    ?manual>
      preparation free
      processor free
@@ -1592,12 +1640,8 @@
  
    =imaginal>
      nature missing-cell
+     response three
      
-   =retrieval>  
-     kind rapm-cell
-     phase choice
-     column three
-
    ?manual>
      preparation free
      processor free
@@ -1668,8 +1712,14 @@
  
 )  ; End of the Model
 
+;; Performance monitoring points---when R+/- is triggered.
 
-(spp-fct `((check*solution-found-and-time-not-elapsed :reward ,*negative-reward*)))
+(spp-fct `((check*solution-found-and-time-not-elapsed :reward ,(* *d2* -1))))
+(spp-fct `((check*solution-found-and-time-elapsed :reward ,(* *d2* -1))))
+(spp-fct `((choice*respond-current-option :reward ,(* *d1* 1))))
+
+;; Randomization of feature utilities (initial biases)
+
 (spp-fct `((feature*pick-shape :u ,(random *initial-value-upper-bound*))))
 (spp-fct `((feature*pick-texture :u ,(random *initial-value-upper-bound*))))
 (spp-fct `((feature*pick-background :u ,(random *initial-value-upper-bound*))))
