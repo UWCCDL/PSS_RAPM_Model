@@ -1,7 +1,14 @@
 library(matlab)
 library(colorspace)
 # Testbed for model analysis
-source("../../PSS_model/functions.R")
+#source("../../PSS_model/functions.R")
+
+## ----------------------------------------------------------------
+## Color palette 
+## ----------------------------------------------------------------
+
+kolors <- heat_hcl(5)
+
 
 #model <- read.table(unzip("simulations-across-features/simulations-across-features.zip"), 
 #                    header = T, sep = ",")
@@ -14,7 +21,7 @@ source("../../PSS_model/functions.R")
 
 #model <- merge(model, model4, all=T)
 #model <- subset(model, model$Ticks > 20)
-model <- read.table("partial.txt", header=T, sep=",")
+model <- read.table("simulations-final-newtau/simulations-final-newtau.txt", header=T, sep=",")
 names(model) <- c("Ticks", "Alpha", "InitValues", "Features", "D1", "D2", "Accuracy", "Latency", "RewardBold", "RpeBold")
 model$RewardActivity <- model$RewardBold / model$Latency
 model$RpeActivity <- model$RpeBold / model$Latency
@@ -74,7 +81,7 @@ vgetcol <- Vectorize(getcol)
 
 figure.psp <- function() {
   oldmar <- par("mar")
-  par(mar=c(3,4,2,1))
+  par(mar=c(4,4,2,0.5))
   plot(md$Beta1, md$Beta2, xlim=c(-0.25, 0.25), 
        ylim=c(-7,7), pch=21,  #3 
        #col=NA, 
@@ -83,13 +90,27 @@ figure.psp <- function() {
        col=vgetcol(md$Ticks),
        cex=0.1, 
        xlab=c("Accuracy Beta"), 
-       ylab="Latency Beta")
+       ylab="Latency Beta",
+       main="Model Flexibility")
+  grid()
   abline(h=0, lty=3, lwd=2, col="darkgrey")
   abline(v=0, lty=3, lwd=2, col="darkgrey")
   par(mar=oldmar)
+  vals <- parse(text = paste("italic(tau) ==", unique(md$Ticks)))
+  
+  legend(x = 0, y=0,
+         legend = vals, 
+         lwd = 0, 
+         lty = 1, 
+         pch = 21,
+         pt.cex=1,
+         bty = "n",
+         y.intersp = 0.6,
+         col =   kolors, 
+         pt.bg = kolors) 
 }
 
-tiff("~/FigPSP.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+png("FigPSP.png", res=300, width=3.5, height=3.5, units = "in")
 figure.psp()
 dev.off()
 
@@ -208,31 +229,86 @@ plot.model.parameters <- function(data, variable, factor1, factor2,
   par(mar = oldmar)
 }
 
+plot.model.bold <- function(data, variable, factor1, factor2, 
+                            factor2name = factor2, rng=NULL, xrng=NULL, leg=T, legpos="bottomleft", abs=NULL, main=paste(variable, "by", factor2), subtitle=NULL, points=NULL, colors=NULL, fgs=NULL, lwds=NULL,...) {
+  oldmar <- par("mar")
+  par(mar=c(3,4,2,1))
+  levels <- levels(factor(data[[factor2]]))
+  res <- tapply(data[[variable]], factor(data[[factor1]]), mean)
+  
+  CEX=2
+  if (is.null(rng)) {
+    arng=axis.range(res)
+  } else {
+    arng=rng
+  }
+  
+  if (is.null(xrng)) {
+    xarng=axis.range(data[[factor1]])
+  } else {
+    xarng=xrng
+  }
+  
+  plot.new()
+  plot.window(xarng[1:2], arng[1:2])
+  axis(2, at=seq(arng[1], arng[2], arng[3]), labels=seq(arng[1], arng[2], arng[3]))
+  axis(1, cex=4)
+  box(bty="o")
+  
+  if(is.null(colors)) {
+    colors <- kolors #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels)-1))))
+  }
+  
+  if(is.null(points)) {
+    points <-rep(21, length(levels))
+  }
+  
+  if (is.null(fgs)) {
+    fgs<-rep("black", length(levels))
+  }
+  
+  if (is.null(lwds)) {
+    lwds<-rep(2, length(levels))
+  }
+  
+  
+  l.points<-c()
+  l.colors<-c()
+  l.names <-c()
+  
+  ## The line
+  if (!is.null(abs)) {
+    abline(h=abs, lty=2)
+  }
+  
+  for (l in seq(length(levels))) {
+    sub <- subset(data, data[[factor2]]==levels[l])
+    res <- tapply(sub[[variable]], factor(sub[[factor1]]), mean)
+    print(res)
+    res.se <- tapply(sub[[variable]], factor(sub[[factor1]]), se)
+    sub.levels <- levels(factor(sub[[factor1]]))
+    #sub.x <- match(sub.levels, x.values)
+    sub.x <- sub.levels
+    lines(sub.x, res, cex=CEX, col=colors[l], lwd=lwds[l])
+    #arrows(sub.x, res, sub.x, res + res.se, angle=90, length=0.10, col=fgs[l], lwd=lwds[l])
+    #arrows(sub.x, res, sub.x, res - res.se, angle=90, length=0.10, col=fgs[l], lwd=lwds[l])
+    points(sub.x, res, pch=points[l], lwd=0.5, cex=CEX, bg=colors[l], col="grey85") #col=colors[l])
+    
+    # Updates
+    l.points<-c(l.points, points[l])
+    l.colors<-c(l.colors, colors[l])
+    l.names <-c(l.names, paste(levels[l], sep=""))
+  }
+  #title(main=main, ylab=variable, xlab=factor1, sub=subtitle)
+  if (leg) {
+    legend(legpos, legend=paste(factor2name, "=", l.names), pch=l.points, lty=1, pt.bg=l.colors, col=l.colors, pt.cex=CEX, bty="n")
+  }
+  par(mar=oldmar)
+}
 
-# Comparison to human data
 
-f <- read.table("firestorm.txt", header=T)
-f$CorrRT[f$CorrRT ==0] <- NA
-
-f$CorrRT <- f$CorrRT / 1000
-f$AllRT <- f$AllRT / 1000
-
-f$Stimulation <- "Stimulation"
-f$Stimulation[f$BlockCondition == "ShamMFG"] <- "Sham"
-f$Stimulation[f$BlockCondition == "ShamIPG"] <- "Sham"
-
-f$Features <- 4
-f$Features[f$Problem == "Rel1"] <- 1
-f$Features[f$Problem == "Rel2"] <- 2
-f$Features[f$Problem == "Rel3"] <- 3
-
-hd_ms <- tapply(f$AllRT, f$Features, mean)
-hd_sds <- tapply(f$AllRT, f$Features, sd)
-
-hd_acc_ms <- tapply(f$ACC, f$Features, mean)
-hd_acc_sds <- tapply(f$ACC, f$Features, sd)
-
-# Data from Matzen et al
+# Comparison to human data: Matzen et al. (2010)
+# and Santarnecchi et al (2013).
 
 matzen <- c(86.8965517241379,
             74.8275862068966,
@@ -251,9 +327,6 @@ santarnecchi <- 1 - c(4.938271604938273,
                       41.04938271604939,
                       42.592592592592595)/100
 santarnecchi.rt <- c(5.0, 10.0, 14.6, 23.0)
-
-## Colors
-kolors <- heat_hcl(5)
 
 
 figure3A <- function() {
@@ -383,99 +456,6 @@ figure3D <- function() {
   mtext("Problem Accuracy", side=2, line=2.5, cex=par("cex"))
 }
 
-tiff("~/Fig3A.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
-figure3A()
-dev.off()
-
-tiff("~/Fig3B.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
-figure3B()
-dev.off()
-
-tiff("~/Fig3C.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
-figure3C()
-dev.off()
-
-tiff("~/Fig3D.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
-figure3D()
-dev.off()
-
-plot.model.bold <- function(data, variable, factor1, factor2, 
-                            factor2name = factor2, rng=NULL, xrng=NULL, leg=T, legpos="bottomleft", abs=NULL, main=paste(variable, "by", factor2), subtitle=NULL, points=NULL, colors=NULL, fgs=NULL, lwds=NULL,...) {
-  oldmar <- par("mar")
-  par(mar=c(3,4,2,1))
-  levels <- levels(factor(data[[factor2]]))
-  res <- tapply(data[[variable]], factor(data[[factor1]]), mean)
-  
-  CEX=2
-  if (is.null(rng)) {
-    arng=axis.range(res)
-  } else {
-    arng=rng
-  }
-  
-  if (is.null(xrng)) {
-    xarng=axis.range(data[[factor1]])
-  } else {
-    xarng=xrng
-  }
-  
-  plot.new()
-  plot.window(xarng[1:2], arng[1:2])
-  axis(2, at=seq(arng[1], arng[2], arng[3]), labels=seq(arng[1], arng[2], arng[3]))
-  axis(1, cex=4)
-  box(bty="o")
-  
-  if(is.null(colors)) {
-    colors <- kolors #grey(seq(0.25, 0.75, 0.5/max(1, (length(levels)-1))))
-  }
-  
-  if(is.null(points)) {
-    points <-rep(21, length(levels))
-  }
-  
-  if (is.null(fgs)) {
-    fgs<-rep("black", length(levels))
-  }
-  
-  if (is.null(lwds)) {
-    lwds<-rep(2, length(levels))
-  }
-  
-  
-  l.points<-c()
-  l.colors<-c()
-  l.names <-c()
-  
-  ## The line
-  if (!is.null(abs)) {
-    abline(h=abs, lty=2)
-  }
-  
-  for (l in seq(length(levels))) {
-    sub <- subset(data, data[[factor2]]==levels[l])
-    res <- tapply(sub[[variable]], factor(sub[[factor1]]), mean)
-    print(res)
-    res.se <- tapply(sub[[variable]], factor(sub[[factor1]]), se)
-    sub.levels <- levels(factor(sub[[factor1]]))
-    #sub.x <- match(sub.levels, x.values)
-    sub.x <- sub.levels
-    lines(sub.x, res, cex=CEX, col=colors[l], lwd=lwds[l])
-    #arrows(sub.x, res, sub.x, res + res.se, angle=90, length=0.10, col=fgs[l], lwd=lwds[l])
-    #arrows(sub.x, res, sub.x, res - res.se, angle=90, length=0.10, col=fgs[l], lwd=lwds[l])
-    points(sub.x, res, pch=points[l], lwd=0.5, cex=CEX, bg=colors[l], col="grey85") #col=colors[l])
-    
-    # Updates
-    l.points<-c(l.points, points[l])
-    l.colors<-c(l.colors, colors[l])
-    l.names <-c(l.names, paste(levels[l], sep=""))
-  }
-  #title(main=main, ylab=variable, xlab=factor1, sub=subtitle)
-  if (leg) {
-    legend(legpos, legend=paste(factor2name, "=", l.names), pch=l.points, lty=1, pt.bg=l.colors, col=l.colors, pt.cex=CEX, bty="n")
-  }
-  par(mar=oldmar)
-}
-
 
 figure3E <- function() {
   plot.model.bold(model.redux, "Accuracy", "RpeActivity", "Wait", "Wait time", rng=c(0.25, 1.02, 0.25), 
@@ -496,7 +476,24 @@ figure3E <- function() {
   mtext("Problem Accuracy", side=2, line=2.5, cex=par("cex"))
 }
 
-tiff("~/Fig3E.tiff", res=300, width=3, height=3.5, units = "in", compression = "lzw")
+png("Fig3A.png", res=300, width=3, height=3.5, units = "in")
+figure3A()
+dev.off()
+
+png("Fig3B.png", res=300, width=3, height=3.5, units = "in")
+figure3B()
+dev.off()
+
+png("Fig3C.png", res=300, width=3, height=3.5, units = "in")
+figure3C()
+dev.off()
+
+png("Fig3D.png", res=300, width=3, height=3.5, units = "in")
+figure3D()
+dev.off()
+
+
+png("Fig3E.png", res=300, width=3, height=3.5, units = "in")
 figure3E()
 dev.off()
 
@@ -519,6 +516,6 @@ figure3 <- function() {
   mtext(expression(bold("(E)")), side=3, line=1, at=c(-5.65), col="black", cex=1.5*par("cex"))
 }
 
-png("~/Fig3Z.png", width=6, height = 5, res=300, units = "in")
+png("Fig3.png", width=6, height = 5, res=300, units = "in")
 figure3()
 dev.off()
