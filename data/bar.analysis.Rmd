@@ -83,6 +83,32 @@ plot.correlations.size <- function(data, xvar, yvar, xlab=xvar, ylab=yvar, leg=F
 
 ## Experiment 1
 
+In Experiment 1, participants performed the classic version of Raven's Advanced Progressive Matrices,  
+
+### Demographics
+
+Here are summary data about the age distributions by gender:
+
+```{r}
+demo1 <- read.table("experiment1/demographics.txt", header=T)
+demo1 %>% 
+  group_by(Gender) %>%
+  summarise(N=length(Age), MeanAge=mean(Age), SDAge=sd(Age)) %>%
+  kable(digits = 3) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+ggplot(demo1, aes(x=Age, fill=Gender)) +
+  geom_bar() +
+  theme_linedraw() +
+  ggtitle("Age distribution by gender")
+
+```
+
+
+### Loading the data
+
+The data summary is contanted in the `experiment1` file:
+
 ```{r}
 behav1 <- read.table("experiment1.txt", header=T, sep="\t")
 
@@ -93,6 +119,7 @@ behav1 <- subset(behav1, !is.na(behav1$RAPM)
                  & !is.na(behav1$ChooseA) 
                  & !is.na(behav1$OS_Score))
 ```
+
 
 Because Experiments 1-3 have different number of problems, we are going to normalize the performance variable as the proportion of correct problems solved. This will make sure all the correlations are on the same scale.
 
@@ -111,8 +138,8 @@ vars_of_interest <- c("ChooseA", "AvoidB", "OS_Score", "RAPM_Accuracy")
 Given this, we can look at some basic features. First, we can look at the distribution of the four variables:
 
 ```{r}
-longb <- gather(behav1, variable, measure, vars_of_interest)
-ggplot(longb, aes(measure, fill=variable)) +
+longb1 <- gather(behav1, variable, measure, vars_of_interest)
+ggplot(longb1, aes(measure, fill=variable)) +
   geom_histogram(col=I("white"), bins = 16) +
   facet_wrap( . ~ variable, scales= "free") +
   theme_linedraw()
@@ -122,11 +149,22 @@ ggplot(longb, aes(measure, fill=variable)) +
 Second, let's look at their mean values:
 
 ```{r}
-ggplot(longb, aes(x=variable, y=measure, fill=variable)) +
+ggplot(longb1, aes(x=variable, y=measure, fill=variable)) +
   stat_summary(fun.data="mean_se", geom = "bar", width=0.5) +
   stat_summary(fun.data="mean_se", geom = "errorbar", width=0.1) +
   facet_wrap( . ~ variable, scales= "free") +
   theme_linedraw()
+```
+
+And, finally, let's summarize their means and SDs in a table:
+
+```{r}
+longb1 %>% 
+  group_by(variable) %>%
+  summarise(N=length(measure), Mean=mean(measure), SD=sd(measure)) %>%
+  kable(digits = 3) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
 ```
 
 ### A comparison of Choose and Avoid accuracies
@@ -137,7 +175,7 @@ As expected, the mean values of Choose (_M_ = `r round(mean(behav1$ChooseA), 3)`
 t <- t.test(behav1$ChooseA, behav1$AvoidB, paired = T)
 ```
 
-with _t_(`r t$parameter`) = `r t$statistic`, _p_ = `r t$p.value`.
+with _t_(`r t$parameter`) = `r round(t$statistic, 2)` _p_ = `r round(t$p.value, 3)`.
 
 ### Correlations between variables
 
@@ -209,6 +247,30 @@ grid.arrange(sp1, sp2, sp3, sp4, sp5, sp6, nrow = 3)
 
 ## Experiment 2
 
+Experiment 2 was a replication of Experiment 1, only using the Brief Abbreviated version of the RAPM task instead of the full version. The Brief RAPM was also performed on a computer. Because of attrition, a large amount of participants could not complete the Operation Span task.
+
+### Demographics
+
+Here are summary data about the age distributions by gender:
+
+```{r}
+demo2 <- read.table("experiment2/demographics.txt", header=T)
+demo2 %>% 
+  group_by(Gender) %>%
+  summarise(N=length(Age), MeanAge=mean(Age), SDAge=sd(Age)) %>%
+  kable(digits = 3) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+ggplot(demo2, aes(x=Age, fill=Gender)) +
+  geom_bar() +
+  theme_linedraw() +
+  ggtitle("Age distribution by gender")
+
+```
+
+
+### Loading the data
+
 First, we are going to load the results from Experiment 2 in "wide" summary format.
 
 ```{r}
@@ -262,6 +324,17 @@ ggplot(longb2, aes(x=variable, y=measure, fill=variable)) +
   stat_summary(fun.data="mean_se", geom = "errorbar", width=0.1) +
   facet_wrap( . ~ variable, nrow = 2) +
   theme_linedraw()
+```
+
+And here is a summary of their means and SDs in a table:
+
+```{r}
+longb2 %>% 
+  group_by(variable) %>%
+  summarise(N=length(measure), Mean=mean(measure), SD=sd(measure)) %>%
+  kable(digits = 3) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
 ```
 
 
@@ -318,7 +391,9 @@ sp2 <- ggplot(behav2, aes(x = ChooseA, y = RAPM_Accuracy)) +
 
 sp3 <- ggplot(behav2, aes(x = AvoidB, y = RAPM_Accuracy)) +
   #stat_bin_hex(bins = 12, col="white") + 
-  geom_count(alpha = 0.5) +
+  geom_count(aes(colour= ..n.., size= ..n..)) +
+  guides(color='legend') +
+  scale_size_area() +
   geom_smooth(method = "lm", formula = y ~ x, 
               col="red", fullrange= T) +
   theme_linedraw()
@@ -329,6 +404,27 @@ grid.arrange(sp1, sp2, sp3, nrow = 2)
 ## Experiment 3
 
 Experiment 3 was conducted in the fMRI scanner. In addition to the behavioral data, we have fMRI data from a set of ROIs.
+
+### Demographics
+
+Here are summary data about the age distributions by gender:
+
+```{r}
+demo3 <- read.table("experiment3/demographics.txt", header=T)
+demo3 %>% 
+  group_by(Gender) %>%
+  summarise(N=length(Age), MeanAge=mean(Age), SDAge=sd(Age)) %>%
+  kable(digits = 3) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+ggplot(demo3, aes(x=Age, fill=Gender)) +
+  geom_bar() +
+  theme_linedraw() +
+  ggtitle("Age distribution by gender")
+
+```
+
+### Loading the data
 
 First, let's load the Experiment 3 data in ``long'' format:
 
@@ -386,6 +482,19 @@ ggplot(longb3, aes(x=variable, y=measure, fill=variable)) +
   facet_wrap( . ~ variable, nrow = 2, scales = "free") +
   theme_linedraw()
 ```
+
+Here is an overview of the variables as a table:
+
+And, finally, let's summarize their means and SDs in a table:
+
+```{r}
+longb3 %>% 
+  group_by(variable) %>%
+  summarise(N=length(measure), Mean=mean(measure), SD=sd(measure)) %>%
+  kable(digits = 3) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
 
 ### Correlations between variables
 

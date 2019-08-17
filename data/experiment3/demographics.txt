@@ -1,0 +1,25 @@
+Subject	Gender	Age
+13005	Female	24
+13006	Female	19
+13007	Female	23
+13008	Female	21
+13009	Female	18
+13010	Female	19
+13011	Female	20
+13013	Female	28
+13014	Female	18
+13015	Female	18
+13017	Female	18
+13018	Female	18
+13019	Female	19
+13020	Female	18
+13021	Female	26
+13022	Male	22
+13023	Male	27
+13024	Female	25
+13025	Male	27
+13026	Male	31
+13027	Female	21
+13029	Male	24
+13030	Female	20
+
