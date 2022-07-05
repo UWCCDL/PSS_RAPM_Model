@@ -83,3 +83,10 @@ A series of four shell scripts manages the various Lisp files:
 
 No unit testing yet. But testing functions and testing problems are
 sparsed here and there.
+
+
+## Publications
+
+The following publications are based on the model:
+
+* Stocco, A., Prat, C. S., & Graham, L. K. (2021). Individual Differences in Reward‐Based Learning Predict Fluid Reasoning Abilities. Cognitive Science, 45(2), e12941, [https://doi.org/10.1111/cogs.12941](https://doi.org/10.1111/cogs.12941).
